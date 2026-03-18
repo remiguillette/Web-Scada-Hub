@@ -9,6 +9,7 @@ import {
   Database,
   Gauge,
   Power,
+  Radio,
   ShieldAlert,
   Siren,
   Zap,
@@ -16,7 +17,7 @@ import {
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { LED } from "@/components/LED";
 import { Panel } from "@/components/Panel";
-import { useGridSimulation } from "@/hooks/use-grid-simulation";
+import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
 import { cn } from "@/lib/utils";
 
@@ -64,21 +65,8 @@ function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: strin
 
 export default function Dashboard() {
   const { state, actions } = useScadaState();
+  const { voltage: simulatedVoltage, frequency } = useGridSimulationContext();
   const [now, setNow] = useState(new Date());
-  const [gridForm, setGridForm] = useState({
-    baseVoltage: 120,
-    baseFrequency: 60,
-    voltageTolerancePct: 2,
-    frequencyVariation: 0.05,
-  });
-  const [gridConfig, setGridConfig] = useState({
-    baseVoltage: 120,
-    voltageVariationPct: 0.02,
-    baseFrequency: 60,
-    frequencyVariation: 0.05,
-    updateIntervalMs: 1000,
-  });
-  const { voltage: simulatedVoltage, frequency } = useGridSimulation(gridConfig);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -88,17 +76,6 @@ export default function Dashboard() {
   const activeAlarms = useMemo(() => state.alarms.filter((alarm) => alarm.active).length, [state.alarms]);
   const countdownMs = Math.max(0, state.nextFeedingTime.getTime() - now.getTime());
   const countdown = `${String(Math.floor(countdownMs / 60000)).padStart(2, "0")}:${String(Math.floor((countdownMs % 60000) / 1000)).padStart(2, "0")}`;
-
-  const handleGridSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setGridConfig({
-      baseVoltage: gridForm.baseVoltage,
-      voltageVariationPct: gridForm.voltageTolerancePct / 100,
-      baseFrequency: gridForm.baseFrequency,
-      frequencyVariation: gridForm.frequencyVariation,
-      updateIntervalMs: 1000,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
@@ -234,70 +211,8 @@ export default function Dashboard() {
             </div>
           </Panel>
 
-          <Panel title="Grid Simulation Controls" icon={<Zap className="h-4 w-4" />}>
-            <form onSubmit={handleGridSubmit} className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Base voltage (V)</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.1"
-                    value={gridForm.baseVoltage}
-                    onChange={(event) => setGridForm((prev) => ({ ...prev, baseVoltage: Number(event.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Base frequency (Hz)</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.001"
-                    value={gridForm.baseFrequency}
-                    onChange={(event) => setGridForm((prev) => ({ ...prev, baseFrequency: Number(event.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Voltage tolerance (%)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={gridForm.voltageTolerancePct}
-                    onChange={(event) => setGridForm((prev) => ({ ...prev, voltageTolerancePct: Number(event.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Frequency band (±Hz)</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    value={gridForm.frequencyVariation}
-                    onChange={(event) => setGridForm((prev) => ({ ...prev, frequencyVariation: Number(event.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3 border-t border-[#142030] pt-4 md:flex-row md:items-center md:justify-between">
-                <div className="font-mono text-sm tracking-[0.08em] text-[#b8c6d9]">
-                  Random-walk grid model with bounded drift for realistic SCADA voltage and frequency trends.
-                </div>
-                <button
-                  type="submit"
-                  className="rounded-xl border border-[#00dcff]/45 bg-[#062032] px-4 py-2 font-display text-sm tracking-[0.14em] text-[#c4f5ff] transition hover:bg-[#0b2c45]"
-                >
-                  APPLY SIMULATION
-                </button>
-              </div>
-            </form>
-          </Panel>
-
-          <Panel title="Real-Time Process Values" icon={<Database className="h-4 w-4" />}>
+          <Panel title="Real-Time Process Values" icon={<Database className="h-4 w-4" />}
+            openUrl={`${import.meta.env.BASE_URL}simulation`}>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <ValueCard title="Supply Voltage" value={simulatedVoltage.toFixed(2)} unit="V" icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
               <ValueCard title="Grid Frequency" value={frequency.toFixed(3)} unit="Hz" icon={<Gauge className="h-5 w-5" />} accent={state.isPowered ? "green" : "red"} />
@@ -325,6 +240,16 @@ export default function Dashboard() {
                         : "Main disconnect open or power unavailable. Downstream control circuit is de-energized."}
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <a
+                href={`${import.meta.env.BASE_URL}simulation`}
+                className="flex items-center gap-2 rounded-xl border border-[#00dcff]/30 bg-[#062032] px-4 py-2.5 font-display text-xs tracking-[0.16em] text-[#00dcff] transition hover:bg-[#0b2c45] w-fit"
+              >
+                <Radio className="h-3.5 w-3.5" />
+                OPEN GRID SIMULATION PAGE
+              </a>
             </div>
           </Panel>
 

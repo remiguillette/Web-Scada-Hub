@@ -1,9 +1,11 @@
 import { Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { useScadaState } from "@/hooks/use-scada-state";
+import { useGridSimulationContext } from "@/context/GridSimulationContext";
 
 export default function ElectricalOneLinePage() {
   const { state, actions } = useScadaState();
+  const { voltage } = useGridSimulationContext();
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0d0d0d] text-[#d6deea]">
@@ -23,7 +25,7 @@ export default function ElectricalOneLinePage() {
           solenoidContactor={state.solenoidContactor}
           motorPowered={state.motorPowered}
           gateOpen={state.gateOpen}
-          voltage={state.voltage}
+          voltage={voltage}
           current={state.current}
           onToggleDisconnect={actions.toggleDisconnect}
           onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}

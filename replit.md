@@ -29,6 +29,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   - Manual controls (main disconnect, circuit breaker, ESTOP, trigger feed)
   - System alarm log (last 5 events)
   - Real-time uptime/clock
+  - Grid Simulation page at `/simulation` with live sparkline charts, grid detail variables, and configuration form
+  - GridSimulationContext (`src/context/GridSimulationContext.tsx`) is a shared data gateway: one `useGridSimulation` instance provides voltage/frequency to Dashboard, Electrical One-Line, and Simulation pages simultaneously
+- Routes: `/` (Dashboard), `/electrical-one-line`, `/simulation`
 - Dependencies: lucide-react, framer-motion, date-fns, clsx, tailwind-merge
 
 ## Structure

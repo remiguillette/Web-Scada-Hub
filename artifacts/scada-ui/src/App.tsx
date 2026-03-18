@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
+import SimulationPage from "@/pages/SimulationPage";
+import { GridSimulationProvider } from "@/context/GridSimulationContext";
 
 const queryClient = new QueryClient();
 
@@ -13,6 +15,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/electrical-one-line" component={ElectricalOneLinePage} />
+      <Route path="/simulation" component={SimulationPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -22,9 +25,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
+        <GridSimulationProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+        </GridSimulationProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
