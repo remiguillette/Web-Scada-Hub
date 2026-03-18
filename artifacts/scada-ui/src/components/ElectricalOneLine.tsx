@@ -229,9 +229,11 @@ function LoadBranchView({ branch }: { branch: LoadBranch }) {
 function ConductorBundle({
   title,
   width,
+  simLabel,
 }: {
   title: string;
   width: number;
+  simLabel?: string;
 }) {
   return (
     <div className="mx-4 flex shrink-0 flex-col gap-[5px]">
@@ -239,7 +241,7 @@ function ConductorBundle({
         {title}
       </span>
 
-      {CONDUCTORS.map((conductor) => (
+      {CONDUCTORS.map((conductor, index) => (
         <div key={`${title}-${conductor.label}`} className="flex items-center gap-2">
           <span
             className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
@@ -247,6 +249,11 @@ function ConductorBundle({
           >
             {conductor.label}
           </span>
+          {index === 0 && simLabel ? (
+            <div className="rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
+              {simLabel}
+            </div>
+          ) : null}
           <div
             className="h-[5px] rounded-full"
             style={{
@@ -587,11 +594,11 @@ export function ElectricalOneLine({
 
           <HWire powered={state.supplyLive} className="w-6" />
 
-          <ConductorBundle title="CONDUCTORS" width={300} />
-
-          <div className="ml-[72px] mt-1 w-fit rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
-            SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V
-          </div>
+          <ConductorBundle
+            title="CONDUCTORS"
+            width={300}
+            simLabel="SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V"
+          />
 
           <HWire powered={state.supplyLive} className="w-6" />
 
