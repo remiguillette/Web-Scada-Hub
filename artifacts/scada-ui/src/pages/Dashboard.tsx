@@ -18,7 +18,9 @@ import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { LED } from "@/components/LED";
 import { Panel } from "@/components/Panel";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
+import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
+import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 
 const STATE_STYLE: Record<SystemState, string> = {
@@ -66,6 +68,11 @@ function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: strin
 export default function Dashboard() {
   const { state, actions } = useScadaState();
   const { voltage: simulatedVoltage, frequency } = useGridSimulationContext();
+  const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
+    simulatedVoltage,
+    state.current,
+    state.motorPowered,
+  );
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -87,12 +94,12 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">CAT_FEEDER_SYS_01</h1>
-                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">AUTO DISPENSER SCADA</span>
+                <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">{SYSTEM.id}</h1>
+                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">{SYSTEM.description}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#8a9a8a]">
                 <span>UPTIME: {formatUptime(state.uptime)}</span>
-                <span>NODE: PLC-001 / MCC-FDR-2</span>
+                <span>NODE: {SYSTEM.node}</span>
                 <span>TIME: {format(now, "yyyy-MM-dd HH:mm:ss")}</span>
               </div>
             </div>
@@ -140,6 +147,11 @@ export default function Dashboard() {
               gateOpen={state.gateOpen}
               voltage={simulatedVoltage}
               current={state.current}
+              frequency={frequency}
+              powerFactor={powerFactor}
+              activePower={activePower}
+              reactivePower={reactivePower}
+              apparentPower={apparentPower}
               onToggleDisconnect={actions.toggleDisconnect}
               onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}
             />
@@ -173,7 +185,7 @@ export default function Dashboard() {
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
               <div>
                 <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Controller Health</div>
-                <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">24VDC logic healthy / scan executing</div>
+                <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">{SYSTEM.controllerHealth}</div>
               </div>
               <div className="flex items-center gap-5 rounded-xl border border-[#243245] bg-[#060d16] px-4 py-3">
                 <LED on={state.systemState === "RUN"} color="green" label="RUN" />

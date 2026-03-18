@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SYSTEM } from "@/config/system";
 
 interface ElectricalOneLineProps {
   disconnectClosed: boolean;
@@ -19,6 +20,11 @@ interface ElectricalOneLineProps {
   gateOpen: boolean;
   voltage: number;
   current: number;
+  frequency?: number;
+  powerFactor?: number;
+  activePower?: number;
+  reactivePower?: number;
+  apparentPower?: number;
   onToggleDisconnect: () => void;
   onToggleBreaker: () => void;
 }
@@ -402,6 +408,11 @@ export function ElectricalOneLine({
   gateOpen,
   voltage,
   current,
+  frequency = SYSTEM.utility.nominalFrequency,
+  powerFactor = 1.0,
+  activePower = 0,
+  reactivePower = 0,
+  apparentPower = 0,
   onToggleDisconnect,
   onToggleBreaker,
 }: ElectricalOneLineProps) {
@@ -443,20 +454,21 @@ export function ElectricalOneLine({
 
   const utilityNode: SourceNode = {
     kind: "source",
-    tag: "UTILITY",
-    title: "Energized Grid",
-    subtitle: "Niagara Peninsula Energy (NPE)",
+    tag: SYSTEM.utility.tag,
+    title: SYSTEM.utility.name,
+    subtitle: SYSTEM.utility.provider,
     status: state.supplyLive ? "ENERGIZED" : "UNAVAILABLE",
     active: state.supplyLive,
     accent: "cyan",
     width: 340,
     details: [
-      { parameter: "Frequency", value: "60.00 Hz", description: "Grid stability." },
-      { parameter: "Actual Power", value: "kW or MW", description: "Active load consumed." },
-      { parameter: "Voltage", value: "V or kV", description: "Phase-to-phase voltage, e.g., 13.8 kV." },
-      { parameter: "Current", value: "A (amperes)", description: "Current per phase (Ia, Ib, Ic)." },
-      { parameter: "Power Factor", value: "cos φ", description: "Indicates energy efficiency, ideally close to 1.0." },
-      { parameter: "Reactive Power", value: "kVAR", description: "Essential for grid management and balance." },
+      { parameter: "Frequency", value: `${frequency.toFixed(2)} Hz`, description: "Grid stability indicator." },
+      { parameter: "Voltage", value: `${voltage.toFixed(1)} V`, description: `Supply voltage at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).` },
+      { parameter: "Current", value: `${current.toFixed(2)} A`, description: "Total load current drawn from supply." },
+      { parameter: "Active Power", value: `${activePower.toFixed(1)} W`, description: "Real power actively consumed by load." },
+      { parameter: "Apparent Power", value: `${apparentPower.toFixed(1)} VA`, description: "Total volt-ampere demand on the supply." },
+      { parameter: "Reactive Power", value: `${reactivePower.toFixed(1)} VAR`, description: "Reactive component — essential for grid balance." },
+      { parameter: "Power Factor", value: `${powerFactor.toFixed(3)} cos\u03C6`, description: "Energy efficiency ratio. Motor load, nominally 0.88." },
     ],
     icon: (
       <StatusIcon
@@ -516,11 +528,20 @@ export function ElectricalOneLine({
       },
       load: {
         kind: "equipment",
-        tag: "MTR-001",
-        title: "DISPENSER MTR",
+        tag: SYSTEM.motor.tag,
+        title: SYSTEM.motor.name,
         status: motorPowered ? `${current.toFixed(2)} A` : "STOPPED",
         active: motorPowered,
         accent: motorPowered ? "green" : "cyan",
+        width: 200,
+        details: [
+          { parameter: "Voltage", value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`, description: `Motor terminal voltage (nominal ${SYSTEM.motor.nominalVoltage} V).` },
+          { parameter: "Current", value: `${current.toFixed(2)} A`, description: motorPowered ? "Running current." : "Motor stopped — no current." },
+          { parameter: "Frequency", value: `${frequency.toFixed(2)} Hz`, description: `Supply frequency (nominal ${SYSTEM.motor.nominalFrequency} Hz).` },
+          { parameter: "Active Power", value: `${activePower.toFixed(1)} W`, description: "Real power delivered to shaft." },
+          { parameter: "Power Factor", value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`, description: `Motor load PF (nominal ${SYSTEM.motor.powerFactor}).` },
+          { parameter: "Reactive Power", value: `${reactivePower.toFixed(1)} VAR`, description: "Magnetising reactive demand." },
+        ],
         icon: (
           <div
             className={cn(
@@ -603,53 +624,21 @@ export function ElectricalOneLine({
     };
   }, [measureAtsCenter]);
 
-  const generatorUnits: GeneratorUnit[] = [
-    {
-      tag: "GEN-001",
-      title: "GENERATOR 1",
-      status: "STANDBY / OFFLINE",
-      active: false,
-      width: 340,
-      details: [
-        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
-        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
-        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
-        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
-        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
-        { parameter: "Fuel Level", value: "87%", description: "Available runtime capacity for standby operation." },
-      ],
-    },
-    {
-      tag: "GEN-002",
-      title: "GENERATOR 2",
-      status: "STANDBY / OFFLINE",
-      active: false,
-      width: 340,
-      details: [
-        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
-        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
-        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
-        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
-        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
-        { parameter: "Fuel Level", value: "91%", description: "Available runtime capacity for standby operation." },
-      ],
-    },
-    {
-      tag: "GEN-003",
-      title: "GENERATOR 3",
-      status: "STANDBY / OFFLINE",
-      active: false,
-      width: 340,
-      details: [
-        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
-        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
-        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
-        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
-        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
-        { parameter: "Fuel Level", value: "84%", description: "Available runtime capacity for standby operation." },
-      ],
-    },
-  ];
+  const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen) => ({
+    tag: gen.tag,
+    title: gen.name,
+    status: "STANDBY / OFFLINE",
+    active: false,
+    width: 340,
+    details: [
+      { parameter: "Frequency", value: `${gen.nominalFrequency.toFixed(2)} Hz`, description: "Generator output frequency when synchronized." },
+      { parameter: "Voltage", value: `${gen.nominalVoltage} V`, description: "Nominal generator terminal voltage." },
+      { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
+      { parameter: "Real Power", value: "0 W", description: "Active power presently delivered to the bus." },
+      { parameter: "Reactive Power", value: "0 VAR", description: "Reactive support available during operation." },
+      { parameter: "Fuel Level", value: `${gen.fuelLevel}%`, description: "Available runtime capacity for standby operation." },
+    ],
+  }));
 
   const generatorBranchWireWidth = Math.max(
     0,

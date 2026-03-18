@@ -2,10 +2,17 @@ import { Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
+import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
+import { SYSTEM } from "@/config/system";
 
 export default function ElectricalOneLinePage() {
   const { state, actions } = useScadaState();
-  const { voltage } = useGridSimulationContext();
+  const { voltage, frequency } = useGridSimulationContext();
+  const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
+    voltage,
+    state.current,
+    state.motorPowered,
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0d0d0d] text-[#d6deea]">
@@ -15,7 +22,9 @@ export default function ElectricalOneLinePage() {
         <h1 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00f7a1]">
           ELECTRICAL ONE-LINE
         </h1>
-        <span className="ml-2 font-mono text-[10px] tracking-widest text-[#4a6a5a]">CAT_FEEDER_SYS_01 / MCC-FDR-2</span>
+        <span className="ml-2 font-mono text-[10px] tracking-widest text-[#4a6a5a]">
+          {SYSTEM.id} / {SYSTEM.mcc}
+        </span>
       </div>
       <div className="flex-1 p-4 min-h-0">
         <ElectricalOneLine
@@ -27,6 +36,11 @@ export default function ElectricalOneLinePage() {
           gateOpen={state.gateOpen}
           voltage={voltage}
           current={state.current}
+          frequency={frequency}
+          powerFactor={powerFactor}
+          activePower={activePower}
+          reactivePower={reactivePower}
+          apparentPower={apparentPower}
           onToggleDisconnect={actions.toggleDisconnect}
           onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}
         />
