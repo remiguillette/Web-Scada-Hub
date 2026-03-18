@@ -99,10 +99,10 @@ function CompactCard({
 }
 
 const CONDUCTORS = [
-  { label: "L1 / BLUE", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
-  { label: "L2 / RED",  color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
-  { label: "N / WHITE", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
-  { label: "GND / GRN", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "N",  color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ];
 
 const SCROLL_STEP = 120;
@@ -202,12 +202,12 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
           {/* ─── UTILITY CONDUCTORS (first) ─── */}
           <div className="flex flex-col gap-[5px] shrink-0 mr-4">
             <span className="font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mb-1">
-              UTILITY CONDUCTORS
+              CONDUCTORS
             </span>
             {CONDUCTORS.map((c) => (
               <div key={c.label} className="flex items-center gap-2">
                 <span
-                  className="w-16 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
+                  className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
                   style={{ color: c.color }}
                 >
                   {c.label}
@@ -215,7 +215,7 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
                 <div
                   className="h-[5px] rounded-full"
                   style={{
-                    minWidth: 300,
+                    width: 300,
                     backgroundColor: c.color,
                     boxShadow: `0 0 7px ${c.glow}`,
                   }}
