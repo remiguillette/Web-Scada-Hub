@@ -9,51 +9,51 @@
   --font-mono: 'Share Tech Mono', monospace;
 
   /* SCADA Industrial Dark Theme */
-  --color-background: hsl(222 47% 5%);
-  --color-foreground: hsl(210 20% 90%);
-  
-  --color-card: hsl(222 40% 9%);
-  --color-card-foreground: hsl(210 20% 90%);
-  
-  --color-popover: hsl(222 40% 9%);
-  --color-popover-foreground: hsl(210 20% 90%);
-  
-  --color-primary: hsl(195 100% 45%); /* Electric Cyan */
-  --color-primary-foreground: hsl(222 47% 5%);
-  
-  --color-secondary: hsl(217 32% 17%);
-  --color-secondary-foreground: hsl(210 20% 90%);
-  
-  --color-muted: hsl(217 32% 17%);
-  --color-muted-foreground: hsl(215 20% 65%);
-  
-  --color-accent: hsl(142 70% 45%); /* Neon Green */
-  --color-accent-foreground: hsl(222 47% 5%);
-  
-  --color-destructive: hsl(0 85% 55%); /* Alarm Red */
-  --color-destructive-foreground: hsl(210 20% 90%);
-  
-  --color-warning: hsl(45 93% 47%); /* Standby Amber */
-  --color-warning-foreground: hsl(222 47% 5%);
+  --color-background: hsl(220 55% 4%);
+  --color-foreground: hsl(210 18% 88%);
 
-  --color-border: hsl(217 32% 17%);
-  --color-input: hsl(217 32% 17%);
-  --color-ring: hsl(195 100% 45%);
+  --color-card: hsl(220 48% 7%);
+  --color-card-foreground: hsl(210 18% 88%);
 
-  --radius-sm: 0.25rem;
+  --color-popover: hsl(220 48% 7%);
+  --color-popover-foreground: hsl(210 18% 88%);
+
+  --color-primary: hsl(195 100% 48%);   /* Electric Cyan */
+  --color-primary-foreground: hsl(220 55% 4%);
+
+  --color-secondary: hsl(220 42% 11%);
+  --color-secondary-foreground: hsl(210 18% 88%);
+
+  --color-muted: hsl(220 42% 11%);
+  --color-muted-foreground: hsl(215 18% 52%);
+
+  --color-accent: hsl(142 80% 42%);     /* Neon Green */
+  --color-accent-foreground: hsl(220 55% 4%);
+
+  --color-destructive: hsl(0 88% 54%);  /* Alarm Red */
+  --color-destructive-foreground: hsl(210 18% 88%);
+
+  --color-warning: hsl(42 96% 50%);     /* Standby Amber/Orange */
+  --color-warning-foreground: hsl(220 55% 4%);
+
+  --color-border: hsl(220 35% 16%);
+  --color-input: hsl(220 35% 16%);
+  --color-ring: hsl(195 100% 48%);
+
+  --radius-sm: 0.3rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 }
 
 :root {
-  --background: 222 47% 5%;
-  --foreground: 210 20% 90%;
+  --background: 220 55% 4%;
+  --foreground: 210 18% 88%;
 }
 
 .dark {
-  --background: 222 47% 5%;
-  --foreground: 210 20% 90%;
+  --background: 220 55% 4%;
+  --foreground: 210 18% 88%;
 }
 
 @layer base {
@@ -67,11 +67,10 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    /* Subtle grid pattern for industrial feel */
-    background-image: 
-      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image:
+      linear-gradient(to right, rgba(0, 180, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 180, 255, 0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -80,32 +79,45 @@
 }
 
 @layer utilities {
+  /* ─── GLOW BOX SHADOWS ──────────────────────────────── */
   .glow-cyan {
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.5), inset 0 0 5px rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 12px rgba(0, 220, 255, 0.55), inset 0 0 6px rgba(0, 220, 255, 0.15);
   }
   .glow-green {
-    box-shadow: 0 0 10px rgba(0, 255, 65, 0.5), inset 0 0 5px rgba(0, 255, 65, 0.2);
+    box-shadow: 0 0 12px rgba(0, 255, 80, 0.55), inset 0 0 6px rgba(0, 255, 80, 0.15);
   }
   .glow-red {
-    box-shadow: 0 0 10px rgba(255, 51, 51, 0.5), inset 0 0 5px rgba(255, 51, 51, 0.2);
+    box-shadow: 0 0 12px rgba(255, 50, 50, 0.6), inset 0 0 6px rgba(255, 50, 50, 0.2);
   }
   .glow-amber {
-    box-shadow: 0 0 10px rgba(255, 179, 0, 0.5), inset 0 0 5px rgba(255, 179, 0, 0.2);
+    box-shadow: 0 0 12px rgba(255, 175, 0, 0.55), inset 0 0 6px rgba(255, 175, 0, 0.15);
   }
+
+  /* ─── GLOW TEXT SHADOWS ─────────────────────────────── */
   .text-glow-cyan {
-    text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+    text-shadow: 0 0 10px rgba(0, 220, 255, 0.7);
   }
   .text-glow-green {
-    text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+    text-shadow: 0 0 10px rgba(0, 255, 80, 0.7);
   }
   .text-glow-red {
-    text-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+    text-shadow: 0 0 10px rgba(255, 50, 50, 0.7);
   }
   .text-glow-amber {
-    text-shadow: 0 0 8px rgba(255, 179, 0, 0.6);
+    text-shadow: 0 0 10px rgba(255, 175, 0, 0.7);
   }
-  
-  /* Scanline effect for screens */
+
+  /* ─── BORDER GLOW ───────────────────────────────────── */
+  .border-glow-cyan {
+    border-color: rgba(0, 220, 255, 0.5);
+    box-shadow: 0 0 0 1px rgba(0, 220, 255, 0.15), 0 0 16px rgba(0, 220, 255, 0.15);
+  }
+  .border-glow-green {
+    border-color: rgba(0, 255, 80, 0.5);
+    box-shadow: 0 0 0 1px rgba(0, 255, 80, 0.15), 0 0 16px rgba(0, 255, 80, 0.15);
+  }
+
+  /* ─── PANEL SCANLINES (very subtle) ────────────────── */
   .scanlines {
     position: relative;
   }
@@ -117,9 +129,33 @@
     left: 0;
     bottom: 0;
     right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0, 0, 0, 0.08) 3px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
     z-index: 50;
-    background-size: 100% 4px, 6px 100%;
     pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* ─── LED PULSE ─────────────────────────────────────── */
+  @keyframes led-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+  }
+  .led-pulse {
+    animation: led-pulse 1.4s ease-in-out infinite;
+  }
+
+  /* ─── ALARM BLINK ───────────────────────────────────── */
+  @keyframes alarm-blink {
+    0%, 100% { background-color: rgba(255,50,50,0.12); }
+    50%       { background-color: rgba(255,50,50,0.04); }
+  }
+  .alarm-blink {
+    animation: alarm-blink 1s steps(1) infinite;
   }
 }
