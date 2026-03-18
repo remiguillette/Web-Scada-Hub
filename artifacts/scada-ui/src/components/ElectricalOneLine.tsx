@@ -42,6 +42,36 @@ type CompactCardProps = {
   width?: number;
 };
 
+type BaseNode = CompactCardProps & {
+  kind: "source" | "equipment" | "ats";
+};
+
+type SourceNode = BaseNode & {
+  kind: "source";
+};
+
+type EquipmentNode = BaseNode & {
+  kind: "equipment";
+};
+
+type ATSNode = BaseNode & {
+  kind: "ats";
+  mode: "utility" | "generator" | "offline";
+};
+
+type BusNode = {
+  kind: "bus";
+  label: string;
+  active: boolean;
+};
+
+type LoadBranch = {
+  kind: "loadBranch";
+  control: EquipmentNode;
+  load: EquipmentNode;
+  loadPowered: boolean;
+};
+
 type DragState = {
   startX: number;
   startY: number;
@@ -52,10 +82,6 @@ type DragState = {
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const SCROLL_STEP = 120;
-
-// Sum of all items before ATS in row 1
-const ATS_LEFT_X = 1466;
-const ATS_CENTER_X = ATS_LEFT_X + CARD_W / 2;
 
 const CONDUCTORS = [
   { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
@@ -168,6 +194,38 @@ function CompactCard({
   );
 }
 
+function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
+  return <CompactCard {...node} />;
+}
+
+function BusNodeView({ node }: { node: BusNode }) {
+  return (
+    <div className="flex shrink-0 flex-col items-center">
+      <VWire powered={node.active} className="h-10" />
+      <div
+        className={cn(
+          "px-2 font-mono text-[8px] tracking-[0.22em]",
+          node.active ? "text-[#00dcff]" : "text-[#475569]"
+        )}
+      >
+        {node.label}
+      </div>
+      <VWire powered={node.active} className="h-10" />
+    </div>
+  );
+}
+
+function LoadBranchView({ branch }: { branch: LoadBranch }) {
+  return (
+    <div className="flex items-center gap-0">
+      <HWire powered={branch.control.active} className="w-4" />
+      <NodeCard node={branch.control} />
+      <HWire powered={branch.loadPowered} className="w-4" />
+      <NodeCard node={branch.load} />
+    </div>
+  );
+}
+
 function ConductorBundle({
   title,
   width,
@@ -243,8 +301,11 @@ export function ElectricalOneLine({
   onToggleBreaker,
 }: ElectricalOneLineProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const diagramRef = useRef<HTMLDivElement>(null);
+  const atsRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
 
   const state = useMemo(() => {
     const supplyLive = voltage > 0;
@@ -274,6 +335,167 @@ export function ElectricalOneLine({
       atsStatus,
     };
   }, [voltage, disconnectClosed, breakerTripped]);
+
+  const utilityNode: SourceNode = {
+    kind: "source",
+    tag: "UTILITY",
+    title: "Niagara Peninsula Energy (NPE)",
+    status: state.supplyLive ? "ENERGIZED" : "UNAVAILABLE",
+    active: state.supplyLive,
+    accent: "cyan",
+    icon: (
+      <StatusIcon
+        icon="zap"
+        active={state.supplyLive}
+        activeColor="text-[#00dcff]"
+      />
+    ),
+  };
+
+  const atsNode: ATSNode = {
+    kind: "ats",
+    tag: "ATS-001",
+    title: "ATS",
+    status: state.atsStatus,
+    active: state.atsPowered,
+    accent: state.atsNormal ? "cyan" : state.genLive ? "amber" : "red",
+    mode: state.atsNormal ? "utility" : state.genLive ? "generator" : "offline",
+    icon: (
+      <ShieldAlert
+        className={cn(
+          "h-4 w-4",
+          state.atsNormal
+            ? "text-[#00dcff]"
+            : state.genLive
+              ? "text-[#ffb347]"
+              : "text-[#475569]"
+        )}
+      />
+    ),
+  };
+
+  const busNode: BusNode = {
+    kind: "bus",
+    label: "BUS",
+    active: state.busLive,
+  };
+
+  const loadBranches: LoadBranch[] = [
+    {
+      kind: "loadBranch",
+      control: {
+        kind: "equipment",
+        tag: "CTR-001",
+        title: "FEEDER CTR",
+        status: feederContactor ? "ENERGIZED" : "DE-ENERGIZED",
+        active: feederContactor,
+        accent: feederContactor ? "green" : "cyan",
+        icon: (
+          <StatusIcon
+            icon="zap"
+            active={feederContactor}
+            activeColor="text-[#00f7a1]"
+            inactiveColor="text-[#00dcff]"
+          />
+        ),
+      },
+      load: {
+        kind: "equipment",
+        tag: "MTR-001",
+        title: "DISPENSER MTR",
+        status: motorPowered ? `${current.toFixed(2)} A` : "STOPPED",
+        active: motorPowered,
+        accent: motorPowered ? "green" : "cyan",
+        icon: (
+          <div
+            className={cn(
+              "font-display text-base font-bold leading-none",
+              motorPowered ? "text-[#00f7a1]" : "text-[#64748b]"
+            )}
+          >
+            M
+          </div>
+        ),
+      },
+      loadPowered: motorPowered,
+    },
+    {
+      kind: "loadBranch",
+      control: {
+        kind: "equipment",
+        tag: "CTR-002",
+        title: "SOL CONTACTOR",
+        status: solenoidContactor ? "ENERGIZED" : "DE-ENERGIZED",
+        active: solenoidContactor,
+        accent: solenoidContactor ? "green" : "cyan",
+        icon: (
+          <StatusIcon
+            icon="zap"
+            active={solenoidContactor}
+            activeColor="text-[#00f7a1]"
+            inactiveColor="text-[#00dcff]"
+          />
+        ),
+      },
+      load: {
+        kind: "equipment",
+        tag: "SOL-001",
+        title: "HOPPER GATE",
+        status: gateOpen ? "OPEN" : "CLOSED",
+        active: gateOpen,
+        accent: gateOpen ? "green" : "cyan",
+        icon: (
+          <div
+            className={cn(
+              "font-display text-base leading-none",
+              gateOpen ? "text-[#00f7a1]" : "text-[#64748b]"
+            )}
+          >
+            ◫
+          </div>
+        ),
+      },
+      loadPowered: gateOpen,
+    },
+  ];
+
+  const measureAtsCenter = useCallback(() => {
+    const diagram = diagramRef.current;
+    const ats = atsRef.current;
+    if (!diagram || !ats) return;
+
+    const diagramRect = diagram.getBoundingClientRect();
+    const atsRect = ats.getBoundingClientRect();
+    setAtsCenterX(atsRect.left - diagramRect.left + atsRect.width / 2);
+  }, []);
+
+  useEffect(() => {
+    measureAtsCenter();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measureAtsCenter);
+      return () => window.removeEventListener("resize", measureAtsCenter);
+    }
+
+    const observer = new ResizeObserver(() => measureAtsCenter());
+    if (diagramRef.current) observer.observe(diagramRef.current);
+    if (atsRef.current) observer.observe(atsRef.current);
+    window.addEventListener("resize", measureAtsCenter);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measureAtsCenter);
+    };
+  }, [measureAtsCenter]);
+
+  const generatorBranchWireWidth = Math.max(
+    0,
+    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2
+  );
+  const generatorBranchVerticalOffset = Math.max(
+    0,
+    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - 3
+  );
 
   const scrollByAmount = useCallback((left: number, top = 0) => {
     viewportRef.current?.scrollBy({ left, top, behavior: "smooth" });
@@ -353,23 +575,10 @@ export function ElectricalOneLine({
         }
       }}
     >
-      <div className="min-w-max">
+      <div ref={diagramRef} className="min-w-max">
         <div className="flex items-center gap-0">
           <div className="flex w-[142px] shrink-0 flex-col items-start">
-            <CompactCard
-              tag="UTILITY"
-              title="Niagara Peninsula Energy (NPE)"
-              status={state.supplyLive ? "ENERGIZED" : "UNAVAILABLE"}
-              active={state.supplyLive}
-              accent="cyan"
-              icon={
-                <StatusIcon
-                  icon="zap"
-                  active={state.supplyLive}
-                  activeColor="text-[#00dcff]"
-                />
-              }
-            />
+            <NodeCard node={utilityNode} />
           </div>
 
           <div className="flex w-7 shrink-0 items-center">
@@ -386,303 +595,234 @@ export function ElectricalOneLine({
 
           <HWire powered={state.supplyLive} className="w-6" />
 
-          <CompactCard
-            tag="POLE-001"
-            title="RISER POLE"
-            status={state.supplyLive ? "4.8 KV" : "DEAD"}
-            active={state.supplyLive}
-            accent="cyan"
-            icon={
-              <StatusIcon
-                icon="power"
-                active={state.supplyLive}
-                activeColor="text-[#00dcff]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "POLE-001",
+              title: "RISER POLE",
+              status: state.supplyLive ? "4.8 KV" : "DEAD",
+              active: state.supplyLive,
+              accent: "cyan",
+              icon: (
+                <StatusIcon
+                  icon="power"
+                  active={state.supplyLive}
+                  activeColor="text-[#00dcff]"
+                />
+              ),
+            }}
           />
 
           <HWire powered={state.supplyLive} className="w-4" />
 
-          <CompactCard
-            tag="CB-UTIL"
-            title="POLE BREAKER"
-            status={state.supplyLive ? "CLOSED" : "OPEN"}
-            active={state.supplyLive}
-            accent={state.supplyLive ? "green" : "amber"}
-            icon={
-              <StatusIcon
-                icon="shield"
-                active={state.supplyLive}
-                activeColor="text-[#00f7a1]"
-                inactiveColor="text-[#ffb347]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "CB-UTIL",
+              title: "POLE BREAKER",
+              status: state.supplyLive ? "CLOSED" : "OPEN",
+              active: state.supplyLive,
+              accent: state.supplyLive ? "green" : "amber",
+              icon: (
+                <StatusIcon
+                  icon="shield"
+                  active={state.supplyLive}
+                  activeColor="text-[#00f7a1]"
+                  inactiveColor="text-[#ffb347]"
+                />
+              ),
+            }}
           />
 
           <HWire powered={state.supplyLive} className="w-4" />
 
-          <CompactCard
-            tag="XFMR-001"
-            title="PAD-MOUNT TRANSFORMER"
-            status={state.supplyLive ? "4.8K→240V" : "NO FEED"}
-            active={state.supplyLive}
-            accent="cyan"
-            icon={
-              <StatusIcon
-                icon="zap"
-                active={state.supplyLive}
-                activeColor="text-[#00dcff]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "XFMR-001",
+              title: "PAD-MOUNT TRANSFORMER",
+              status: state.supplyLive ? "4.8K→240V" : "NO FEED",
+              active: state.supplyLive,
+              accent: "cyan",
+              icon: (
+                <StatusIcon
+                  icon="zap"
+                  active={state.supplyLive}
+                  activeColor="text-[#00dcff]"
+                />
+              ),
+            }}
           />
 
           <ConductorBundle title="SECONDARY SERVICE CABLE" width={220} />
 
           <HWire powered={state.meterLive} className="w-4" />
 
-          <CompactCard
-            tag="MTR-UTIL"
-            title="METER"
-            status={state.meterLive ? `${voltage.toFixed(1)} VAC` : "0.0 VAC"}
-            active={state.meterLive}
-            accent="cyan"
-            icon={
-              <StatusIcon
-                icon="zap"
-                active={state.meterLive}
-                activeColor="text-[#00dcff]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "MTR-UTIL",
+              title: "METER",
+              status: state.meterLive ? `${voltage.toFixed(1)} VAC` : "0.0 VAC",
+              active: state.meterLive,
+              accent: "cyan",
+              icon: (
+                <StatusIcon
+                  icon="zap"
+                  active={state.meterLive}
+                  activeColor="text-[#00dcff]"
+                />
+              ),
+            }}
           />
 
           <HWire powered={state.meterLive} className="w-4" />
 
-          <CompactCard
-            tag="ATS-001"
-            title="ATS"
-            status={state.atsStatus}
-            active={state.atsPowered}
-            accent={state.atsNormal ? "cyan" : state.genLive ? "amber" : "red"}
-            icon={
-              <ShieldAlert
-                className={cn(
-                  "h-4 w-4",
-                  state.atsNormal
-                    ? "text-[#00dcff]"
-                    : state.genLive
-                      ? "text-[#ffb347]"
-                      : "text-[#475569]"
-                )}
-              />
-            }
-          />
+          <div ref={atsRef} className="shrink-0">
+            <NodeCard node={atsNode} />
+          </div>
 
           <HWire powered={state.atsPowered} className="w-4" />
 
-          <CompactCard
-            tag="PNL-001"
-            title="MAIN PANEL"
-            status={state.mainPanelLive ? "ENERGIZED" : "OFFLINE"}
-            active={state.mainPanelLive}
-            accent={state.mainPanelLive ? "green" : "amber"}
-            icon={
-              <StatusIcon
-                icon="power"
-                active={state.mainPanelLive}
-                activeColor="text-[#00f7a1]"
-                inactiveColor="text-[#ffb347]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "PNL-001",
+              title: "MAIN PANEL",
+              status: state.mainPanelLive ? "ENERGIZED" : "OFFLINE",
+              active: state.mainPanelLive,
+              accent: state.mainPanelLive ? "green" : "amber",
+              icon: (
+                <StatusIcon
+                  icon="power"
+                  active={state.mainPanelLive}
+                  activeColor="text-[#00f7a1]"
+                  inactiveColor="text-[#ffb347]"
+                />
+              ),
+            }}
           />
 
           <HWire powered={state.atsPowered} className="w-4" />
 
           <div className="flex shrink-0 flex-col items-center">
             <VWire powered={state.mainPanelLive} style={{ height: 14 }} />
-            <CompactCard
-              tag="SCADA-01"
-              title="SCADA MONITOR"
-              status={state.mainPanelLive ? "MONITORING" : "OFFLINE"}
-              active={state.mainPanelLive}
-              accent="violet"
-              icon={
-                <StatusIcon
-                  icon="monitor"
-                  active={state.mainPanelLive}
-                  activeColor="text-[#a78bfa]"
-                />
-              }
+            <NodeCard
+              node={{
+                kind: "equipment",
+                tag: "SCADA-01",
+                title: "SCADA MONITOR",
+                status: state.mainPanelLive ? "MONITORING" : "OFFLINE",
+                active: state.mainPanelLive,
+                accent: "violet",
+                icon: (
+                  <StatusIcon
+                    icon="monitor"
+                    active={state.mainPanelLive}
+                    activeColor="text-[#a78bfa]"
+                  />
+                ),
+              }}
             />
             <VWire powered={state.mainPanelLive} style={{ height: 14 }} />
           </div>
 
           <HWire powered={state.atsPowered} className="w-4" />
 
-          <CompactCard
-            tag="MDS-001"
-            title="MAIN DISCONNECT"
-            status={disconnectClosed ? "CLOSED" : "OPEN"}
-            active={disconnectClosed && state.atsPowered}
-            accent={disconnectClosed ? "green" : "amber"}
-            icon={
-              <StatusIcon
-                icon="power"
-                active={disconnectClosed}
-                activeColor="text-[#00f7a1]"
-                inactiveColor="text-[#ffb347]"
-              />
-            }
-            onClick={onToggleDisconnect}
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "MDS-001",
+              title: "MAIN DISCONNECT",
+              status: disconnectClosed ? "CLOSED" : "OPEN",
+              active: disconnectClosed && state.atsPowered,
+              accent: disconnectClosed ? "green" : "amber",
+              icon: (
+                <StatusIcon
+                  icon="power"
+                  active={disconnectClosed}
+                  activeColor="text-[#00f7a1]"
+                  inactiveColor="text-[#ffb347]"
+                />
+              ),
+              onClick: onToggleDisconnect,
+            }}
           />
 
           <HWire powered={disconnectClosed && state.atsPowered} className="w-4" />
 
-          <CompactCard
-            tag="CB-001"
-            title="CIRCUIT BREAKER"
-            status={breakerTripped ? "TRIPPED" : "OK"}
-            active={!breakerTripped && disconnectClosed && state.atsPowered}
-            accent={breakerTripped ? "red" : "green"}
-            icon={
-              <StatusIcon
-                icon="shield"
-                active={!breakerTripped}
-                activeColor="text-[#00f7a1]"
-                inactiveColor="text-[#ff4d5a]"
-              />
-            }
-            onClick={onToggleBreaker}
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "CB-001",
+              title: "CIRCUIT BREAKER",
+              status: breakerTripped ? "TRIPPED" : "OK",
+              active: !breakerTripped && disconnectClosed && state.atsPowered,
+              accent: breakerTripped ? "red" : "green",
+              icon: (
+                <StatusIcon
+                  icon="shield"
+                  active={!breakerTripped}
+                  activeColor="text-[#00f7a1]"
+                  inactiveColor="text-[#ff4d5a]"
+                />
+              ),
+              onClick: onToggleBreaker,
+            }}
           />
 
           <HWire powered={state.busLive} className="w-4" />
 
-          <div className="flex shrink-0 flex-col items-center">
-            <VWire powered={state.busLive} className="h-10" />
-            <div
-              className={cn(
-                "px-2 font-mono text-[8px] tracking-[0.22em]",
-                state.busLive ? "text-[#00dcff]" : "text-[#475569]"
-              )}
-            >
-              BUS
-            </div>
-            <VWire powered={state.busLive} className="h-10" />
-          </div>
+          <BusNodeView node={busNode} />
 
           <div className="ml-0 flex self-stretch flex-col items-stretch justify-center gap-0">
-            <div className="flex items-center gap-0">
-              <HWire powered={state.busLive} className="w-4" />
-              <CompactCard
-                tag="CTR-001"
-                title="FEEDER CTR"
-                status={feederContactor ? "ENERGIZED" : "DE-ENERGIZED"}
-                active={feederContactor}
-                accent={feederContactor ? "green" : "cyan"}
-                icon={
-                  <StatusIcon
-                    icon="zap"
-                    active={feederContactor}
-                    activeColor="text-[#00f7a1]"
-                    inactiveColor="text-[#00dcff]"
-                  />
-                }
-              />
-              <HWire powered={motorPowered} className="w-4" />
-              <CompactCard
-                tag="MTR-001"
-                title="DISPENSER MTR"
-                status={motorPowered ? `${current.toFixed(2)} A` : "STOPPED"}
-                active={motorPowered}
-                accent={motorPowered ? "green" : "cyan"}
-                icon={
-                  <div
-                    className={cn(
-                      "font-display text-base font-bold leading-none",
-                      motorPowered ? "text-[#00f7a1]" : "text-[#64748b]"
-                    )}
-                  >
-                    M
-                  </div>
-                }
-              />
-            </div>
-
-            <div className="h-3" />
-
-            <div className="flex items-center gap-0">
-              <HWire powered={state.busLive} className="w-4" />
-              <CompactCard
-                tag="CTR-002"
-                title="SOL CONTACTOR"
-                status={solenoidContactor ? "ENERGIZED" : "DE-ENERGIZED"}
-                active={solenoidContactor}
-                accent={solenoidContactor ? "green" : "cyan"}
-                icon={
-                  <StatusIcon
-                    icon="zap"
-                    active={solenoidContactor}
-                    activeColor="text-[#00f7a1]"
-                    inactiveColor="text-[#00dcff]"
-                  />
-                }
-              />
-              <HWire powered={gateOpen} className="w-4" />
-              <CompactCard
-                tag="SOL-001"
-                title="HOPPER GATE"
-                status={gateOpen ? "OPEN" : "CLOSED"}
-                active={gateOpen}
-                accent={gateOpen ? "green" : "cyan"}
-                icon={
-                  <div
-                    className={cn(
-                      "font-display text-base leading-none",
-                      gateOpen ? "text-[#00f7a1]" : "text-[#64748b]"
-                    )}
-                  >
-                    ◫
-                  </div>
-                }
-              />
-            </div>
+            {loadBranches.map((branch, index) => (
+              <div key={`${branch.control.tag}-${branch.load.tag}`}>
+                {index > 0 ? <div className="h-3" /> : null}
+                <LoadBranchView branch={branch} />
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="flex items-start" style={{ height: 28 }}>
-          <div style={{ width: ATS_CENTER_X - 3, flexShrink: 0 }} />
+          <div style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }} />
           <VWire powered={state.genBrkLive} style={{ height: 28 }} />
         </div>
 
         <div className="flex items-center gap-0">
           <div className="flex w-[142px] shrink-0 flex-col items-start">
-            <CompactCard
-              tag="GEN-001"
-              title="GENERATOR"
-              status="STANDBY / OFFLINE"
-              active={false}
-              accent="amber"
-              icon={<Zap className="h-4 w-4 text-[#475569]" />}
+            <NodeCard
+              node={{
+                kind: "source",
+                tag: "GEN-001",
+                title: "GENERATOR",
+                status: "STANDBY / OFFLINE",
+                active: false,
+                accent: "amber",
+                icon: <Zap className="h-4 w-4 text-[#475569]" />,
+              }}
             />
           </div>
 
-          <HWire
-            powered={state.genBrkLive}
-            style={{ width: ATS_LEFT_X - SOURCE_COL_W }}
-          />
+          <HWire powered={state.genBrkLive} style={{ width: generatorBranchWireWidth }} />
 
-          <CompactCard
-            tag="CB-GEN"
-            title="MAIN PANEL GEN"
-            status={state.genBrkLive ? "CLOSED" : "OPEN / STANDBY"}
-            active={state.genBrkLive}
-            accent="amber"
-            icon={
-              <StatusIcon
-                icon="shield"
-                active={state.genBrkLive}
-                activeColor="text-[#ffb347]"
-              />
-            }
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: "CB-GEN",
+              title: "MAIN PANEL GEN",
+              status: state.genBrkLive ? "CLOSED" : "OPEN / STANDBY",
+              active: state.genBrkLive,
+              accent: "amber",
+              icon: (
+                <StatusIcon
+                  icon="shield"
+                  active={state.genBrkLive}
+                  activeColor="text-[#ffb347]"
+                />
+              ),
+            }}
           />
         </div>
       </div>
