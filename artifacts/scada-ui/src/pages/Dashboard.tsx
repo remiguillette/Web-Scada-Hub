@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, Cpu, Power, Settings, ShieldAlert, Waves, Zap 
 import { useScadaState, SystemState } from "@/hooks/use-scada-state";
 import { Panel } from "@/components/Panel";
 import { LED } from "@/components/LED";
+import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -84,104 +85,18 @@ export default function Dashboard() {
       <main className="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto">
         
         {/* PANEL 1: ELECTRICAL DIAGRAM (Cols 1-3) */}
-        <Panel title="ELECTRICAL ONE-LINE" className="lg:col-span-3 min-h-[500px]" status={state.isPowered ? "ok" : "warning"}>
-          <div className="relative h-full flex flex-col items-center justify-between py-4 font-mono text-xs">
-            {/* Supply */}
-            <div className="flex flex-col items-center z-10 bg-card p-2 rounded border border-primary glow-cyan w-full text-center">
-              <Zap className="w-5 h-5 text-primary mb-1" />
-              <span className="text-primary font-bold">120V AC SUPPLY</span>
-              <span className="text-muted-foreground">{state.voltage.toFixed(1)}V</span>
-            </div>
-
-            {/* Line down */}
-            <div className="w-1 h-8 bg-primary glow-cyan" />
-
-            {/* MDS-001 */}
-            <div className="flex items-center w-full relative z-10">
-              <div className="flex-1 border-b border-border border-dashed" />
-              <div className={cn(
-                "border-2 rounded p-2 mx-2 text-center transition-colors w-32",
-                state.disconnectClosed ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground"
-              )}>
-                <div>MDS-001</div>
-                <div className="text-[10px]">{state.disconnectClosed ? "CLOSED" : "OPEN"}</div>
-              </div>
-              <div className="flex-1 border-b border-border border-dashed" />
-              <LED on={state.disconnectClosed} color="cyan" className="absolute -right-1" />
-            </div>
-
-            {/* Line down */}
-            <div className={cn("w-1 h-8 transition-colors", state.disconnectClosed ? "bg-primary glow-cyan" : "bg-muted-foreground/30")} />
-
-            {/* CB-001 */}
-            <div className="flex items-center w-full relative z-10">
-              <div className="flex-1 border-b border-border border-dashed" />
-              <div className={cn(
-                "border-2 rounded p-2 mx-2 text-center transition-colors w-32",
-                state.breakerTripped ? "border-destructive text-destructive bg-destructive/10" :
-                (state.disconnectClosed ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground")
-              )}>
-                <div>CB-001</div>
-                <div className="text-[10px]">{state.breakerTripped ? "TRIPPED" : "CLOSED"}</div>
-              </div>
-              <div className="flex-1 border-b border-border border-dashed" />
-              <LED on={!state.breakerTripped && state.disconnectClosed} color={state.breakerTripped ? "red" : "cyan"} className="absolute -right-1" />
-            </div>
-
-            {/* Line down */}
-            <div className={cn("w-1 h-8 transition-colors", state.isPowered ? "bg-primary glow-cyan" : "bg-muted-foreground/30")} />
-
-            {/* Power Bus */}
-            <div className={cn("w-full h-2 rounded transition-colors", state.isPowered ? "bg-primary glow-cyan" : "bg-muted-foreground/30")} />
-            <div className="text-[10px] text-muted-foreground mt-1 mb-4">MAIN POWER BUS</div>
-
-            {/* Parallel paths for Motor and Solenoid */}
-            <div className="flex w-full justify-around h-32 relative">
-              {/* Left Path: CTR-001 & Motor */}
-              <div className="flex flex-col items-center">
-                <div className={cn("w-1 h-4 transition-colors", state.isPowered ? "bg-primary glow-cyan" : "bg-muted-foreground/30")} />
-                <div className={cn(
-                  "border rounded p-1 text-[10px] text-center w-20 transition-colors",
-                  state.feedActive ? "border-accent text-accent" : "border-muted-foreground text-muted-foreground"
-                )}>
-                  CTR-001<br/>FEED
-                </div>
-                <div className={cn("w-1 h-6 transition-colors", state.feedActive && state.isPowered ? "bg-accent glow-green" : "bg-muted-foreground/30")} />
-                <div className={cn(
-                  "rounded-full w-12 h-12 flex items-center justify-center border-2 transition-colors",
-                  state.feedActive && state.isPowered ? "border-accent text-accent glow-green" : "border-muted-foreground text-muted-foreground"
-                )}>
-                  M
-                </div>
-                <span className="text-[10px] mt-1">MTR-001</span>
-                <span className="text-primary">{state.current > 0 ? state.current.toFixed(2) + 'A' : '0.00A'}</span>
-              </div>
-
-              {/* Right Path: CTR-002 & Solenoid */}
-              <div className="flex flex-col items-center">
-                <div className={cn("w-1 h-4 transition-colors", state.isPowered ? "bg-primary glow-cyan" : "bg-muted-foreground/30")} />
-                <div className={cn(
-                  "border rounded p-1 text-[10px] text-center w-20 transition-colors",
-                  state.feedActive ? "border-accent text-accent" : "border-muted-foreground text-muted-foreground"
-                )}>
-                  CTR-002<br/>GATE
-                </div>
-                <div className={cn("w-1 h-6 transition-colors", state.feedActive && state.isPowered ? "bg-accent glow-green" : "bg-muted-foreground/30")} />
-                <div className={cn(
-                  "w-10 h-10 flex flex-col items-center justify-center border-2 transition-colors",
-                  state.feedActive && state.isPowered ? "border-accent text-accent glow-green" : "border-muted-foreground text-muted-foreground"
-                )}>
-                  <div className="w-4 h-4 border-t-2 border-b-2 border-current flex items-center justify-center">
-                    <div className="w-1 h-4 bg-current" />
-                  </div>
-                </div>
-                <span className="text-[10px] mt-1">SOL-001</span>
-                <span className={cn("text-[10px]", state.feedActive ? "text-accent" : "text-muted-foreground")}>
-                  {state.feedActive ? "OPEN" : "CLOSED"}
-                </span>
-              </div>
-            </div>
-          </div>
+        <Panel title="ELECTRICAL ONE-LINE" className="lg:col-span-3 min-h-[600px]" status={state.isPowered ? "ok" : "warning"}>
+          <ElectricalOneLine
+            disconnectClosed={state.disconnectClosed}
+            breakerTripped={state.breakerTripped}
+            feedActive={state.feedActive}
+            isPowered={state.isPowered}
+            voltage={state.voltage}
+            current={state.current}
+            onToggleDisconnect={actions.toggleDisconnect}
+            onTripBreaker={actions.tripBreaker}
+            onResetBreaker={actions.resetBreaker}
+          />
         </Panel>
 
         {/* MIDDLE COLUMN: PLC & OVERVIEW (Cols 4-8) */}
