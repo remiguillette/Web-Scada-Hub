@@ -346,12 +346,28 @@ const GEN_STATE_CONFIG: Record<
     ledColor: "amber",
     ledOn: true,
   },
-  RUNNING: {
+  STABILIZING: {
+    border: "border-[#00dcff]/30",
+    bg: "bg-gradient-to-br from-[#08161d] to-[#0a1119]",
+    badgeText: "STABILIZING",
+    badgeStyle: "border-[#00dcff]/40 bg-[#00dcff]/10 text-[#00dcff]",
+    ledColor: "cyan",
+    ledOn: true,
+  },
+  READY: {
     border: "border-[#00f7a1]/30",
     bg: "bg-gradient-to-br from-[#0e1a10] to-[#0a140c]",
     badgeText: "AVAILABLE",
     badgeStyle: "border-[#00f7a1]/40 bg-[#00f7a1]/10 text-[#00f7a1]",
     ledColor: "green",
+    ledOn: true,
+  },
+  LOADED: {
+    border: "border-[#ffd166]/35",
+    bg: "bg-gradient-to-br from-[#1e1808] to-[#161006]",
+    badgeText: "ON BUS",
+    badgeStyle: "border-[#ffd166]/40 bg-[#ffd166]/10 text-[#ffd166]",
+    ledColor: "amber",
     ledOn: true,
   },
   STOPPING: {
@@ -385,8 +401,12 @@ function GeneratorCard({
   const gen = SYSTEM.generators[genIdx];
   const cfg = GEN_STATE_CONFIG[status.state];
   const isTransitioning =
-    status.state === "STARTING" || status.state === "STOPPING";
-  const isRunning = status.state === "RUNNING";
+    status.state === "STARTING" ||
+    status.state === "STABILIZING" ||
+    status.state === "STOPPING";
+  const isReady = status.state === "READY";
+  const isLoaded = status.state === "LOADED";
+  const isAvailable = isReady || isLoaded;
   const isOffline = status.state === "OFFLINE";
   const isStopping = status.state === "STOPPING";
 
@@ -397,7 +417,7 @@ function GeneratorCard({
         status.state !== "OFFLINE"
           ? `${status.frequency.toFixed(2)} Hz`
           : `${gen.nominalFrequency.toFixed(2)} Hz (nominal)`,
-      description: isRunning
+      description: isAvailable
         ? "Live output frequency."
         : "Nominal standby output frequency.",
     },
@@ -407,21 +427,21 @@ function GeneratorCard({
         status.state !== "OFFLINE"
           ? `${status.voltage.toFixed(1)} V`
           : `${gen.nominalVoltage} V (nominal)`,
-      description: isRunning
+      description: isAvailable
         ? "Live terminal voltage."
         : "Nominal standby terminal voltage.",
     },
     {
       parameter: "Current",
       value: `${status.current.toFixed(2)} A`,
-      description: isRunning
+      description: isAvailable
         ? "Live output current."
         : "Offline — zero current.",
     },
     {
       parameter: "Active Power",
       value: `${status.activePower.toFixed(1)} W`,
-      description: isRunning
+      description: isAvailable
         ? "Emergency-source power available to the ATS path."
         : "Zero while offline.",
     },
@@ -478,7 +498,7 @@ function GeneratorCard({
               <Power className="h-3 w-3" /> START
             </button>
           )}
-          {isRunning && (
+          {isAvailable && (
             <button
               type="button"
               onClick={onStop}
@@ -503,8 +523,8 @@ function GeneratorCard({
                 const prevThreshold =
                   i === 0 ? 0 : RAMP_PHASES[i - 1].threshold;
                 const reached = isStopping
-                  ? 1 - status.rampProgress <= phase.threshold
-                  : status.rampProgress >= prevThreshold;
+                  ? 1 - status.progress <= phase.threshold
+                  : status.progress >= prevThreshold;
                 const active = isStopping
                   ? status.phaseLabel === phase.label
                   : status.phaseLabel === phase.label;
@@ -526,7 +546,7 @@ function GeneratorCard({
               })}
             </div>
             <span className="shrink-0 font-mono text-[10px] text-[#ffb347]">
-              {(status.rampProgress * 100).toFixed(0)}%
+              {(status.progress * 100).toFixed(0)}%
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-[#1a1a1a]">
@@ -537,17 +557,17 @@ function GeneratorCard({
                   ? "bg-gradient-to-r from-[#ffb347] to-[#ff4d5a]"
                   : "bg-gradient-to-r from-[#00dcff] to-[#00f7a1]",
               )}
-              style={{ width: `${status.rampProgress * 100}%` }}
+              style={{ width: `${status.progress * 100}%` }}
             />
           </div>
         </div>
       )}
 
-      {(isTransitioning || isRunning) && status.voltageHistory.length > 1 && (
+      {(isTransitioning || isAvailable) && status.voltageHistory.length > 1 && (
         <div className="h-[50px] overflow-hidden rounded-xl border border-white/6 bg-black/20">
           <Sparkline
             values={status.voltageHistory}
-            color={isRunning ? "#00f7a1" : "#ffb347"}
+            color={isAvailable ? "#00f7a1" : "#ffb347"}
             height={50}
           />
         </div>
@@ -578,7 +598,7 @@ function GeneratorCard({
                 <td
                   className={cn(
                     "px-3 py-2 font-semibold",
-                    isRunning
+                    isAvailable
                       ? "text-[#00f7a1]"
                       : isTransitioning
                         ? "text-[#ffb347]"
@@ -596,7 +616,7 @@ function GeneratorCard({
         </table>
       </div>
 
-      {isRunning && (
+      {isAvailable && (
         <div className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/20 bg-[#00f7a1]/5 px-3 py-2">
           <Zap className="h-3.5 w-3.5 shrink-0 text-[#00f7a1]" />
           <span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">
@@ -1018,7 +1038,7 @@ export default function SimulationPage() {
               <LED on={anyGenActive} color={anyGenActive ? "amber" : "cyan"} />
               <span className="font-display text-xs uppercase tracking-[0.16em] text-[#7f93ac]">
                 {anyGenActive
-                  ? `${generatorStatuses.filter((s) => s.state === "RUNNING").length} generator(s) available — emergency source ready`
+                  ? `${generatorStatuses.filter((s) => s.state === "READY" || s.state === "LOADED").length} generator(s) available — emergency source ready`
                   : "Utility active — all generators standby"}
               </span>
             </div>
