@@ -647,6 +647,9 @@ export function ElectricalOneLine({
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0 || !viewportRef.current) return;
 
+      const target = event.target as HTMLElement;
+      if (target.closest("button, a, input, select, textarea")) return;
+
       dragStateRef.current = {
         startX: event.clientX,
         startY: event.clientY,
@@ -709,7 +712,7 @@ export function ElectricalOneLine({
     >
       <div ref={diagramRef} className="min-w-max">
         <div className="flex items-center gap-0">
-          <div className="flex w-[142px] shrink-0 flex-col items-start">
+          <div className="flex shrink-0 flex-col items-start">
             <NodeCard node={utilityNode} />
           </div>
 
