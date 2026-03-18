@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
   Activity,
@@ -64,8 +64,6 @@ function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: strin
 export default function Dashboard() {
   const { state, actions } = useScadaState();
   const [now, setNow] = useState(new Date());
-  const [oneLineExpanded, setOneLineExpanded] = useState(false);
-  const toggleOneLine = useCallback(() => setOneLineExpanded((v) => !v), []);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -124,12 +122,10 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto grid max-w-[1700px] grid-cols-1 gap-5 p-5 2xl:grid-cols-[1.15fr_1.45fr]">
-        <div className="space-y-5">
+        <div className="space-y-5 min-w-0">
           <Panel
             title="Electrical One-Line"
             icon={<Zap className="h-4 w-4" />}
-            expanded={oneLineExpanded}
-            onToggleExpand={toggleOneLine}
           >
             <ElectricalOneLine
               disconnectClosed={state.disconnectClosed}

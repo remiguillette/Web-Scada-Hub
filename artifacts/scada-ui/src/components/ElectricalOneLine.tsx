@@ -157,7 +157,7 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
       ref={viewportRef}
       tabIndex={0}
       className={cn(
-        "overflow-auto pb-2 select-none outline-none",
+        "w-full overflow-auto pb-2 select-none outline-none",
         "cursor-grab active:cursor-grabbing",
         isDragging && "cursor-grabbing",
       )}

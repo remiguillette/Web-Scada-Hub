@@ -70,7 +70,7 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
         </div>
       </div>
 
-      <div className={cn("p-4 flex-1", expanded ? "overflow-auto" : "")}>
+      <div className={cn("p-4 flex-1 min-w-0 min-h-0", expanded ? "overflow-auto" : "overflow-hidden")}>
         {children}
       </div>
     </div>
