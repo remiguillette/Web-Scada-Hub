@@ -169,7 +169,7 @@ function CompactCard({
           <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
             {tag}
           </div>
-          <div className="truncate font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
+          <div className="font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
             {title}
           </div>
         </div>
