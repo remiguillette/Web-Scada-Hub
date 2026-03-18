@@ -113,30 +113,6 @@
     box-shadow: 0 0 0 1px rgba(0, 255, 80, 0.15), 0 0 16px rgba(0, 255, 80, 0.15);
   }
 
-  /* ─── PANEL SCANLINES (very subtle) ────────────────── */
-  .scanlines {
-    position: relative;
-  }
-  .scanlines::before {
-    content: " ";
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 3px,
-      rgba(0, 0, 0, 0.08) 3px,
-      rgba(0, 0, 0, 0.08) 4px
-    );
-    z-index: 50;
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
   /* ─── LED PULSE ─────────────────────────────────────── */
   @keyframes led-pulse {
     0%, 100% { opacity: 1; }
