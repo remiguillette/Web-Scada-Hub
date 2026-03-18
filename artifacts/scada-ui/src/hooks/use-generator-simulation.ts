@@ -25,7 +25,7 @@ const GEN_POWER_FACTOR = 0.9;
 
 function getPhaseLabel(state: GenState, progress: number): string {
   if (state === "OFFLINE") return "OFFLINE";
-  if (state === "RUNNING") return "AT RATED OUTPUT";
+  if (state === "RUNNING") return "READY FOR ATS TRANSFER";
   if (state === "STOPPING") {
     if (progress > 0.7) return "UNLOADING";
     if (progress > 0.3) return "SPINNING DOWN";
@@ -33,8 +33,8 @@ function getPhaseLabel(state: GenState, progress: number): string {
   }
   if (progress < 0.2) return "CRANKING";
   if (progress < 0.55) return "BUILDING VOLTAGE";
-  if (progress < 0.88) return "SYNCHRONIZING";
-  return "STABILIZING";
+  if (progress < 0.88) return "REACHING RATED SPEED";
+  return "READY FOR ATS TRANSFER";
 }
 
 function computePower(v: number, c: number) {
@@ -59,8 +59,8 @@ function buildOfflineStatus(): GeneratorLiveStatus {
 }
 
 export function useGeneratorSimulation() {
-  const [statuses, setStatuses] = useState<GeneratorLiveStatus[]>(
-    () => SYSTEM.generators.map(() => buildOfflineStatus()),
+  const [statuses, setStatuses] = useState<GeneratorLiveStatus[]>(() =>
+    SYSTEM.generators.map(() => buildOfflineStatus()),
   );
 
   const startTimestampsRef = useRef<(number | null)[]>(
@@ -71,7 +71,11 @@ export function useGeneratorSimulation() {
     setStatuses((prev) => {
       if (prev[idx].state !== "OFFLINE") return prev;
       const next = [...prev];
-      next[idx] = { ...buildOfflineStatus(), state: "STARTING", phaseLabel: "CRANKING" };
+      next[idx] = {
+        ...buildOfflineStatus(),
+        state: "STARTING",
+        phaseLabel: "CRANKING",
+      };
       return next;
     });
     startTimestampsRef.current[idx] = Date.now();
@@ -105,18 +109,39 @@ export function useGeneratorSimulation() {
           if (s.state === "RUNNING") {
             const driftV = (Math.random() - 0.5) * 4;
             const driftI = (Math.random() - 0.5) * 2;
-            const v = Number(Math.max(gen.nominalVoltage - 10, Math.min(gen.nominalVoltage + 10, s.voltage + driftV)).toFixed(1));
-            const c = Number(Math.max(GEN_NOMINAL_CURRENT - 5, Math.min(GEN_NOMINAL_CURRENT + 5, s.current + driftI)).toFixed(2));
+            const v = Number(
+              Math.max(
+                gen.nominalVoltage - 10,
+                Math.min(gen.nominalVoltage + 10, s.voltage + driftV),
+              ).toFixed(1),
+            );
+            const c = Number(
+              Math.max(
+                GEN_NOMINAL_CURRENT - 5,
+                Math.min(GEN_NOMINAL_CURRENT + 5, s.current + driftI),
+              ).toFixed(2),
+            );
             const { activePower, reactivePower } = computePower(v, c);
             const voltageHistory = [...s.voltageHistory, v].slice(-HISTORY_MAX);
-            return { ...s, voltage: v, current: c, activePower, reactivePower, voltageHistory };
+            return {
+              ...s,
+              voltage: v,
+              current: c,
+              activePower,
+              reactivePower,
+              voltageHistory,
+            };
           }
 
           if (s.state === "STARTING") {
             const progress = Math.min(1, elapsed / RAMP_UP_MS);
             const v = Number((gen.nominalVoltage * progress).toFixed(1));
-            const freq = Number((gen.nominalFrequency * Math.min(1, progress * 1.4)).toFixed(2));
-            const c = Number((GEN_NOMINAL_CURRENT * progress * progress).toFixed(2));
+            const freq = Number(
+              (gen.nominalFrequency * Math.min(1, progress * 1.4)).toFixed(2),
+            );
+            const c = Number(
+              (GEN_NOMINAL_CURRENT * progress * progress).toFixed(2),
+            );
             const { activePower, reactivePower } = computePower(v, c);
             const voltageHistory = [...s.voltageHistory, v].slice(-HISTORY_MAX);
 
@@ -124,7 +149,10 @@ export function useGeneratorSimulation() {
               startTimestampsRef.current[idx] = null;
               const fullV = gen.nominalVoltage;
               const fullC = GEN_NOMINAL_CURRENT;
-              const { activePower: fAP, reactivePower: fRP } = computePower(fullV, fullC);
+              const { activePower: fAP, reactivePower: fRP } = computePower(
+                fullV,
+                fullC,
+              );
               return {
                 state: "RUNNING" as GenState,
                 rampProgress: 1,
@@ -133,7 +161,7 @@ export function useGeneratorSimulation() {
                 current: fullC,
                 activePower: fAP,
                 reactivePower: fRP,
-                phaseLabel: "AT RATED OUTPUT",
+                phaseLabel: "READY FOR ATS TRANSFER",
                 voltageHistory: [...voltageHistory, fullV].slice(-HISTORY_MAX),
               };
             }

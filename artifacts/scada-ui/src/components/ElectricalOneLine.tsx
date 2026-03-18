@@ -212,7 +212,9 @@ function CompactCard({
         </div>
         <div className="mt-0.5 shrink-0">{icon}</div>
       </div>
-      <div className="font-mono text-[8px] leading-tight tracking-[0.12em]">{status}</div>
+      <div className="font-mono text-[8px] leading-tight tracking-[0.12em]">
+        {status}
+      </div>
       {hasDetails ? (
         <div className="mt-2 border-t border-white/10 pt-2">
           <button
@@ -245,16 +247,27 @@ function CompactCard({
                   <thead className="bg-white/5 text-[#9fb3c8]">
                     <tr>
                       <th className="px-2 py-1 font-medium">Parameter</th>
-                      <th className="px-2 py-1 font-medium">Abbreviation / Unit</th>
+                      <th className="px-2 py-1 font-medium">
+                        Abbreviation / Unit
+                      </th>
                       <th className="px-2 py-1 font-medium">Description</th>
                     </tr>
                   </thead>
                   <tbody>
                     {details?.map((detail) => (
-                      <tr key={detail.parameter} className="border-t border-white/10 align-top">
-                        <td className="px-2 py-1.5 text-[#dce7f3]">{detail.parameter}</td>
-                        <td className="px-2 py-1.5 text-[#8ecae6]">{detail.value}</td>
-                        <td className="px-2 py-1.5 text-[#9fb3c8]">{detail.description}</td>
+                      <tr
+                        key={detail.parameter}
+                        className="border-t border-white/10 align-top"
+                      >
+                        <td className="px-2 py-1.5 text-[#dce7f3]">
+                          {detail.parameter}
+                        </td>
+                        <td className="px-2 py-1.5 text-[#8ecae6]">
+                          {detail.value}
+                        </td>
+                        <td className="px-2 py-1.5 text-[#9fb3c8]">
+                          {detail.description}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -419,9 +432,11 @@ export function ElectricalOneLine({
   onToggleDisconnect,
   onToggleBreaker,
 }: ElectricalOneLineProps) {
-  const genLive = generatorLiveStates?.some(
-    (s) => s.state === "RUNNING" || (s.state === "STARTING" && s.voltage > 100),
-  ) ?? false;
+  const genLive =
+    generatorLiveStates?.some(
+      (s) =>
+        s.state === "RUNNING" || (s.state === "STARTING" && s.voltage > 100),
+    ) ?? false;
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const atsRef = useRef<HTMLDivElement>(null);
@@ -439,9 +454,9 @@ export function ElectricalOneLine({
     const busLive = mainPanelLive;
 
     const atsStatus = atsNormal
-      ? "NORMAL / UTILITY"
+      ? "ATS ON UTILITY"
       : genLive
-        ? "EMERGENCY / GEN"
+        ? "ATS ON EMERGENCY"
         : "OPEN — NO SOURCE";
 
     return {
@@ -467,13 +482,41 @@ export function ElectricalOneLine({
     accent: "cyan",
     width: 340,
     details: [
-      { parameter: "Frequency", value: `${frequency.toFixed(2)} Hz`, description: "Grid stability indicator." },
-      { parameter: "Voltage", value: `${voltage.toFixed(1)} V`, description: `Supply voltage at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).` },
-      { parameter: "Current", value: `${current.toFixed(2)} A`, description: "Total load current drawn from supply." },
-      { parameter: "Active Power", value: `${activePower.toFixed(1)} W`, description: "Real power actively consumed by load." },
-      { parameter: "Apparent Power", value: `${apparentPower.toFixed(1)} VA`, description: "Total volt-ampere demand on the supply." },
-      { parameter: "Reactive Power", value: `${reactivePower.toFixed(1)} VAR`, description: "Reactive component — essential for grid balance." },
-      { parameter: "Power Factor", value: `${powerFactor.toFixed(3)} cos\u03C6`, description: "Energy efficiency ratio. Motor load, nominally 0.88." },
+      {
+        parameter: "Frequency",
+        value: `${frequency.toFixed(2)} Hz`,
+        description: "Grid stability indicator.",
+      },
+      {
+        parameter: "Voltage",
+        value: `${voltage.toFixed(1)} V`,
+        description: `Supply voltage at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).`,
+      },
+      {
+        parameter: "Current",
+        value: `${current.toFixed(2)} A`,
+        description: "Total load current drawn from supply.",
+      },
+      {
+        parameter: "Active Power",
+        value: `${activePower.toFixed(1)} W`,
+        description: "Real power actively consumed by load.",
+      },
+      {
+        parameter: "Apparent Power",
+        value: `${apparentPower.toFixed(1)} VA`,
+        description: "Total volt-ampere demand on the supply.",
+      },
+      {
+        parameter: "Reactive Power",
+        value: `${reactivePower.toFixed(1)} VAR`,
+        description: "Reactive component — essential for grid balance.",
+      },
+      {
+        parameter: "Power Factor",
+        value: `${powerFactor.toFixed(3)} cos\u03C6`,
+        description: "Energy efficiency ratio. Motor load, nominally 0.88.",
+      },
     ],
     icon: (
       <StatusIcon
@@ -540,12 +583,38 @@ export function ElectricalOneLine({
         accent: motorPowered ? "green" : "cyan",
         width: 200,
         details: [
-          { parameter: "Voltage", value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`, description: `Motor terminal voltage (nominal ${SYSTEM.motor.nominalVoltage} V).` },
-          { parameter: "Current", value: `${current.toFixed(2)} A`, description: motorPowered ? "Running current." : "Motor stopped — no current." },
-          { parameter: "Frequency", value: `${frequency.toFixed(2)} Hz`, description: `Supply frequency (nominal ${SYSTEM.motor.nominalFrequency} Hz).` },
-          { parameter: "Active Power", value: `${activePower.toFixed(1)} W`, description: "Real power delivered to shaft." },
-          { parameter: "Power Factor", value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`, description: `Motor load PF (nominal ${SYSTEM.motor.powerFactor}).` },
-          { parameter: "Reactive Power", value: `${reactivePower.toFixed(1)} VAR`, description: "Magnetising reactive demand." },
+          {
+            parameter: "Voltage",
+            value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`,
+            description: `Motor terminal voltage (nominal ${SYSTEM.motor.nominalVoltage} V).`,
+          },
+          {
+            parameter: "Current",
+            value: `${current.toFixed(2)} A`,
+            description: motorPowered
+              ? "Running current."
+              : "Motor stopped — no current.",
+          },
+          {
+            parameter: "Frequency",
+            value: `${frequency.toFixed(2)} Hz`,
+            description: `Supply frequency (nominal ${SYSTEM.motor.nominalFrequency} Hz).`,
+          },
+          {
+            parameter: "Active Power",
+            value: `${activePower.toFixed(1)} W`,
+            description: "Real power delivered to shaft.",
+          },
+          {
+            parameter: "Power Factor",
+            value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
+            description: `Motor load PF (nominal ${SYSTEM.motor.powerFactor}).`,
+          },
+          {
+            parameter: "Reactive Power",
+            value: `${reactivePower.toFixed(1)} VAR`,
+            description: "Magnetising reactive demand.",
+          },
         ],
         icon: (
           <div
@@ -632,9 +701,8 @@ export function ElectricalOneLine({
   const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
     const live = generatorLiveStates?.[idx];
     const isActive = live?.state === "RUNNING" || live?.state === "STARTING";
-    const statusLabel = live && live.state !== "OFFLINE"
-      ? live.phaseLabel
-      : "STANDBY / OFFLINE";
+    const statusLabel =
+      live && live.state !== "OFFLINE" ? live.phaseLabel : "STANDBY / OFFLINE";
     return {
       tag: gen.tag,
       title: gen.name,
@@ -644,23 +712,37 @@ export function ElectricalOneLine({
       details: [
         {
           parameter: "Frequency",
-          value: live && live.state !== "OFFLINE" ? `${live.frequency.toFixed(2)} Hz` : `${gen.nominalFrequency.toFixed(2)} Hz`,
-          description: isActive ? "Live output frequency." : "Nominal frequency when synchronized.",
+          value:
+            live && live.state !== "OFFLINE"
+              ? `${live.frequency.toFixed(2)} Hz`
+              : `${gen.nominalFrequency.toFixed(2)} Hz`,
+          description: isActive
+            ? "Live output frequency."
+            : "Nominal standby output frequency.",
         },
         {
           parameter: "Voltage",
-          value: live && live.state !== "OFFLINE" ? `${live.voltage.toFixed(1)} V` : `${gen.nominalVoltage} V`,
-          description: isActive ? "Live terminal voltage." : "Nominal generator terminal voltage.",
+          value:
+            live && live.state !== "OFFLINE"
+              ? `${live.voltage.toFixed(1)} V`
+              : `${gen.nominalVoltage} V`,
+          description: isActive
+            ? "Live terminal voltage."
+            : "Nominal generator terminal voltage.",
         },
         {
           parameter: "Current",
           value: live ? `${live.current.toFixed(2)} A` : "0 A",
-          description: isActive ? "Live output current." : "Per-phase current while offline.",
+          description: isActive
+            ? "Live output current."
+            : "Per-phase current while offline.",
         },
         {
           parameter: "Active Power",
           value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
-          description: isActive ? "Active power delivered to bus." : "Active power when running.",
+          description: isActive
+            ? "Emergency-source power available to ATS."
+            : "Active power when running.",
         },
         {
           parameter: "Reactive Power",
