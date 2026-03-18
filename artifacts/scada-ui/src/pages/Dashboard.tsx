@@ -126,6 +126,7 @@ export default function Dashboard() {
           <Panel
             title="Electrical One-Line"
             icon={<Zap className="h-4 w-4" />}
+            openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
           >
             <ElectricalOneLine
               disconnectClosed={state.disconnectClosed}

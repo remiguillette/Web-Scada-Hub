@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { ExternalLink, Maximize2, Minimize2 } from "lucide-react";
 
 interface PanelProps {
   title: string;
@@ -10,9 +10,10 @@ interface PanelProps {
   icon?: ReactNode;
   expanded?: boolean;
   onToggleExpand?: () => void;
+  openUrl?: string;
 }
 
-export function Panel({ title, children, className, status, icon, expanded, onToggleExpand }: PanelProps) {
+export function Panel({ title, children, className, status, icon, expanded, onToggleExpand, openUrl }: PanelProps) {
   const statusDot: Record<string, string> = {
     ok:      "bg-[#00ff50] shadow-[0_0_8px_rgba(0,255,80,0.9)] led-pulse",
     warning: "bg-[#ffb300] shadow-[0_0_8px_rgba(255,175,0,0.9)] led-pulse",
@@ -54,6 +55,17 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
                 {status}
               </span>
             </div>
+          )}
+          {openUrl && (
+            <a
+              href={openUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center rounded p-1 text-[#4a6a5a] transition hover:bg-[#1a2a1a] hover:text-[#00f7a1]"
+              title="Open full page"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
           )}
           {onToggleExpand && (
             <button
