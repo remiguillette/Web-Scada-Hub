@@ -237,11 +237,18 @@ function ConductorBundle({
 }) {
   return (
     <div className="mx-4 flex shrink-0 flex-col gap-[5px]">
-      <span className="mb-1 font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]">
-        {title}
-      </span>
+      <div className="mb-1 flex items-center gap-2">
+        <span className="font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]">
+          {title}
+        </span>
+        {simLabel ? (
+          <div className="rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
+            {simLabel}
+          </div>
+        ) : null}
+      </div>
 
-      {CONDUCTORS.map((conductor, index) => (
+      {CONDUCTORS.map((conductor) => (
         <div key={`${title}-${conductor.label}`} className="flex items-center gap-2">
           <span
             className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
@@ -249,11 +256,6 @@ function ConductorBundle({
           >
             {conductor.label}
           </span>
-          {index === 0 && simLabel ? (
-            <div className="rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
-              {simLabel}
-            </div>
-          ) : null}
           <div
             className="h-[5px] rounded-full"
             style={{
