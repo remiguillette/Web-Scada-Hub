@@ -1,446 +1,262 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import {
-  Activity, AlertTriangle, Cpu,
-  Zap, Database, Radio, Timer
+  Activity,
+  AlertTriangle,
+  CircuitBoard,
+  Clock3,
+  Cpu,
+  Database,
+  Gauge,
+  Power,
+  ShieldAlert,
+  Siren,
+  Zap,
 } from "lucide-react";
-import { useScadaState, SystemState } from "@/hooks/use-scada-state";
-import { Panel } from "@/components/Panel";
-import { LED } from "@/components/LED";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
+import { LED } from "@/components/LED";
+import { Panel } from "@/components/Panel";
+import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
 import { cn } from "@/lib/utils";
 
-const STATE_STYLE: Record<SystemState, { badge: string; icon: string }> = {
-  RUN:    { badge: "border-[#00ff50] text-[#00ff50] shadow-[0_0_12px_rgba(0,255,80,0.4)]",  icon: "bg-[#00ff50] led-pulse shadow-[0_0_8px_rgba(0,255,80,0.9)]" },
-  STANDBY:{ badge: "border-[#ffb300] text-[#ffb300] shadow-[0_0_12px_rgba(255,175,0,0.4)]", icon: "bg-[#ffb300] led-pulse shadow-[0_0_8px_rgba(255,175,0,0.9)]" },
-  STOP:   { badge: "border-[#4a6a7a] text-[#6a8a9a]", icon: "bg-[#3a4a5a]" },
-  FAULT:  { badge: "border-[#ff3232] text-[#ff3232] shadow-[0_0_12px_rgba(255,50,50,0.5)] animate-pulse", icon: "bg-[#ff3232] led-pulse shadow-[0_0_8px_rgba(255,50,50,0.9)]" },
+const STATE_STYLE: Record<SystemState, string> = {
+  RUN: "border-[#00f7a1]/60 text-[#00f7a1] shadow-[0_0_24px_rgba(0,247,161,0.16)]",
+  STANDBY: "border-[#ffb347]/60 text-[#ffb347] shadow-[0_0_24px_rgba(255,179,71,0.14)]",
+  STOP: "border-[#334155] text-[#94a3b8]",
+  FAULT: "border-[#ff4d5a]/70 text-[#ff4d5a] shadow-[0_0_24px_rgba(255,77,90,0.18)]",
 };
+
+const ALARM_STYLE: Record<Alarm["type"], string> = {
+  CRITICAL: "border-[#ff4d5a]/30 bg-[#2a0b12] text-[#ffd7dc]",
+  WARNING: "border-[#ffb347]/30 bg-[#231708] text-[#ffe4ba]",
+  INFO: "border-[#00dcff]/20 bg-[#071723] text-[#c4f5ff]",
+};
+
+function formatUptime(totalSeconds: number) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: string; value: string; unit?: string; icon: React.ReactNode; accent?: "cyan" | "green" | "amber" | "red"; }) {
+  const accents = {
+    cyan: "border-[#1e3a5f] from-[#06121d] to-[#0a1622] text-[#dff8ff]",
+    green: "border-[#174935] from-[#05150f] to-[#091b14] text-[#e8fff4]",
+    amber: "border-[#4d3412] from-[#171006] to-[#1c1509] text-[#fff1d6]",
+    red: "border-[#5f1d28] from-[#19090d] to-[#1f0b11] text-[#ffe0e4]",
+  };
+
+  return (
+    <div className={cn("rounded-2xl border bg-gradient-to-br p-4", accents[accent])}>
+      <div className="mb-5 flex items-center justify-between">
+        <div className="font-display text-xs uppercase tracking-[0.18em] text-[#8ca5bf]">{title}</div>
+        <div className="text-[#00dcff]">{icon}</div>
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="font-mono text-4xl font-semibold tracking-[0.08em]">{value}</div>
+        {unit ? <div className="pb-1 font-mono text-sm text-[#8ca5bf]">{unit}</div> : null}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { state, actions } = useScadaState();
-  const [time, setTime] = useState(new Date());
-  const calcCountdown = (target: Date) => {
-    const diff = Math.max(0, target.getTime() - Date.now());
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
-  const [countdown, setCountdown] = useState(() => calcCountdown(state.nextFeedingTime));
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date());
-      setCountdown(calcCountdown(state.nextFeedingTime));
-    }, 1000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [state.nextFeedingTime]);
+  }, []);
 
-  const formatUptime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
-  const activeAlarms = state.alarms.filter(a => a.active).length;
+  const activeAlarms = useMemo(() => state.alarms.filter((alarm) => alarm.active).length, [state.alarms]);
+  const countdownMs = Math.max(0, state.nextFeedingTime.getTime() - now.getTime());
+  const countdown = `${String(Math.floor(countdownMs / 60000)).padStart(2, "0")}:${String(Math.floor((countdownMs % 60000) / 1000)).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen bg-[#060b12] text-[#c8d8e8] flex flex-col font-sans overflow-hidden">
-
-      {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="h-[52px] border-b border-[#1a2e42] bg-[#060e1a] flex items-center justify-between px-5 shrink-0 z-10">
-        {/* Left: logo + metadata */}
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded border border-[#00dcff]/40 bg-[#00dcff]/10 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-[#00dcff]" />
+    <div className="min-h-screen bg-[#050a12] text-[#d6deea]">
+      <header className="sticky top-0 z-20 border-b border-[#1c2c40] bg-[#07101a]/95 backdrop-blur px-6 py-4">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1f8a61]/30 bg-[#0b1a14] shadow-[0_0_20px_rgba(0,247,161,0.12)]">
+              <Cpu className="h-6 w-6 text-[#00f7a1]" />
             </div>
             <div>
-              <div className="font-mono text-[13px] font-bold tracking-[0.12em] text-[#00dcff] text-glow-cyan leading-none">
-                CAT_FEEDER_SYS_01
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">CAT_FEEDER_SYS_01</h1>
+                <span className="rounded-md border border-[#334155] bg-[#111b29] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9fb0c7]">AUTO DISPENSER SCADA</span>
               </div>
-              <div className="font-mono text-[9px] text-[#3a6070] tracking-wider mt-0.5">
-                NODE: N-442 &nbsp;|&nbsp; UPTIME: {formatUptime(state.uptime)}
+              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#7f93ac]">
+                <span>UPTIME: {formatUptime(state.uptime)}</span>
+                <span>NODE: PLC-001 / MCC-FDR-2</span>
+                <span>TIME: {format(now, "yyyy-MM-dd HH:mm:ss")}</span>
               </div>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-1 ml-2">
-            <span className="font-mono text-[10px] text-[#1e3a50] border border-[#1e3a50] rounded px-2 py-0.5 tracking-widest">
-              v2.4.1
-            </span>
-          </div>
-        </div>
-
-        {/* Right: status badge + alarm counter + clock */}
-        <div className="flex items-center gap-4">
-          {/* System Status */}
-          <div className="flex flex-col items-center">
-            <span className="font-display text-[8px] text-[#3a5a6a] tracking-[0.15em] mb-1">SYSTEM STATUS</span>
-            <div className={cn(
-              "flex items-center gap-2 px-3 py-1 rounded border font-display text-[11px] font-bold tracking-[0.15em]",
-              STATE_STYLE[state.systemState].badge
-            )}>
-              <div className={cn("w-1.5 h-1.5 rounded-full", STATE_STYLE[state.systemState].icon)} />
-              {state.systemState}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className={cn("rounded-2xl border bg-[#09111d] px-4 py-3", STATE_STYLE[state.systemState])}>
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Overall Status</div>
+              <div className="flex items-center gap-2 font-display text-xl tracking-[0.15em]">
+                <LED on={state.systemState === "RUN"} color={state.systemState === "FAULT" ? "red" : state.systemState === "STANDBY" ? "amber" : "green"} size="md" />
+                {state.systemState}
+              </div>
             </div>
-          </div>
-
-          {/* Active Alarms */}
-          <div className="flex flex-col items-center">
-            <span className="font-display text-[8px] text-[#3a5a6a] tracking-[0.15em] mb-1">ACTIVE ALARMS</span>
-            <div className={cn(
-              "flex items-center gap-2 px-3 py-1 rounded border font-display text-[11px] font-bold tracking-[0.15em]",
-              activeAlarms > 0
-                ? "border-[#ff3232]/60 text-[#ff3232] bg-[#ff3232]/5"
-                : "border-[#1e3a50] text-[#3a5a6a]"
-            )}>
-              <AlertTriangle className="w-3 h-3" />
-              {activeAlarms}
+            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Active Alarms</div>
+              <div className={cn("flex items-center gap-2 font-display text-xl tracking-[0.15em]", activeAlarms > 0 ? "text-[#ff4d5a]" : "text-[#00f7a1]") }>
+                <AlertTriangle className="h-5 w-5" /> {activeAlarms}
+              </div>
             </div>
-          </div>
-
-          {/* Clock */}
-          <div className="hidden lg:flex flex-col items-end font-mono">
-            <span className="text-[13px] text-[#8aaabb] tracking-widest">{format(time, "HH:mm:ss")}</span>
-            <span className="text-[9px] text-[#3a5a6a] tracking-wider">{format(time, "yyyy-MM-dd")}</span>
+            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Mode</div>
+              <div className="font-display text-xl tracking-[0.15em] text-[#00dcff]">{state.systemMode}</div>
+            </div>
+            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Next Auto Feed</div>
+              <div className="font-mono text-2xl tracking-[0.12em] text-[#dff8ff]">{countdown}</div>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* ── MAIN CONTENT ───────────────────────────────────────────────── */}
-      <main className="flex-1 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto">
-
-        {/* PANEL 1: ELECTRICAL ONE-LINE (3 cols) */}
-        <Panel
-          title="Electrical One-Line"
-          icon={<Zap className="w-3.5 h-3.5" />}
-          className="lg:col-span-3 min-h-[620px]"
-          status={state.isPowered ? "ok" : "warning"}
-        >
-          <ElectricalOneLine
-            disconnectClosed={state.disconnectClosed}
-            breakerTripped={state.breakerTripped}
-            feedActive={state.feedActive}
-            isPowered={state.isPowered}
-            voltage={state.voltage}
-            current={state.current}
-            onToggleDisconnect={actions.toggleDisconnect}
-            onTripBreaker={actions.tripBreaker}
-            onResetBreaker={actions.resetBreaker}
-          />
-        </Panel>
-
-        {/* MIDDLE: PLC STATUS + PROCESS (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-4">
-
-          {/* PLC-001 STATUS */}
-          <Panel
-            title="PLC-001 Status"
-            icon={<Cpu className="w-3.5 h-3.5" />}
-            status="ok"
-          >
-            {/* RUN / STOP / FLT indicator row */}
-            <div className="flex items-center justify-end gap-4 mb-4 pb-3 border-b border-[#1a2e42]">
-              <LED on={state.systemState === "RUN"}    color="green" label="RUN" size="sm" />
-              <LED on={state.systemState === "STOP" || state.systemState === "STANDBY"} color="amber" label="STOP" size="sm" />
-              <LED on={state.systemState === "FAULT"}  color="red"   label="FLT" size="sm" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
-              {/* DI header */}
-              <div className="col-span-1 text-[9px] font-display text-[#00dcff]/70 border-b border-[#1a2e42] pb-1 mb-1 tracking-[0.18em]">
-                DISCRETE INPUTS (DI)
-              </div>
-              <div className="col-span-1 text-[9px] font-display text-[#00dcff]/70 border-b border-[#1a2e42] pb-1 mb-1 tracking-[0.18em]">
-                DISCRETE OUTPUTS (DO)
-              </div>
-
-              <LED on={state.disconnectClosed}             label="DI-01 MDS-001 ON" />
-              <LED on={state.feedActive}                   label="DO-01 FEEDER CTR" />
-
-              <LED on={!state.breakerTripped}              label="DI-02 CB-001 OK" />
-              <LED on={state.feedActive}                   label="DO-02 HOPPER SOL" />
-
-              <LED on={state.hopperLevel > 70}             label="DI-03 HOPPER HIGH" />
-              <LED on={state.systemState === "RUN" || state.systemState === "STANDBY"} label="DO-03 BEACON GRN" />
-
-              <LED on={state.hopperLevel < 20} color={state.hopperLevel < 20 ? "red" : "green"} label="DI-04 HOPPER LOW" />
-              <LED on={state.systemState === "FAULT"}      color="red" label="DO-04 BEACON RED" />
-
-              <LED on={state.bowlDetected}                 label="DI-05 BOWL DETECT" />
-              <div />
-
-              <LED on={!state.estopPressed}  color="red"  label="DI-06 ESTOP NC" />
-              <div />
-            </div>
+      <main className="mx-auto grid max-w-[1700px] grid-cols-1 gap-5 p-5 2xl:grid-cols-[1.15fr_1.45fr]">
+        <div className="space-y-5">
+          <Panel title="Electrical One-Line" icon={<Zap className="h-4 w-4" />}>
+            <ElectricalOneLine
+              disconnectClosed={state.disconnectClosed}
+              breakerTripped={state.breakerTripped}
+              feederContactor={state.feederContactor}
+              solenoidContactor={state.solenoidContactor}
+              motorPowered={state.motorPowered}
+              gateOpen={state.gateOpen}
+              voltage={state.voltage}
+              current={state.current}
+              onToggleDisconnect={actions.toggleDisconnect}
+              onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}
+            />
           </Panel>
 
-          {/* REAL-TIME PROCESS VALUES */}
-          <Panel
-            title="Real-Time Process Values"
-            icon={<Database className="w-3.5 h-3.5" />}
-            className="flex-1"
-          >
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {/* Supply Voltage */}
-              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
-                <div className="absolute right-2 top-2 opacity-10">
-                  <Zap className="w-10 h-10 text-[#00dcff]" />
-                </div>
-                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">SUPPLY VOLTAGE</span>
-                <div className="font-mono text-3xl font-bold text-[#00dcff] text-glow-cyan mt-1 leading-none">
-                  {state.voltage.toFixed(1)}
-                  <span className="text-base font-normal text-[#3a6070] ml-1">V</span>
-                </div>
-              </div>
-
-              {/* Motor Current */}
-              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
-                <div className="absolute right-2 top-2 opacity-10">
-                  <Activity className="w-10 h-10 text-[#00ff50]" />
-                </div>
-                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">MOTOR CURRENT</span>
-                <div className="font-mono text-3xl font-bold text-[#00ff50] text-glow-green mt-1 leading-none">
-                  {state.current > 0 ? state.current.toFixed(2) : "0.00"}
-                  <span className="text-base font-normal text-[#2a5030] ml-1">A</span>
-                </div>
-                <div className="w-full bg-[#0d1e12] h-1 mt-2 rounded overflow-hidden">
-                  <div
-                    className="h-full bg-[#00ff50] transition-all duration-300 shadow-[0_0_6px_rgba(0,255,80,0.6)]"
-                    style={{ width: `${Math.min((state.current / 5) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {/* Hopper Level */}
-              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3">
-                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest block mb-2">HOPPER LEVEL</span>
-                <div className="flex items-end gap-3">
-                  <div className="w-5 h-16 bg-[#0d1e12] border border-[#1a2e42] rounded-sm overflow-hidden flex flex-col justify-end">
-                    <div
-                      className={cn(
-                        "w-full transition-all duration-1000 ease-out",
-                        state.hopperLevel > 50 ? "bg-[#00ff50] shadow-[0_0_8px_rgba(0,255,80,0.5)]"
-                          : state.hopperLevel > 20 ? "bg-[#ffb300] shadow-[0_0_8px_rgba(255,175,0,0.5)]"
-                          : "bg-[#ff3232] shadow-[0_0_8px_rgba(255,50,50,0.5)]"
-                      )}
-                      style={{ height: `${state.hopperLevel}%` }}
-                    />
-                  </div>
-                  <div>
-                    <div className={cn(
-                      "font-mono text-xl font-bold leading-none",
-                      state.hopperLevel > 50 ? "text-[#00ff50] text-glow-green"
-                        : state.hopperLevel > 20 ? "text-[#ffb300] text-glow-amber"
-                        : "text-[#ff3232] text-glow-red"
-                    )}>
-                      {state.hopperLevel}
-                      <span className="text-xs font-normal ml-0.5">%</span>
-                    </div>
-                    <button
-                      onClick={actions.refillHopper}
-                      className="mt-2 px-2 py-0.5 bg-[#0a1e2a] border border-[#1e3a50] hover:border-[#00dcff]/50 rounded text-[9px] font-display tracking-widest text-[#4a6a7a] hover:text-[#00dcff] transition-all"
-                    >
-                      REFILL
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Today's Feeds */}
-              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
-                <div className="absolute right-1 top-1 opacity-10">
-                  <Activity className="w-8 h-8 text-[#00dcff]" />
-                </div>
-                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">TODAY'S FEEDS</span>
-                <div className="font-mono text-2xl font-bold text-[#00dcff] text-glow-cyan mt-1 leading-none">
-                  {state.feedCount.toString().padStart(5, "0")}
-                </div>
-                <span className="font-display text-[8px] text-[#3a5a6a] tracking-wider">LIFETIME TOTAL</span>
-              </div>
-
-              {/* Next Feeding */}
-              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
-                <div className="absolute right-1 top-1 opacity-10">
-                  <Timer className="w-8 h-8 text-[#ffb300]" />
-                </div>
-                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">NEXT FEEDING</span>
-                <div className="font-mono text-xl font-bold text-[#ffb300] text-glow-amber mt-1 leading-none tabular-nums">
-                  {countdown || "--:--:--"}
-                </div>
-                <span className="font-display text-[8px] text-[#3a5a6a] tracking-wider">
-                  {state.nextFeedingTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
+          <Panel title="Command / Safety Controls" icon={<Power className="h-4 w-4" />}>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+              {[
+                { label: state.feedActive ? "FEED CYCLE ACTIVE" : "START FEED CYCLE", onClick: actions.triggerFeed, style: "border-[#00f7a1]/45 text-[#00f7a1] hover:bg-[#00f7a1]/10" },
+                { label: "REFILL HOPPER", onClick: actions.refillHopper, style: "border-[#00dcff]/45 text-[#00dcff] hover:bg-[#00dcff]/10" },
+                { label: state.estopPressed ? "RESET ESTOP" : "EMERGENCY STOP", onClick: state.estopPressed ? actions.resetEstop : actions.pressEstop, style: state.estopPressed ? "border-[#ffb347]/45 text-[#ffb347] hover:bg-[#ffb347]/10" : "border-[#ff4d5a]/45 text-[#ff4d5a] hover:bg-[#ff4d5a]/10" },
+                { label: "REMOVE BOWL", onClick: actions.removeBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+                { label: "RESTORE BOWL", onClick: actions.restoreBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+                { label: "EMPTY BOWL", onClick: actions.clearBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+              ].map((button) => (
+                <button
+                  key={button.label}
+                  type="button"
+                  onClick={button.onClick}
+                  className={cn("rounded-xl border bg-[#0a121f] px-4 py-3 text-left font-display text-sm tracking-[0.14em] transition", button.style)}
+                >
+                  {button.label}
+                </button>
+              ))}
             </div>
           </Panel>
         </div>
 
-        {/* RIGHT: CONTROLS (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          <Panel title="Manual Controls" icon={<Radio className="w-3.5 h-3.5" />}>
-            <div className="flex flex-col gap-3">
+        <div className="space-y-5">
+          <Panel title="PLC-001 Status" icon={<CircuitBoard className="h-4 w-4" />}>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div>
+                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Controller Health</div>
+                <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">24VDC logic healthy / scan executing</div>
+              </div>
+              <div className="flex items-center gap-5 rounded-xl border border-[#243245] bg-[#060d16] px-4 py-3">
+                <LED on={state.systemState === "RUN"} color="green" label="RUN" />
+                <LED on={state.systemState === "STANDBY" || state.systemState === "STOP"} color="amber" label="STOP" />
+                <LED on={state.systemState === "FAULT"} color="red" label="FLT" />
+              </div>
+            </div>
 
-              {/* Power Management */}
-              <div className="bg-[#030912] rounded border border-[#1a2e42] p-3">
-                <div className="text-[9px] font-display text-[#3a5a6a] tracking-[0.18em] mb-3 pb-1.5 border-b border-[#1a2e42]">
-                  POWER MANAGEMENT
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">Discrete Inputs (DI)</div>
+                <div className="space-y-3">
+                  {state.digitalInputs.map((point) => (
+                    <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
+                      <LED on={point.on} color={point.id === "DI-04" && point.on ? "amber" : point.id === "DI-06" && !point.on ? "red" : "green"} />
+                      <span className="font-mono text-sm tracking-[0.14em] text-[#9fb0c7]">{point.id}</span>
+                      <span className="font-display text-sm tracking-[0.08em] text-[#d6deea]">{point.label}</span>
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-[11px] text-[#8aaabb]">MDS-001 (MAIN)</span>
-                  <button
-                    onClick={actions.toggleDisconnect}
-                    className={cn(
-                      "px-4 py-1.5 font-display text-[11px] font-bold tracking-wider rounded border transition-all active:scale-95",
-                      state.disconnectClosed
-                        ? "bg-[#00dcff]/10 text-[#00dcff] border-[#00dcff]/50 shadow-[0_0_12px_rgba(0,220,255,0.25)]"
-                        : "bg-[#0a1628] text-[#4a6a7a] border-[#1e3048] hover:border-[#3a5a6a]"
-                    )}
-                  >
-                    {state.disconnectClosed ? "ON (CLOSED)" : "OFF (OPEN)"}
-                  </button>
+              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">Discrete Outputs (DO)</div>
+                <div className="space-y-3">
+                  {state.digitalOutputs.map((point) => (
+                    <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
+                      <LED on={point.on} color={point.id === "DO-04" ? "red" : point.id === "DO-03" ? "cyan" : "green"} />
+                      <span className="font-mono text-sm tracking-[0.14em] text-[#9fb0c7]">{point.id}</span>
+                      <span className="font-display text-sm tracking-[0.08em] text-[#d6deea]">{point.label}</span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            </div>
+          </Panel>
 
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] text-[#8aaabb]">CB-001 (BREAKER)</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={actions.tripBreaker}
-                      disabled={state.breakerTripped}
-                      className="px-3 py-1 text-[10px] font-display rounded border border-[#1e3048] text-[#4a6a7a] hover:border-[#ff3232]/60 hover:text-[#ff3232] transition-all disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                      TRIP
-                    </button>
-                    <button
-                      onClick={actions.resetBreaker}
-                      disabled={!state.breakerTripped}
-                      className="px-3 py-1 text-[10px] font-display rounded border border-[#1e3048] text-[#4a6a7a] hover:border-[#00ff50]/60 hover:text-[#00ff50] transition-all disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                      RESET
-                    </button>
+          <Panel title="Real-Time Process Values" icon={<Database className="h-4 w-4" />}>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <ValueCard title="Supply Voltage" value={state.voltage.toFixed(1)} unit="V" icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
+              <ValueCard title="Motor Current" value={state.current.toFixed(2)} unit="A" icon={<Activity className="h-5 w-5" />} accent={state.motorPowered ? "green" : "cyan"} />
+              <ValueCard title="Hopper Level" value={state.hopperLevel.toFixed(1)} unit="%" icon={<Gauge className="h-5 w-5" />} accent={state.hopperLow ? "amber" : "green"} />
+              <ValueCard title="Bowl Level / Portion" value={state.bowlLevel.toFixed(1)} unit="%" icon={<Database className="h-5 w-5" />} accent={state.bowlLevel <= 20 ? "amber" : "cyan"} />
+              <ValueCard title="Today's Feeds" value={String(state.feedCount)} icon={<Clock3 className="h-5 w-5" />} accent="cyan" />
+              <ValueCard title="System Mode" value={state.systemMode} icon={<ShieldAlert className="h-5 w-5" />} accent={state.systemMode === "LOCKOUT" ? "red" : state.systemMode === "AUTO" ? "green" : "amber"} />
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Last Feed Time</div>
+                <div className="font-mono text-lg tracking-[0.14em] text-[#e7edf6]">{state.lastFeedTime ? format(state.lastFeedTime, "yyyy-MM-dd HH:mm:ss") : "--"}</div>
+              </div>
+              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Process Synopsis</div>
+                <div className="font-mono text-sm leading-6 tracking-[0.08em] text-[#b8c6d9]">
+                  {state.isFault
+                    ? "Feeder locked out due to protection condition. Reset fault inputs before restart."
+                    : state.feedActive
+                      ? "Motor and hopper gate are energized. Dry feed is being metered into the bowl."
+                      : state.isPowered
+                        ? "Electrical bus healthy. PLC armed and waiting for bowl demand / scheduled feed."
+                        : "Main disconnect open or power unavailable. Downstream control circuit is de-energized."}
+                </div>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel title="Alarms / Events" icon={<Siren className="h-4 w-4" />}>
+            <div className="space-y-3">
+              {state.alarms.map((alarm) => (
+                <div key={alarm.id} className={cn("rounded-2xl border p-3", ALARM_STYLE[alarm.type], alarm.active && alarm.type === "CRITICAL" ? "alarm-blink" : "") }>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <LED on color={alarm.type === "CRITICAL" ? "red" : alarm.type === "WARNING" ? "amber" : "cyan"} />
+                      <div>
+                        <div className="font-display text-sm uppercase tracking-[0.12em]">{alarm.message}</div>
+                        <div className="mt-1 font-mono text-xs tracking-[0.14em] text-[#93a6bf]">{format(alarm.timestamp, "yyyy-MM-dd HH:mm:ss")}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-md border border-current/20 px-2 py-1 font-mono text-[11px] tracking-[0.18em]">{alarm.type}</span>
+                      <span className={cn("rounded-md px-2 py-1 font-mono text-[11px] tracking-[0.18em]", alarm.active ? "bg-[#ffffff14] text-white" : "bg-[#00000026] text-[#9fb0c7]")}>{alarm.active ? "ACTIVE" : "EVENT"}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* E-STOP */}
-              <div className="bg-[#030912] rounded border border-[#ff3232]/25 p-3 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[3px] bg-[repeating-linear-gradient(90deg,#ff3232_0px,#ff3232_8px,transparent_8px,transparent_16px)] opacity-40" />
-                <div className="text-[9px] font-display text-[#ff3232]/80 tracking-[0.18em] mb-3">
-                  EMERGENCY STOP
-                </div>
-                <div className="flex flex-col items-center gap-3">
-                  <button
-                    onClick={actions.pressEstop}
-                    className={cn(
-                      "w-28 h-28 rounded-full font-display font-bold text-xl transition-all shadow-xl active:scale-90",
-                      state.estopPressed
-                        ? "bg-[#1a0505] text-[#ff3232]/40 border-4 border-[#ff3232]/20"
-                        : "bg-gradient-to-b from-[#cc1111] to-[#880000] text-white border-4 border-[#550000] shadow-[0_0_24px_rgba(255,0,0,0.35),0_8px_20px_rgba(0,0,0,0.5)] hover:brightness-110"
-                    )}
-                  >
-                    E-STOP
-                  </button>
-                  <button
-                    onClick={actions.resetEstop}
-                    disabled={!state.estopPressed}
-                    className="w-full py-1.5 bg-[#0a1628] text-[11px] font-display tracking-widest rounded border border-[#1e3048] text-[#4a6a7a] hover:text-[#8aaabb] hover:border-[#3a5a6a] disabled:opacity-40 disabled:pointer-events-none transition-all"
-                  >
-                    PULL TO RESET
-                  </button>
-                </div>
-              </div>
-
-              {/* Trigger Feed */}
-              <div className="bg-[#030912] rounded border border-[#1a2e42] p-3">
-                <button
-                  onClick={actions.triggerFeed}
-                  disabled={state.systemState !== "STANDBY"}
-                  className={cn(
-                    "w-full py-4 rounded font-display text-base font-bold tracking-[0.2em] transition-all border",
-                    state.systemState === "STANDBY"
-                      ? "bg-[#00ff50]/10 text-[#00ff50] border-[#00ff50]/50 shadow-[0_0_20px_rgba(0,255,80,0.3)] hover:bg-[#00ff50]/20 active:scale-95"
-                      : "bg-[#0a1628] text-[#3a5a6a] border-[#1e3048] cursor-not-allowed"
-                  )}
-                >
-                  {state.feedActive ? "DISPENSING..." : "TRIGGER FEED"}
-                </button>
-                {state.systemState !== "STANDBY" && (
-                  <p className="text-center text-[9px] text-[#ffb300] mt-2 font-mono tracking-wider">
-                    SYSTEM MUST BE IN STANDBY TO FEED
-                  </p>
-                )}
-              </div>
-
+              ))}
             </div>
           </Panel>
         </div>
       </main>
-
-      {/* ── ALARM BANNER ───────────────────────────────────────────────── */}
-      <footer className="h-44 border-t border-[#1a2e42] bg-[#040a14] flex flex-col shrink-0">
-        <div className="px-4 py-1.5 bg-[#060e1a] border-b border-[#1a2e42] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-[3px] h-4 bg-[#00dcff] rounded-full" />
-            <span className="font-display text-[10px] text-[#00dcff] font-semibold tracking-[0.2em]">
-              SYSTEM ALARMS &amp; EVENTS
-            </span>
-          </div>
-          <span className="font-mono text-[9px] text-[#3a5a6a] tracking-wider">SHOWING LAST 5</span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-2 font-mono text-[11px]">
-          {state.alarms.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-[#2a4a5a] text-xs tracking-widest">
-              NO ACTIVE ALARMS
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {state.alarms.map(alarm => (
-                <div
-                  key={alarm.id}
-                  className={cn(
-                    "px-3 py-1.5 flex items-center gap-4 rounded border",
-                    alarm.type === "CRITICAL" && "border-[#ff3232]/40 text-[#ff5050]",
-                    alarm.type === "WARNING"  && "border-[#ffb300]/30 text-[#ffb300]",
-                    alarm.type === "INFO"     && "border-[#00dcff]/20 text-[#00aacc]",
-                    alarm.active && alarm.type === "CRITICAL" && "alarm-blink"
-                  )}
-                  style={{
-                    backgroundColor:
-                      alarm.type === "CRITICAL" ? "rgba(255,50,50,0.06)"
-                      : alarm.type === "WARNING" ? "rgba(255,175,0,0.05)"
-                      : "rgba(0,220,255,0.03)"
-                  }}
-                >
-                  <span className="w-20 shrink-0 text-[#3a5a6a]">{format(alarm.timestamp, "HH:mm:ss")}</span>
-                  <span className={cn(
-                    "w-16 shrink-0 text-[9px] px-1.5 py-0.5 rounded border text-center font-display tracking-widest",
-                    alarm.type === "CRITICAL" && "border-[#ff3232]/50 text-[#ff5050]",
-                    alarm.type === "WARNING"  && "border-[#ffb300]/50 text-[#ffb300]",
-                    alarm.type === "INFO"     && "border-[#00dcff]/30 text-[#00aacc]"
-                  )}>
-                    {alarm.type}
-                  </span>
-                  <span className="flex-1 font-bold tracking-wide">{alarm.message}</span>
-                  <span className={cn(
-                    "text-[9px] px-2 py-0.5 border rounded tracking-widest",
-                    alarm.active ? "border-current opacity-80" : "border-[#1a2e42] text-[#3a5a6a]"
-                  )}>
-                    {alarm.active ? "ACTIVE" : "CLEARED"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </footer>
     </div>
   );
 }
