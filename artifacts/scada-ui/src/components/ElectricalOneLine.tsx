@@ -1,4 +1,4 @@
-import type { ReactNode, CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import { Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -105,6 +105,10 @@ const CONDUCTORS = [
   { label: "GND / GRN", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ];
 
+const SCROLL_STEP = 120;
+const SOURCE_COLUMN_WIDTH = 142;
+const SOURCE_BUS_WIDTH = 34;
+
 export function ElectricalOneLine(props: ElectricalOneLineProps) {
   const {
     disconnectClosed,
@@ -123,16 +127,88 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
   const meterLive     = supplyLive;
   const mainPanelLive = disconnectClosed && !breakerTripped && supplyLive;
   const busLive       = mainPanelLive;
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef<{ startX: number; startY: number; scrollLeft: number; scrollTop: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const scrollByAmount = useCallback((left: number, top = 0) => {
+    viewportRef.current?.scrollBy({
+      left,
+      top,
+      behavior: "smooth",
+    });
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const handlePointerUp = () => {
+      dragState.current = null;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => window.removeEventListener("pointerup", handlePointerUp);
+  }, []);
 
   return (
-    <div className="overflow-x-auto pb-2 select-none">
+    <div
+      ref={viewportRef}
+      tabIndex={0}
+      className={cn(
+        "overflow-auto pb-2 select-none outline-none",
+        "cursor-grab active:cursor-grabbing",
+        isDragging && "cursor-grabbing",
+      )}
+      onPointerDown={(event) => {
+        if (event.button !== 0 || !viewportRef.current) return;
+        dragState.current = {
+          startX: event.clientX,
+          startY: event.clientY,
+          scrollLeft: viewportRef.current.scrollLeft,
+          scrollTop: viewportRef.current.scrollTop,
+        };
+        setIsDragging(true);
+      }}
+      onPointerMove={(event) => {
+        const viewport = viewportRef.current;
+        const drag = dragState.current;
+        if (!viewport || !drag) return;
+        viewport.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
+        viewport.scrollTop = drag.scrollTop - (event.clientY - drag.startY);
+      }}
+      onPointerLeave={() => {
+        dragState.current = null;
+        setIsDragging(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          scrollByAmount(-SCROLL_STEP);
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          scrollByAmount(SCROLL_STEP);
+        }
+      }}
+      aria-label="Electrical one-line diagram viewport"
+    >
       <div className="min-w-max">
 
         {/* ─── UTILITY CONDUCTORS ─── */}
-        <div className="mb-1 text-center font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]">
-          UTILITY CONDUCTORS
+        <div
+          className="mb-1 flex font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]"
+          style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}
+        >
+          <div
+            className="flex items-center justify-center text-center"
+            style={{ width: SOURCE_BUS_WIDTH }}
+          >
+            UTILITY CONDUCTORS
+          </div>
         </div>
-        <div className="mb-4 flex flex-col gap-[5px]">
+        <div className="mb-4 flex flex-col gap-[5px]" style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}>
           {CONDUCTORS.map((c) => (
             <div key={c.label} className="flex items-center gap-2">
               <span
