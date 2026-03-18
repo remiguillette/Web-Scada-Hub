@@ -836,7 +836,7 @@ export function ElectricalOneLine({
       tabIndex={0}
       aria-label="Electrical one-line diagram viewport"
       className={cn(
-        "w-full overflow-auto pb-2 select-none outline-none",
+        "w-full overflow-auto scrollbar-hidden pb-2 select-none outline-none",
         "cursor-grab active:cursor-grabbing",
         isDragging && "cursor-grabbing",
       )}
