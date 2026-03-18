@@ -73,7 +73,7 @@ function EquipmentCard({
   if (!onClick) return body;
 
   return (
-    <button type="button" onClick={onClick} className="w-full text-left hover:scale-[1.01] active:scale-[0.99] transition-transform">
+    <button type="button" onClick={onClick} className="w-full text-left transition-transform hover:scale-[1.01] active:scale-[0.99]">
       {body}
     </button>
   );
@@ -94,37 +94,86 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
   } = props;
 
   const supplyLive = voltage > 0;
-  const busLive = disconnectClosed && !breakerTripped && supplyLive;
+  const meterLive = supplyLive;
+  const mainPanelLive = disconnectClosed && !breakerTripped && supplyLive;
+  const busLive = mainPanelLive;
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Incoming conductors: L1 (blue), Neutral (white), Ground (green) */}
-      <div className="flex flex-col items-center gap-1.5 w-full">
-        <div className="font-mono text-[9px] tracking-[0.22em] text-[#6b7a6b] mb-0.5">UTILITY CONDUCTORS</div>
+      <div className="flex w-full flex-col items-center gap-1.5">
+        <div className="mb-0.5 font-mono text-[9px] tracking-[0.22em] text-[#6b7a6b]">UTILITY CONDUCTORS</div>
         <div className="flex justify-center gap-3">
           <div className="flex flex-col items-center gap-1">
-            <div className="w-2 h-10 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+            <div className="h-10 w-2 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
             <span className="font-mono text-[8px] tracking-[0.18em] text-[#3b82f6]">L1</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <div className="w-2 h-10 rounded-full bg-[#e5e5e5] shadow-[0_0_8px_rgba(220,220,220,0.4)]" />
+            <div className="h-10 w-2 rounded-full bg-[#e5e5e5] shadow-[0_0_8px_rgba(220,220,220,0.4)]" />
             <span className="font-mono text-[8px] tracking-[0.18em] text-[#c8c8c8]">N</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <div className="w-2 h-10 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+            <div className="h-10 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
             <span className="font-mono text-[8px] tracking-[0.18em] text-[#22c55e]">GND</span>
           </div>
         </div>
       </div>
 
       <EquipmentCard
-        tag="L1 / N"
-        title="120V AC SUPPLY"
-        status={supplyLive ? `${voltage.toFixed(1)} VAC PRESENT` : "0.0 VAC OFFLINE"}
+        tag="UTILITY"
+        title="HYDRO ONE ONTARIO"
+        status={supplyLive ? "MAIN ENTRANCE ENERGIZED" : "SERVICE UNAVAILABLE"}
         active={supplyLive}
         accent="cyan"
         icon={<Zap className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
-        note="UTILITY FEED"
+        note="PROPERTY MAIN ENTRANCE"
+      />
+
+      <Wire powered={supplyLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="POLE-001"
+        title="UTILITY POLE"
+        status={supplyLive ? "OVERHEAD FEED PRESENT" : "DE-ENERGIZED"}
+        active={supplyLive}
+        accent="cyan"
+        icon={<Power className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="HYDRO ONE DROP"
+      />
+
+      <Wire powered={supplyLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="XFMR-001"
+        title="PAD MOUNT"
+        status={supplyLive ? "TRANSFORMER ONLINE" : "NO PRIMARY FEED"}
+        active={supplyLive}
+        accent="cyan"
+        icon={<Zap className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="UTILITY TRANSFORMER"
+      />
+
+      <Wire powered={meterLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="MTR-UTIL"
+        title="ELECTRIC METER"
+        status={meterLive ? `${voltage.toFixed(1)} VAC METERED` : "0.0 VAC"}
+        active={meterLive}
+        accent="cyan"
+        icon={<Zap className={cn("h-5 w-5", meterLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="REVENUE METER"
+      />
+
+      <Wire powered={meterLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="PNL-001"
+        title="MAIN PANEL"
+        status={mainPanelLive ? "ENERGIZED" : disconnectClosed ? "BREAKER OPEN" : "DISCONNECT OPEN"}
+        active={mainPanelLive}
+        accent={mainPanelLive ? "green" : "amber"}
+        icon={<Power className={cn("h-5 w-5", mainPanelLive ? "text-[#00f7a1]" : "text-[#ffb347]")} />}
+        note="SERVICE ENTRANCE PANEL"
       />
 
       <Wire powered={supplyLive} vertical className="h-8" />
