@@ -3,9 +3,9 @@ import { format } from "date-fns";
 import {
   Activity,
   AlertTriangle,
+  Cat,
   CircuitBoard,
   Clock3,
-  Cpu,
   Database,
   Gauge,
   Power,
@@ -41,17 +41,17 @@ function formatUptime(totalSeconds: number) {
 
 function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: string; value: string; unit?: string; icon: React.ReactNode; accent?: "cyan" | "green" | "amber" | "red"; }) {
   const accents = {
-    cyan: "border-[#1e3a5f] from-[#06121d] to-[#0a1622] text-[#dff8ff]",
-    green: "border-[#174935] from-[#05150f] to-[#091b14] text-[#e8fff4]",
-    amber: "border-[#4d3412] from-[#171006] to-[#1c1509] text-[#fff1d6]",
-    red: "border-[#5f1d28] from-[#19090d] to-[#1f0b11] text-[#ffe0e4]",
+    cyan: "border-[#2a3a3a] from-[#141a1a] to-[#1a2222] text-[#dff8ff]",
+    green: "border-[#1a3a28] from-[#0e160e] to-[#121a12] text-[#e8fff4]",
+    amber: "border-[#3a2a10] from-[#181208] to-[#1c160a] text-[#fff1d6]",
+    red: "border-[#3a1a20] from-[#16090d] to-[#1c0c11] text-[#ffe0e4]",
   };
 
   return (
     <div className={cn("rounded-2xl border bg-gradient-to-br p-4", accents[accent])}>
       <div className="mb-5 flex items-center justify-between">
         <div className="font-display text-xs uppercase tracking-[0.18em] text-[#8ca5bf]">{title}</div>
-        <div className="text-[#00dcff]">{icon}</div>
+        <div className="text-[#00f7a1]">{icon}</div>
       </div>
       <div className="flex items-end gap-2">
         <div className="font-mono text-4xl font-semibold tracking-[0.08em]">{value}</div>
@@ -75,19 +75,19 @@ export default function Dashboard() {
   const countdown = `${String(Math.floor(countdownMs / 60000)).padStart(2, "0")}:${String(Math.floor((countdownMs % 60000) / 1000)).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen bg-[#050a12] text-[#d6deea]">
-      <header className="sticky top-0 z-20 border-b border-[#1c2c40] bg-[#07101a]/95 backdrop-blur px-6 py-4">
+    <div className="min-h-screen bg-[#141414] text-[#d6deea]">
+      <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 backdrop-blur px-6 py-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1f8a61]/30 bg-[#0b1a14] shadow-[0_0_20px_rgba(0,247,161,0.12)]">
-              <Cpu className="h-6 w-6 text-[#00f7a1]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1f8a61]/40 bg-[#161c18] shadow-[0_0_20px_rgba(0,247,161,0.12)]">
+              <Cat className="h-6 w-6 text-[#00f7a1]" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">CAT_FEEDER_SYS_01</h1>
-                <span className="rounded-md border border-[#334155] bg-[#111b29] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9fb0c7]">AUTO DISPENSER SCADA</span>
+                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">AUTO DISPENSER SCADA</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#7f93ac]">
+              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#8a9a8a]">
                 <span>UPTIME: {formatUptime(state.uptime)}</span>
                 <span>NODE: PLC-001 / MCC-FDR-2</span>
                 <span>TIME: {format(now, "yyyy-MM-dd HH:mm:ss")}</span>
@@ -96,26 +96,26 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className={cn("rounded-2xl border bg-[#09111d] px-4 py-3", STATE_STYLE[state.systemState])}>
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Overall Status</div>
+            <div className={cn("rounded-2xl border bg-[#1a1a1a] px-4 py-3", STATE_STYLE[state.systemState])}>
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Overall Status</div>
               <div className="flex items-center gap-2 font-display text-xl tracking-[0.15em]">
                 <LED on={state.systemState === "RUN"} color={state.systemState === "FAULT" ? "red" : state.systemState === "STANDBY" ? "amber" : "green"} size="md" />
                 {state.systemState}
               </div>
             </div>
-            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Active Alarms</div>
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Active Alarms</div>
               <div className={cn("flex items-center gap-2 font-display text-xl tracking-[0.15em]", activeAlarms > 0 ? "text-[#ff4d5a]" : "text-[#00f7a1]") }>
                 <AlertTriangle className="h-5 w-5" /> {activeAlarms}
               </div>
             </div>
-            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Mode</div>
-              <div className="font-display text-xl tracking-[0.15em] text-[#00dcff]">{state.systemMode}</div>
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Mode</div>
+              <div className="font-display text-xl tracking-[0.15em] text-[#b0d4b0]">{state.systemMode}</div>
             </div>
-            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#7f93ac]">Next Auto Feed</div>
-              <div className="font-mono text-2xl tracking-[0.12em] text-[#dff8ff]">{countdown}</div>
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Next Auto Feed</div>
+              <div className="font-mono text-2xl tracking-[0.12em] text-[#e0ece0]">{countdown}</div>
             </div>
           </div>
         </div>

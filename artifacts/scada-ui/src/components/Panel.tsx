@@ -20,8 +20,8 @@ export function Panel({ title, children, className, status, icon }: PanelProps) 
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border border-[#1e3048]",
-        "bg-[#060e18] shadow-[0_0_0_1px_rgba(0,180,255,0.06),0_4px_32px_rgba(0,0,0,0.6)]",
+        "flex flex-col overflow-hidden rounded-lg border border-[#2a2a2a]",
+        "bg-[#111111] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_4px_32px_rgba(0,0,0,0.6)]",
         "scanlines",
         className
       )}
@@ -30,16 +30,16 @@ export function Panel({ title, children, className, status, icon }: PanelProps) 
       <div
         className={cn(
           "flex items-center justify-between px-4 py-2 shrink-0",
-          "bg-[#0a1628] border-b border-[#1e3048]",
+          "bg-[#0d0d0d] border-b border-[#2a2a2a]",
           "relative overflow-hidden"
         )}
       >
         {/* Left accent stripe */}
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#00dcff]" />
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#00f7a1]" />
 
         <div className="flex items-center gap-2.5 pl-2">
-          {icon && <span className="text-[#00dcff] opacity-80">{icon}</span>}
-          <h3 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00dcff]">
+          {icon && <span className="text-[#00f7a1] opacity-80">{icon}</span>}
+          <h3 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00f7a1]">
             {title}
           </h3>
         </div>
@@ -47,7 +47,7 @@ export function Panel({ title, children, className, status, icon }: PanelProps) 
         {status && (
           <div className="flex items-center gap-2">
             <div className={cn("w-2 h-2 rounded-full", statusDot[status])} />
-            <span className="text-[9px] font-mono text-[#4a6a7a] uppercase tracking-wider">
+            <span className="text-[9px] font-mono text-[#5a7a5a] uppercase tracking-wider">
               {status}
             </span>
           </div>

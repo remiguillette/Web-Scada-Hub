@@ -9,23 +9,23 @@
   --font-mono: 'Share Tech Mono', monospace;
 
   /* SCADA Industrial Dark Theme */
-  --color-background: hsl(220 55% 4%);
-  --color-foreground: hsl(210 18% 88%);
+  --color-background: hsl(0 0% 8%);
+  --color-foreground: hsl(0 0% 88%);
 
-  --color-card: hsl(220 48% 7%);
-  --color-card-foreground: hsl(210 18% 88%);
+  --color-card: hsl(0 0% 10%);
+  --color-card-foreground: hsl(0 0% 88%);
 
-  --color-popover: hsl(220 48% 7%);
-  --color-popover-foreground: hsl(210 18% 88%);
+  --color-popover: hsl(0 0% 10%);
+  --color-popover-foreground: hsl(0 0% 88%);
 
-  --color-primary: hsl(195 100% 48%);   /* Electric Cyan */
-  --color-primary-foreground: hsl(220 55% 4%);
+  --color-primary: hsl(142 80% 42%);    /* Neon Green as primary */
+  --color-primary-foreground: hsl(0 0% 8%);
 
-  --color-secondary: hsl(220 42% 11%);
-  --color-secondary-foreground: hsl(210 18% 88%);
+  --color-secondary: hsl(0 0% 12%);
+  --color-secondary-foreground: hsl(0 0% 88%);
 
-  --color-muted: hsl(220 42% 11%);
-  --color-muted-foreground: hsl(215 18% 52%);
+  --color-muted: hsl(0 0% 12%);
+  --color-muted-foreground: hsl(0 0% 52%);
 
   --color-accent: hsl(142 80% 42%);     /* Neon Green */
   --color-accent-foreground: hsl(220 55% 4%);
@@ -47,13 +47,13 @@
 }
 
 :root {
-  --background: 220 55% 4%;
-  --foreground: 210 18% 88%;
+  --background: 0 0% 8%;
+  --foreground: 0 0% 88%;
 }
 
 .dark {
-  --background: 220 55% 4%;
-  --foreground: 210 18% 88%;
+  --background: 0 0% 8%;
+  --foreground: 0 0% 88%;
 }
 
 @layer base {
@@ -68,8 +68,8 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      linear-gradient(to right, rgba(0, 180, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 180, 255, 0.025) 1px, transparent 1px);
+      linear-gradient(to right, rgba(200, 200, 200, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(200, 200, 200, 0.03) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 

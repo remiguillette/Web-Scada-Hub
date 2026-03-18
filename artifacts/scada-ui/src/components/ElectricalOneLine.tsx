@@ -50,10 +50,10 @@ function EquipmentCard({
   note?: string;
 }) {
   const accentMap = {
-    green: active ? "border-[#00f7a1] text-[#00f7a1] bg-[#021910] shadow-[0_0_18px_rgba(0,247,161,0.22)]" : "border-[#334155] text-[#64748b] bg-[#0b1220]",
-    cyan: active ? "border-[#00dcff] text-[#b8f3ff] bg-[#061522] shadow-[0_0_18px_rgba(0,220,255,0.2)]" : "border-[#334155] text-[#64748b] bg-[#0b1220]",
-    red: active ? "border-[#ff4d5a] text-[#ffd8dc] bg-[#22070d] shadow-[0_0_18px_rgba(255,77,90,0.25)]" : "border-[#334155] text-[#64748b] bg-[#0b1220]",
-    amber: active ? "border-[#ffb347] text-[#ffe2af] bg-[#211304] shadow-[0_0_18px_rgba(255,179,71,0.22)]" : "border-[#334155] text-[#64748b] bg-[#0b1220]",
+    green: active ? "border-[#00f7a1] text-[#00f7a1] bg-[#0e1a10] shadow-[0_0_18px_rgba(0,247,161,0.22)]" : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    cyan: active ? "border-[#00dcff] text-[#b8f3ff] bg-[#0d1a1e] shadow-[0_0_18px_rgba(0,220,255,0.2)]" : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    red: active ? "border-[#ff4d5a] text-[#ffd8dc] bg-[#22070d] shadow-[0_0_18px_rgba(255,77,90,0.25)]" : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    amber: active ? "border-[#ffb347] text-[#ffe2af] bg-[#1e1206] shadow-[0_0_18px_rgba(255,179,71,0.22)]" : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
   };
 
   const body = (
@@ -98,6 +98,25 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
+      {/* Incoming conductors: L1 (blue), Neutral (white), Ground (green) */}
+      <div className="flex flex-col items-center gap-1.5 w-full">
+        <div className="font-mono text-[9px] tracking-[0.22em] text-[#6b7a6b] mb-0.5">UTILITY CONDUCTORS</div>
+        <div className="flex justify-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-2 h-10 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#3b82f6]">L1</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-2 h-10 rounded-full bg-[#e5e5e5] shadow-[0_0_8px_rgba(220,220,220,0.4)]" />
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#c8c8c8]">N</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-2 h-10 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#22c55e]">GND</span>
+          </div>
+        </div>
+      </div>
+
       <EquipmentCard
         tag="L1 / N"
         title="120V AC SUPPLY"
