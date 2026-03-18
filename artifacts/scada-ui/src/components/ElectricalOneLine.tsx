@@ -387,6 +387,67 @@ function ConductorBundle({
   );
 }
 
+function VerticalConductorBundle({
+  title,
+  height,
+}: {
+  title: string;
+  height: number;
+}) {
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-3">
+      <div className="font-mono text-[9px] tracking-[0.32em] text-[#6b7a6b]">
+        {title}
+      </div>
+      <div className="flex items-start gap-3 rounded-xl border border-white/8 bg-[#0a0f12]/70 px-3 py-2">
+        {CONDUCTORS.map((conductor) => (
+          <div
+            key={`${title}-${conductor.label}-vertical`}
+            className="flex flex-col items-center gap-2"
+          >
+            <span
+              className="font-mono text-[7.5px] tracking-[0.14em]"
+              style={{ color: conductor.color }}
+            >
+              {conductor.label}
+            </span>
+            <div
+              className="w-[5px] rounded-full"
+              style={{
+                height,
+                backgroundColor: conductor.color,
+                boxShadow: `0 0 7px ${conductor.glow}`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VerticalDivider({
+  height,
+  label,
+}: {
+  height: number;
+  label?: string;
+}) {
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-2 px-2">
+      {label ? (
+        <div className="font-mono text-[8px] tracking-[0.28em] text-[#4b5563]">
+          {label}
+        </div>
+      ) : null}
+      <div
+        className="w-px bg-gradient-to-b from-[#334155] via-[#64748b] to-[#334155] shadow-[0_0_10px_rgba(100,116,139,0.35)]"
+        style={{ height }}
+      />
+    </div>
+  );
+}
+
 function StatusIcon({
   icon,
   activeColor,
@@ -769,9 +830,11 @@ export function ElectricalOneLine({
     0,
     (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2,
   );
+  const generatorSpacerWidth = 56;
+  const campusDividerHeight = generatorUnits.length * 74 + 24;
   const generatorBranchVerticalOffset = Math.max(
     0,
-    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - 3,
+    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - generatorSpacerWidth - 3,
   );
 
   const scrollByAmount = useCallback((left: number, top = 0) => {
@@ -1076,6 +1139,35 @@ export function ElectricalOneLine({
         </div>
 
         <div className="flex items-start gap-0">
+          <div className="flex shrink-0 items-start">
+            <NodeCard
+              node={{
+                kind: "equipment",
+                tag: "NPE-001",
+                title: "NPE",
+                status: state.supplyLive ? "STREET SERVICE" : "DE-ENERGIZED",
+                active: state.supplyLive,
+                accent: "cyan",
+                icon: (
+                  <StatusIcon
+                    icon="power"
+                    active={state.supplyLive}
+                    activeColor="text-[#00dcff]"
+                  />
+                ),
+              }}
+            />
+          </div>
+
+          <div className="flex shrink-0 items-start justify-center px-4">
+            <VerticalConductorBundle
+              title="STREET"
+              height={campusDividerHeight}
+            />
+          </div>
+
+          <VerticalDivider height={campusDividerHeight} label="CAMPUS" />
+
           <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
             {generatorUnits.map((generator) => (
               <NodeCard
