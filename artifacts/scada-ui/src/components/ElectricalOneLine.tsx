@@ -257,6 +257,8 @@ function CompactCard({
     </>
   );
 
+  const effectiveWidth = hasDetails && detailsOpen ? width : CARD_W;
+
   const cardClasses = cn(
     "rounded-xl border px-2.5 py-2 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
@@ -264,7 +266,7 @@ function CompactCard({
 
   if (!onClick) {
     return (
-      <div className={cardClasses} style={{ width }}>
+      <div className={cardClasses} style={{ width: effectiveWidth }}>
         {content}
       </div>
     );
@@ -276,7 +278,7 @@ function CompactCard({
       onClick={onClick}
       className="text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
     >
-      <div className={cardClasses} style={{ width }}>
+      <div className={cardClasses} style={{ width: effectiveWidth }}>
         {content}
       </div>
     </button>
