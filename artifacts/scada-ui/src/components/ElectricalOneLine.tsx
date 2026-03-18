@@ -198,15 +198,10 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
 
         {/* ─── UTILITY CONDUCTORS ─── */}
         <div
-          className="mb-1 flex font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]"
-          style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}
+          className="mb-1 font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]"
+          style={{ paddingLeft: SOURCE_COLUMN_WIDTH + SOURCE_BUS_WIDTH + 8 }}
         >
-          <div
-            className="flex items-center justify-center text-center"
-            style={{ width: SOURCE_BUS_WIDTH }}
-          >
-            UTILITY CONDUCTORS
-          </div>
+          UTILITY CONDUCTORS
         </div>
         <div className="mb-4 flex flex-col gap-[5px]" style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}>
           {CONDUCTORS.map((c) => (
@@ -233,48 +228,44 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
         </div>
 
         {/* ─── MAIN HORIZONTAL FLOW ─── */}
-        <div className="flex items-stretch gap-0">
+        <div className="flex items-center gap-0">
 
           {/* ── Sources column (Hydro One top, Generator bottom) ── */}
-          <div className="flex flex-col shrink-0" style={{ width: 142 }}>
+          <div className="flex flex-col shrink-0 items-start" style={{ width: 142 }}>
             {/* Hydro One */}
-            <div className="flex items-center" style={{ height: 64 }}>
-              <CompactCard
-                tag="UTILITY"
-                title="HYDRO ONE"
-                status={supplyLive ? "ENERGIZED" : "UNAVAILABLE"}
-                active={supplyLive}
-                accent="cyan"
-                icon={<Zap className={cn("h-4 w-4", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
-              />
-            </div>
+            <CompactCard
+              tag="UTILITY"
+              title="HYDRO ONE"
+              status={supplyLive ? "ENERGIZED" : "UNAVAILABLE"}
+              active={supplyLive}
+              accent="cyan"
+              icon={<Zap className={cn("h-4 w-4", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+            />
 
-            {/* Vertical wire between sources */}
-            <div className="flex justify-center flex-1 py-0">
-              <VWire powered={supplyLive} className="flex-1" style={{ minHeight: 16 }} />
+            {/* Vertical wire between sources — fixed short height */}
+            <div className="flex justify-center" style={{ width: 130 }}>
+              <VWire powered={supplyLive} style={{ height: 10 }} />
             </div>
 
             {/* Generator */}
-            <div className="flex items-center" style={{ height: 64 }}>
-              <CompactCard
-                tag="GEN-001"
-                title="GENERATOR"
-                status="STANDBY / OFFLINE"
-                active={false}
-                accent="amber"
-                icon={<Zap className="h-4 w-4 text-[#475569]" />}
-              />
-            </div>
+            <CompactCard
+              tag="GEN-001"
+              title="GENERATOR"
+              status="STANDBY / OFFLINE"
+              active={false}
+              accent="amber"
+              icon={<Zap className="h-4 w-4 text-[#475569]" />}
+            />
           </div>
 
           {/* Vertical junction bus + horizontal stub out */}
           <div className="flex items-center shrink-0" style={{ width: 28 }}>
-            <VWire powered={supplyLive} className="h-full self-stretch" style={{ minHeight: 144 }} />
+            <VWire powered={supplyLive} style={{ height: 138 }} />
           </div>
-          <HWire powered={supplyLive} className="w-6 self-center" />
+          <HWire powered={supplyLive} className="w-6" />
 
           {/* ── Upstream equipment chain ── */}
-          <div className="flex items-center gap-0 self-center">
+          <div className="flex items-center gap-0">
 
             <CompactCard
               tag="POLE-001"
