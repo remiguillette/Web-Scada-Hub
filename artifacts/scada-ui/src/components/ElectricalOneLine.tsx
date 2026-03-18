@@ -100,21 +100,28 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex w-full flex-col items-center gap-1.5">
+      <div className="flex w-full flex-col items-center gap-2">
         <div className="mb-0.5 font-mono text-[9px] tracking-[0.22em] text-[#6b7a6b]">UTILITY CONDUCTORS</div>
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           <div className="flex flex-col items-center gap-1">
             <div className="h-10 w-2 rounded-full bg-[#3b82f6] shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
-            <span className="font-mono text-[8px] tracking-[0.18em] text-[#3b82f6]">L1</span>
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#3b82f6]">L1 / BLUE</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="h-10 w-2 rounded-full bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.55)]" />
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#f87171]">L2 / RED</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <div className="h-10 w-2 rounded-full bg-[#e5e5e5] shadow-[0_0_8px_rgba(220,220,220,0.4)]" />
-            <span className="font-mono text-[8px] tracking-[0.18em] text-[#c8c8c8]">N</span>
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#c8c8c8]">N / WHITE</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <div className="h-10 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-            <span className="font-mono text-[8px] tracking-[0.18em] text-[#22c55e]">GND</span>
+            <span className="font-mono text-[8px] tracking-[0.18em] text-[#22c55e]">GND / GREEN</span>
           </div>
+        </div>
+        <div className="rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-1 text-center font-mono text-[8px] tracking-[0.18em] text-[#8ecae6]">
+          SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V
         </div>
       </div>
 
@@ -132,36 +139,84 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
 
       <EquipmentCard
         tag="POLE-001"
-        title="UTILITY POLE"
-        status={supplyLive ? "OVERHEAD FEED PRESENT" : "DE-ENERGIZED"}
+        title="RISER POLE"
+        status={supplyLive ? "4.8 KV PRIMARY AVAILABLE" : "PRIMARY DE-ENERGIZED"}
         active={supplyLive}
         accent="cyan"
         icon={<Power className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
-        note="HYDRO ONE DROP"
+        note="PRIMARY OVERHEAD DISTRIBUTION"
+      />
+
+      <Wire powered={supplyLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="CB-UTIL"
+        title="POLE CIRCUIT BREAKER"
+        status={supplyLive ? "CLOSED / UTILITY NORMAL" : "OPEN / NO SOURCE"}
+        active={supplyLive}
+        accent={supplyLive ? "green" : "amber"}
+        icon={<ShieldAlert className={cn("h-5 w-5", supplyLive ? "text-[#00f7a1]" : "text-[#ffb347]")} />}
+        note="RISER POLE PROTECTION"
+      />
+
+      <Wire powered={supplyLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="UG-PRI"
+        title="OVERHEAD TO UNDERGROUND TRANSITION"
+        status={supplyLive ? "RISER POLE DOWNFEED ACTIVE" : "NO PRIMARY TRANSITION"}
+        active={supplyLive}
+        accent="cyan"
+        icon={<Zap className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="CONDUIT DROP AT RISER POLE"
+      />
+
+      <Wire powered={supplyLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="LAT-001"
+        title="UNDERGROUND SERVICE LATERAL"
+        status={supplyLive ? "4.8 KV PRIMARY IN CONDUIT" : "LATERAL DE-ENERGIZED"}
+        active={supplyLive}
+        accent="cyan"
+        icon={<Zap className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="UNDERGROUND PRIMARY FEED"
       />
 
       <Wire powered={supplyLive} vertical className="h-6" />
 
       <EquipmentCard
         tag="XFMR-001"
-        title="PAD MOUNT"
-        status={supplyLive ? "TRANSFORMER ONLINE" : "NO PRIMARY FEED"}
+        title="PAD-MOUNT TRANSFORMER"
+        status={supplyLive ? "INPUT 4.8 KV / OUTPUT 120-240V" : "NO PRIMARY FEED"}
         active={supplyLive}
         accent="cyan"
         icon={<Zap className={cn("h-5 w-5", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
-        note="UTILITY TRANSFORMER"
+        note="UNDERGROUND PRIMARY TO SECONDARY"
+      />
+
+      <Wire powered={meterLive} vertical className="h-6" />
+
+      <EquipmentCard
+        tag="SEC-001"
+        title="SECONDARY SERVICE TO BUILDING"
+        status={meterLive ? "L1 / L2 / N SERVICE CABLE ENERGIZED" : "SECONDARY SERVICE DEAD"}
+        active={meterLive}
+        accent="cyan"
+        icon={<Zap className={cn("h-5 w-5", meterLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+        note="HYDRO ONE DEMARC AT METER LINE SIDE"
       />
 
       <Wire powered={meterLive} vertical className="h-6" />
 
       <EquipmentCard
         tag="MTR-UTIL"
-        title="ELECTRIC METER"
+        title="ELECTRIC METER BASE"
         status={meterLive ? `${voltage.toFixed(1)} VAC METERED` : "0.0 VAC"}
         active={meterLive}
         accent="cyan"
         icon={<Zap className={cn("h-5 w-5", meterLive ? "text-[#00dcff]" : "text-[#475569]")} />}
-        note="REVENUE METER"
+        note="DEMARCATION AT LINE-SIDE TERMINALS"
       />
 
       <Wire powered={meterLive} vertical className="h-6" />
