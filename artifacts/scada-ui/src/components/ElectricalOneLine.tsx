@@ -72,6 +72,13 @@ type LoadBranch = {
   loadPowered: boolean;
 };
 
+type GeneratorUnit = {
+  tag: string;
+  title: string;
+  status: string;
+  active: boolean;
+};
+
 type DragState = {
   startX: number;
   startY: number;
@@ -90,14 +97,13 @@ const CONDUCTORS = [
   { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ] as const;
 
-const BASE_WIRE_CLASSES =
-  "transition-all duration-300 rounded-full shrink-0";
+const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 
 const getWireClasses = (powered: boolean) =>
   cn(
     powered
       ? "bg-[#00f7a1] shadow-[0_0_12px_rgba(0,247,161,0.85)]"
-      : "bg-[#1e293b]"
+      : "bg-[#1e293b]",
   );
 
 const ACCENT_STYLES: Record<Accent, { active: string; inactive: string }> = {
@@ -131,7 +137,12 @@ const ACCENT_STYLES: Record<Accent, { active: string; inactive: string }> = {
 function HWire({ powered, className, style }: WireProps) {
   return (
     <div
-      className={cn("h-1.5", BASE_WIRE_CLASSES, getWireClasses(powered), className)}
+      className={cn(
+        "h-1.5",
+        BASE_WIRE_CLASSES,
+        getWireClasses(powered),
+        className,
+      )}
       style={style}
     />
   );
@@ -140,7 +151,12 @@ function HWire({ powered, className, style }: WireProps) {
 function VWire({ powered, className, style }: WireProps) {
   return (
     <div
-      className={cn("w-1.5", BASE_WIRE_CLASSES, getWireClasses(powered), className)}
+      className={cn(
+        "w-1.5",
+        BASE_WIRE_CLASSES,
+        getWireClasses(powered),
+        className,
+      )}
       style={style}
     />
   );
@@ -160,7 +176,7 @@ function CompactCard({
     <div
       className={cn(
         "rounded-xl border px-2.5 py-2 transition-all duration-300 shrink-0",
-        active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive
+        active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
       )}
       style={{ width }}
     >
@@ -205,7 +221,7 @@ function BusNodeView({ node }: { node: BusNode }) {
       <div
         className={cn(
           "px-2 font-mono text-[8px] tracking-[0.22em]",
-          node.active ? "text-[#00dcff]" : "text-[#475569]"
+          node.active ? "text-[#00dcff]" : "text-[#475569]",
         )}
       >
         {node.label}
@@ -249,7 +265,10 @@ function ConductorBundle({
       </div>
 
       {CONDUCTORS.map((conductor) => (
-        <div key={`${title}-${conductor.label}`} className="flex items-center gap-2">
+        <div
+          key={`${title}-${conductor.label}`}
+          className="flex items-center gap-2"
+        >
           <span
             className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
             style={{ color: conductor.color }}
@@ -377,7 +396,7 @@ export function ElectricalOneLine({
             ? "text-[#00dcff]"
             : state.genLive
               ? "text-[#ffb347]"
-              : "text-[#475569]"
+              : "text-[#475569]",
         )}
       />
     ),
@@ -419,7 +438,7 @@ export function ElectricalOneLine({
           <div
             className={cn(
               "font-display text-base font-bold leading-none",
-              motorPowered ? "text-[#00f7a1]" : "text-[#64748b]"
+              motorPowered ? "text-[#00f7a1]" : "text-[#64748b]",
             )}
           >
             M
@@ -457,7 +476,7 @@ export function ElectricalOneLine({
           <div
             className={cn(
               "font-display text-base leading-none",
-              gateOpen ? "text-[#00f7a1]" : "text-[#64748b]"
+              gateOpen ? "text-[#00f7a1]" : "text-[#64748b]",
             )}
           >
             ◫
@@ -497,13 +516,34 @@ export function ElectricalOneLine({
     };
   }, [measureAtsCenter]);
 
+  const generatorUnits: GeneratorUnit[] = [
+    {
+      tag: "GEN-001",
+      title: "GENERATOR 1",
+      status: "STANDBY / OFFLINE",
+      active: false,
+    },
+    {
+      tag: "GEN-002",
+      title: "GENERATOR 2",
+      status: "STANDBY / OFFLINE",
+      active: false,
+    },
+    {
+      tag: "GEN-003",
+      title: "GENERATOR 3",
+      status: "STANDBY / OFFLINE",
+      active: false,
+    },
+  ];
+
   const generatorBranchWireWidth = Math.max(
     0,
-    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2
+    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2,
   );
   const generatorBranchVerticalOffset = Math.max(
     0,
-    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - 3
+    (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - 3,
   );
 
   const scrollByAmount = useCallback((left: number, top = 0) => {
@@ -534,7 +574,7 @@ export function ElectricalOneLine({
       event.currentTarget.setPointerCapture(event.pointerId);
       setIsDragging(true);
     },
-    []
+    [],
   );
 
   const handlePointerMove = useCallback(
@@ -546,7 +586,7 @@ export function ElectricalOneLine({
       viewport.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
       viewport.scrollTop = drag.scrollTop - (event.clientY - drag.startY);
     },
-    []
+    [],
   );
 
   const handlePointerUp = useCallback(
@@ -556,7 +596,7 @@ export function ElectricalOneLine({
       }
       stopDragging();
     },
-    [stopDragging]
+    [stopDragging],
   );
 
   return (
@@ -567,7 +607,7 @@ export function ElectricalOneLine({
       className={cn(
         "w-full overflow-auto pb-2 select-none outline-none",
         "cursor-grab active:cursor-grabbing",
-        isDragging && "cursor-grabbing"
+        isDragging && "cursor-grabbing",
       )}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -758,7 +798,10 @@ export function ElectricalOneLine({
             }}
           />
 
-          <HWire powered={disconnectClosed && state.atsPowered} className="w-4" />
+          <HWire
+            powered={disconnectClosed && state.atsPowered}
+            className="w-4"
+          />
 
           <NodeCard
             node={{
@@ -795,44 +838,70 @@ export function ElectricalOneLine({
         </div>
 
         <div className="flex items-start" style={{ height: 28 }}>
-          <div style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }} />
+          <div
+            style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
+          />
           <VWire powered={state.genBrkLive} style={{ height: 28 }} />
         </div>
 
-        <div className="flex items-center gap-0">
-          <div className="flex w-[142px] shrink-0 flex-col items-start">
+        <div className="flex items-start gap-0">
+          <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
+            {generatorUnits.map((generator) => (
+              <NodeCard
+                key={generator.tag}
+                node={{
+                  kind: "source",
+                  tag: generator.tag,
+                  title: generator.title,
+                  status: generator.status,
+                  active: generator.active,
+                  accent: "amber",
+                  icon: <Zap className="h-4 w-4 text-[#475569]" />,
+                }}
+              />
+            ))}
+          </div>
+
+          <div
+            className="flex shrink-0 items-center"
+            style={{
+              width: generatorBranchWireWidth,
+              minHeight: generatorUnits.length * 74 - 12,
+            }}
+          >
+            <div className="flex h-full items-center">
+              <VWire powered={state.genBrkLive} className="self-stretch" />
+            </div>
+            <div className="flex flex-1 flex-col justify-center gap-[58px]">
+              {generatorUnits.map((generator) => (
+                <HWire
+                  key={`${generator.tag}-branch`}
+                  powered={generator.active}
+                  className="w-full"
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center">
             <NodeCard
               node={{
-                kind: "source",
-                tag: "GEN-001",
-                title: "GENERATOR",
-                status: "STANDBY / OFFLINE",
-                active: false,
+                kind: "equipment",
+                tag: "CB-GEN",
+                title: "MAIN PANEL GEN",
+                status: state.genBrkLive ? "CLOSED" : "OPEN / STANDBY",
+                active: state.genBrkLive,
                 accent: "amber",
-                icon: <Zap className="h-4 w-4 text-[#475569]" />,
+                icon: (
+                  <StatusIcon
+                    icon="shield"
+                    active={state.genBrkLive}
+                    activeColor="text-[#ffb347]"
+                  />
+                ),
               }}
             />
           </div>
-
-          <HWire powered={state.genBrkLive} style={{ width: generatorBranchWireWidth }} />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "CB-GEN",
-              title: "MAIN PANEL GEN",
-              status: state.genBrkLive ? "CLOSED" : "OPEN / STANDBY",
-              active: state.genBrkLive,
-              accent: "amber",
-              icon: (
-                <StatusIcon
-                  icon="shield"
-                  active={state.genBrkLive}
-                  activeColor="text-[#ffb347]"
-                />
-              ),
-            }}
-          />
         </div>
       </div>
     </div>
