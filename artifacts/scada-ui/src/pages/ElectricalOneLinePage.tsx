@@ -2,12 +2,14 @@ import { Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
+import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { SYSTEM } from "@/config/system";
 
 export default function ElectricalOneLinePage() {
   const { state, actions } = useScadaState();
   const { voltage, frequency } = useGridSimulationContext();
+  const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
   const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
     voltage,
     state.current,
@@ -41,6 +43,7 @@ export default function ElectricalOneLinePage() {
           activePower={activePower}
           reactivePower={reactivePower}
           apparentPower={apparentPower}
+          generatorLiveStates={generatorLiveStates}
           onToggleDisconnect={actions.toggleDisconnect}
           onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}
         />

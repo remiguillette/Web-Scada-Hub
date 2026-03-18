@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
 import SimulationPage from "@/pages/SimulationPage";
 import { GridSimulationProvider } from "@/context/GridSimulationContext";
+import { GeneratorSimulationProvider } from "@/context/GeneratorSimulationContext";
 
 const queryClient = new QueryClient();
 
@@ -26,9 +27,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <GridSimulationProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
+          <GeneratorSimulationProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+          </GeneratorSimulationProvider>
         </GridSimulationProvider>
         <Toaster />
       </TooltipProvider>

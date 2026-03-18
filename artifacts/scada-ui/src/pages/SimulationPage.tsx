@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { Activity, ArrowLeft, Gauge, Zap, Radio, TrendingUp, AlertTriangle, CheckCircle2, Cpu } from "lucide-react";
+import {
+  Activity, ArrowLeft, Gauge, Zap, Radio, TrendingUp,
+  AlertTriangle, CheckCircle2, Cpu, Power,
+} from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { LED } from "@/components/LED";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
+import { useGeneratorSimulationContext, type GenState, type GeneratorLiveStatus } from "@/context/GeneratorSimulationContext";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { SYSTEM } from "@/config/system";
@@ -23,14 +27,14 @@ function buildSparklinePath(values: number[], width: number, height: number, pad
   return `M ${points.join(" L ")}`;
 }
 
-function Sparkline({ values, color, width = 260, height = 60 }: { values: number[]; color: string; width?: number; height?: number }) {
+function Sparkline({ values, color, width = 260, height = 50 }: { values: number[]; color: string; width?: number; height?: number }) {
   const path = useMemo(() => buildSparklinePath(values, width, height), [values, width, height]);
-  const gradId = `grad-${color.replace(/[^a-z0-9]/gi, "")}`;
+  const gradId = `sg-${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
     <svg width={width} height={height} className="w-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
           <stop offset="100%" stopColor={color} stopOpacity="0.0" />
         </linearGradient>
       </defs>
@@ -56,13 +60,11 @@ function StatusBadge({ ok, okLabel, faultLabel }: { ok: boolean; okLabel: string
   );
 }
 
-interface MetricCardProps {
+function MetricCard({ label, value, unit, nominal, deviation, toleranceBand, inBand, icon, color, sparkValues, sparkColor }: {
   label: string; value: string; unit: string; nominal: string; deviation: string;
   toleranceBand: string; inBand: boolean; icon: React.ReactNode; color: "cyan" | "green";
   sparkValues: number[]; sparkColor: string;
-}
-
-function MetricCard({ label, value, unit, nominal, deviation, toleranceBand, inBand, icon, color, sparkValues, sparkColor }: MetricCardProps) {
+}) {
   const colorMap = {
     cyan: { border: "border-[#2a3a3a]", bg: "from-[#141a1a] to-[#1a2222]", text: "text-[#dff8ff]", accent: "text-[#00dcff]" },
     green: { border: "border-[#1a3a28]", bg: "from-[#0e160e] to-[#121a12]", text: "text-[#e8fff4]", accent: "text-[#00f7a1]" },
@@ -81,7 +83,7 @@ function MetricCard({ label, value, unit, nominal, deviation, toleranceBand, inB
         <span className="font-mono text-5xl font-semibold tracking-[0.06em]">{value}</span>
         <span className="pb-1 font-mono text-sm text-[#8ca5bf]">{unit}</span>
       </div>
-      <div className="h-[60px] overflow-hidden rounded-lg">
+      <div className="h-[50px] overflow-hidden rounded-lg">
         <Sparkline values={sparkValues} color={sparkColor} />
       </div>
       <div className="grid grid-cols-3 gap-2 rounded-xl border border-[#1c2c40] bg-[#09111d] p-3">
@@ -102,22 +104,14 @@ function MetricCard({ label, value, unit, nominal, deviation, toleranceBand, inB
   );
 }
 
-interface ElecDataCardProps {
-  tag: string;
-  title: string;
-  subtitle?: string;
-  status: string;
-  energized: boolean;
+function ElecDataCard({ tag, title, subtitle, status, energized, rows }: {
+  tag: string; title: string; subtitle?: string; status: string; energized: boolean;
   rows: { parameter: string; value: string; description: string }[];
-}
-
-function ElecDataCard({ tag, title, subtitle, status, energized, rows }: ElecDataCardProps) {
+}) {
   return (
     <div className={cn(
       "rounded-2xl border p-4",
-      energized
-        ? "border-[#00dcff]/30 bg-gradient-to-br from-[#0d1a1e] to-[#0a1318]"
-        : "border-[#2a2a2a] bg-[#111]"
+      energized ? "border-[#00dcff]/30 bg-gradient-to-br from-[#0d1a1e] to-[#0a1318]" : "border-[#2a2a2a] bg-[#111]"
     )}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -126,16 +120,11 @@ function ElecDataCard({ tag, title, subtitle, status, energized, rows }: ElecDat
           {subtitle && <div className="mt-0.5 font-mono text-[11px] tracking-[0.1em] text-[#6a8a9f]">{subtitle}</div>}
           <div className={cn(
             "mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[10px] tracking-[0.18em]",
-            energized
-              ? "border-[#00f7a1]/30 bg-[#00f7a1]/10 text-[#00f7a1]"
-              : "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]"
-          )}>
-            {status}
-          </div>
+            energized ? "border-[#00f7a1]/30 bg-[#00f7a1]/10 text-[#00f7a1]" : "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]"
+          )}>{status}</div>
         </div>
         <Zap className={cn("h-5 w-5 shrink-0", energized ? "text-[#00dcff]" : "text-[#334155]")} />
       </div>
-
       <div className="overflow-hidden rounded-xl border border-white/8">
         <table className="w-full border-collapse text-left font-mono text-[11px]">
           <thead className="bg-white/5 text-[#7f93ac]">
@@ -147,7 +136,7 @@ function ElecDataCard({ tag, title, subtitle, status, energized, rows }: ElecDat
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.parameter} className="border-t border-white/6 align-top transition-colors hover:bg-white/3">
+              <tr key={row.parameter} className="border-t border-white/6 align-top hover:bg-white/3">
                 <td className="px-3 py-2 text-[#cfd8e3]">{row.parameter}</td>
                 <td className={cn("px-3 py-2 font-semibold", energized ? "text-[#8ecae6]" : "text-[#475569]")}>{row.value}</td>
                 <td className="hidden px-3 py-2 text-[#6a8a9f] sm:table-cell">{row.description}</td>
@@ -160,13 +149,208 @@ function ElecDataCard({ tag, title, subtitle, status, energized, rows }: ElecDat
   );
 }
 
+const GEN_STATE_CONFIG: Record<GenState, {
+  border: string; bg: string; badgeText: string; badgeStyle: string;
+  ledColor: "green" | "amber" | "red" | "cyan"; ledOn: boolean;
+}> = {
+  OFFLINE: {
+    border: "border-[#2a2a2a]", bg: "bg-[#0f0f0f]",
+    badgeText: "OFFLINE",
+    badgeStyle: "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]",
+    ledColor: "cyan", ledOn: false,
+  },
+  STARTING: {
+    border: "border-[#ffb347]/30", bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
+    badgeText: "STARTING",
+    badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
+    ledColor: "amber", ledOn: true,
+  },
+  RUNNING: {
+    border: "border-[#00f7a1]/30", bg: "bg-gradient-to-br from-[#0e1a10] to-[#0a140c]",
+    badgeText: "RUNNING",
+    badgeStyle: "border-[#00f7a1]/40 bg-[#00f7a1]/10 text-[#00f7a1]",
+    ledColor: "green", ledOn: true,
+  },
+  STOPPING: {
+    border: "border-[#ffb347]/30", bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
+    badgeText: "STOPPING",
+    badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
+    ledColor: "amber", ledOn: true,
+  },
+};
+
+const RAMP_PHASES = [
+  { label: "CRANKING", threshold: 0.2 },
+  { label: "BUILDING VOLTAGE", threshold: 0.55 },
+  { label: "SYNCHRONIZING", threshold: 0.88 },
+  { label: "STABILIZING", threshold: 1.0 },
+];
+
+function GeneratorCard({
+  genIdx, status, onStart, onStop,
+}: {
+  genIdx: number;
+  status: GeneratorLiveStatus;
+  onStart: () => void;
+  onStop: () => void;
+}) {
+  const gen = SYSTEM.generators[genIdx];
+  const cfg = GEN_STATE_CONFIG[status.state];
+  const isTransitioning = status.state === "STARTING" || status.state === "STOPPING";
+  const isRunning = status.state === "RUNNING";
+  const isOffline = status.state === "OFFLINE";
+  const isStopping = status.state === "STOPPING";
+
+  const rows = [
+    { parameter: "Frequency", value: status.state !== "OFFLINE" ? `${status.frequency.toFixed(2)} Hz` : `${gen.nominalFrequency.toFixed(2)} Hz (nominal)`, description: isRunning ? "Live output frequency." : "Nominal output frequency." },
+    { parameter: "Voltage", value: status.state !== "OFFLINE" ? `${status.voltage.toFixed(1)} V` : `${gen.nominalVoltage} V (nominal)`, description: isRunning ? "Live terminal voltage." : "Nominal terminal voltage." },
+    { parameter: "Current", value: `${status.current.toFixed(2)} A`, description: isRunning ? "Live output current." : "Offline — zero current." },
+    { parameter: "Active Power", value: `${status.activePower.toFixed(1)} W`, description: isRunning ? "Active power to bus." : "Zero while offline." },
+    { parameter: "Reactive Power", value: `${status.reactivePower.toFixed(1)} VAR`, description: "Reactive support available." },
+    { parameter: "Fuel Level", value: `${gen.fuelLevel}%`, description: "Runtime capacity available." },
+  ];
+
+  return (
+    <div className={cn("rounded-2xl border p-4 flex flex-col gap-4 transition-all duration-500", cfg.border, cfg.bg)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <LED on={cfg.ledOn} color={cfg.ledColor} size="md" />
+          <div>
+            <div className="font-mono text-[10px] tracking-[0.22em] text-[#5a7a8a]">{gen.tag}</div>
+            <div className="font-display text-sm font-semibold uppercase tracking-[0.1em] text-white">{gen.name}</div>
+            <div className={cn("mt-1 inline-block rounded border px-2 py-0.5 font-mono text-[10px] tracking-[0.18em]", cfg.badgeStyle)}>
+              {status.phaseLabel}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="font-mono text-[10px] tracking-[0.18em] text-[#5a7a8a]">FUEL {gen.fuelLevel}%</div>
+          {isOffline && (
+            <button
+              type="button"
+              onClick={onStart}
+              className="flex items-center gap-1.5 rounded-xl border border-[#00f7a1]/40 bg-[#00f7a1]/10 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#00f7a1] transition hover:bg-[#00f7a1]/20"
+            >
+              <Power className="h-3 w-3" /> START
+            </button>
+          )}
+          {isRunning && (
+            <button
+              type="button"
+              onClick={onStop}
+              className="flex items-center gap-1.5 rounded-xl border border-[#ff4d5a]/40 bg-[#ff4d5a]/10 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#ff4d5a] transition hover:bg-[#ff4d5a]/20"
+            >
+              <Power className="h-3 w-3" /> STOP
+            </button>
+          )}
+          {isTransitioning && (
+            <span className="rounded-xl border border-[#ffb347]/30 bg-[#ffb347]/8 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#ffb347]/60">
+              {isStopping ? "STOPPING..." : "STARTING..."}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {isTransitioning && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex gap-2 flex-wrap">
+              {RAMP_PHASES.map((phase, i) => {
+                const prevThreshold = i === 0 ? 0 : RAMP_PHASES[i - 1].threshold;
+                const reached = isStopping
+                  ? (1 - status.rampProgress) <= phase.threshold
+                  : status.rampProgress >= prevThreshold;
+                const active = isStopping
+                  ? status.phaseLabel === phase.label
+                  : status.phaseLabel === phase.label;
+                return (
+                  <span key={phase.label} className={cn(
+                    "rounded px-1.5 py-0.5 font-mono text-[9px] tracking-[0.14em] transition-all duration-300",
+                    active ? "bg-[#ffb347]/25 text-[#ffb347]" : reached ? "text-[#4a6a5a]" : "text-[#2a3a3a]"
+                  )}>
+                    {phase.label}
+                  </span>
+                );
+              })}
+            </div>
+            <span className="shrink-0 font-mono text-[10px] text-[#ffb347]">
+              {(status.rampProgress * 100).toFixed(0)}%
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-[#1a1a1a]">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-200",
+                isStopping
+                  ? "bg-gradient-to-r from-[#ffb347] to-[#ff4d5a]"
+                  : "bg-gradient-to-r from-[#00dcff] to-[#00f7a1]"
+              )}
+              style={{ width: `${status.rampProgress * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {(isTransitioning || isRunning) && status.voltageHistory.length > 1 && (
+        <div className="h-[50px] overflow-hidden rounded-xl border border-white/6 bg-black/20">
+          <Sparkline
+            values={status.voltageHistory}
+            color={isRunning ? "#00f7a1" : "#ffb347"}
+            height={50}
+          />
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-white/8">
+        <table className="w-full border-collapse text-left font-mono text-[11px]">
+          <thead className="bg-white/5 text-[#7f93ac]">
+            <tr>
+              <th className="px-3 py-1.5 font-medium tracking-[0.1em]">Parameter</th>
+              <th className="px-3 py-1.5 font-medium tracking-[0.1em]">Value</th>
+              <th className="hidden px-3 py-1.5 font-medium tracking-[0.1em] lg:table-cell">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.parameter} className="border-t border-white/6 align-top hover:bg-white/3">
+                <td className="px-3 py-2 text-[#cfd8e3]">{row.parameter}</td>
+                <td className={cn(
+                  "px-3 py-2 font-semibold",
+                  isRunning ? "text-[#00f7a1]" : isTransitioning ? "text-[#ffb347]" : "text-[#475569]"
+                )}>
+                  {row.value}
+                </td>
+                <td className="hidden px-3 py-2 text-[#6a8a9f] lg:table-cell">{row.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {isRunning && (
+        <div className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/20 bg-[#00f7a1]/5 px-3 py-2">
+          <Zap className="h-3.5 w-3.5 shrink-0 text-[#00f7a1]" />
+          <span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">
+            Live values are reflected in the Electrical One-Line diagram
+          </span>
+          <a
+            href={`${import.meta.env.BASE_URL}electrical-one-line`}
+            className="ml-auto shrink-0 font-display text-[10px] tracking-[0.14em] text-[#00f7a1] underline underline-offset-2 transition hover:text-white"
+          >
+            VIEW DIAGRAM →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SimulationPage() {
   const { voltage, frequency, history, form, config, setForm, applyConfig } = useGridSimulationContext();
+  const { statuses: generatorStatuses, start, stop } = useGeneratorSimulationContext();
   const { state } = useScadaState();
   const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
-    voltage,
-    state.current,
-    state.motorPowered,
+    voltage, state.current, state.motorPowered,
   );
 
   const voltageMin = config.baseVoltage * (1 - config.voltageVariationPct);
@@ -183,10 +367,7 @@ export default function SimulationPage() {
   const voltageHistory = useMemo(() => history.map((r) => r.voltage), [history]);
   const freqHistory = useMemo(() => history.map((r) => r.frequency), [history]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    applyConfig();
-  };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); applyConfig(); };
 
   const gridDetails = useMemo(() => [
     { label: "Nominal Voltage", value: `${config.baseVoltage.toFixed(1)} V` },
@@ -207,8 +388,6 @@ export default function SimulationPage() {
     { label: "Freq Status", value: freqInBand ? "IN BAND" : "OUT OF BAND" },
   ], [config, voltage, frequency, voltageMin, voltageMax, voltageDeviation, freqMin, freqMax, freqDeviation, voltageInBand, freqInBand, history.length]);
 
-  const isPowered = state.isPowered;
-
   const utilityRows = useMemo(() => [
     { parameter: "Frequency", value: `${frequency.toFixed(2)} Hz`, description: "Grid stability indicator." },
     { parameter: "Voltage", value: `${voltage.toFixed(1)} V`, description: `Supply at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).` },
@@ -227,6 +406,8 @@ export default function SimulationPage() {
     { parameter: "Reactive Power", value: `${reactivePower.toFixed(1)} VAR`, description: "Magnetising reactive demand." },
     { parameter: "Power Factor", value: `${state.motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`, description: `Nominal ${SYSTEM.motor.powerFactor} at full load.` },
   ], [frequency, voltage, state.motorPowered, state.current, activePower, reactivePower, powerFactor]);
+
+  const anyGenActive = generatorStatuses.some((s) => s.state !== "OFFLINE");
 
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
@@ -248,7 +429,6 @@ export default function SimulationPage() {
               </div>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-2">
               <LED on={voltageInBand && freqInBand} color={voltageInBand && freqInBand ? "green" : "red"} />
@@ -256,6 +436,12 @@ export default function SimulationPage() {
                 {voltageInBand && freqInBand ? "GRID NOMINAL" : "GRID ANOMALY"}
               </span>
             </div>
+            {anyGenActive && (
+              <div className="flex items-center gap-2 rounded-xl border border-[#ffb347]/30 bg-[#ffb347]/8 px-4 py-2">
+                <LED on color="amber" />
+                <span className="font-mono text-xs tracking-[0.16em] text-[#ffb347]">GENERATOR ACTIVE</span>
+              </div>
+            )}
             <a
               href={`${import.meta.env.BASE_URL}electrical-one-line`}
               className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
@@ -269,49 +455,34 @@ export default function SimulationPage() {
       <main className="mx-auto max-w-[1600px] space-y-5 p-5">
         <div className="grid gap-5 xl:grid-cols-2">
           <MetricCard
-            label="Supply Voltage"
-            value={voltage.toFixed(2)}
-            unit="V"
+            label="Supply Voltage" value={voltage.toFixed(2)} unit="V"
             nominal={config.baseVoltage.toFixed(1)}
             deviation={`${Number(voltageDeviation) >= 0 ? "+" : ""}${voltageDeviation}`}
-            toleranceBand={voltageBand}
-            inBand={voltageInBand}
-            icon={<Zap className="h-5 w-5" />}
-            color="cyan"
-            sparkValues={voltageHistory}
-            sparkColor="#00dcff"
+            toleranceBand={voltageBand} inBand={voltageInBand}
+            icon={<Zap className="h-5 w-5" />} color="cyan"
+            sparkValues={voltageHistory} sparkColor="#00dcff"
           />
           <MetricCard
-            label="Grid Frequency"
-            value={frequency.toFixed(3)}
-            unit="Hz"
+            label="Grid Frequency" value={frequency.toFixed(3)} unit="Hz"
             nominal={config.baseFrequency.toFixed(2)}
             deviation={`${Number(freqDeviation) >= 0 ? "+" : ""}${freqDeviation}`}
-            toleranceBand={config.frequencyVariation.toFixed(3)}
-            inBand={freqInBand}
-            icon={<Activity className="h-5 w-5" />}
-            color="green"
-            sparkValues={freqHistory}
-            sparkColor="#00f7a1"
+            toleranceBand={config.frequencyVariation.toFixed(3)} inBand={freqInBand}
+            icon={<Activity className="h-5 w-5" />} color="green"
+            sparkValues={freqHistory} sparkColor="#00f7a1"
           />
         </div>
 
         <div className="grid gap-5 xl:grid-cols-2">
           <ElecDataCard
-            tag={SYSTEM.utility.tag}
-            title={SYSTEM.utility.name}
-            subtitle={SYSTEM.utility.provider}
-            status={isPowered ? "ENERGIZED" : "UNAVAILABLE"}
-            energized={isPowered}
-            rows={utilityRows}
+            tag={SYSTEM.utility.tag} title={SYSTEM.utility.name} subtitle={SYSTEM.utility.provider}
+            status={state.isPowered ? "ENERGIZED" : "UNAVAILABLE"}
+            energized={state.isPowered} rows={utilityRows}
           />
           <ElecDataCard
-            tag={SYSTEM.motor.tag}
-            title={SYSTEM.motor.name}
+            tag={SYSTEM.motor.tag} title={SYSTEM.motor.name}
             subtitle={`${SYSTEM.id} / ${SYSTEM.mcc}`}
             status={state.motorPowered ? "RUNNING" : state.isPowered ? "STANDBY" : "OFFLINE"}
-            energized={state.motorPowered}
-            rows={motorRows}
+            energized={state.motorPowered} rows={motorRows}
           />
         </div>
 
@@ -319,59 +490,27 @@ export default function SimulationPage() {
           <Panel title="Simulation Configuration" icon={<Gauge className="h-4 w-4" />}>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
-                    Base Voltage (V)
-                  </span>
-                  <input
-                    type="number" min="1" step="0.1"
-                    value={form.baseVoltage}
-                    onChange={(e) => setForm((p) => ({ ...p, baseVoltage: Number(e.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
-                    Base Frequency (Hz)
-                  </span>
-                  <input
-                    type="number" min="1" step="0.001"
-                    value={form.baseFrequency}
-                    onChange={(e) => setForm((p) => ({ ...p, baseFrequency: Number(e.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
-                    Voltage Tolerance (%)
-                  </span>
-                  <input
-                    type="number" min="0" step="0.1"
-                    value={form.voltageTolerancePct}
-                    onChange={(e) => setForm((p) => ({ ...p, voltageTolerancePct: Number(e.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
-                    Frequency Band (±Hz)
-                  </span>
-                  <input
-                    type="number" min="0" step="0.001"
-                    value={form.frequencyVariation}
-                    onChange={(e) => setForm((p) => ({ ...p, frequencyVariation: Number(e.target.value) }))}
-                    className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
-                  />
-                </label>
+                {[
+                  { label: "Base Voltage (V)", key: "baseVoltage" as const, step: "0.1", min: "1" },
+                  { label: "Base Frequency (Hz)", key: "baseFrequency" as const, step: "0.001", min: "1" },
+                  { label: "Voltage Tolerance (%)", key: "voltageTolerancePct" as const, step: "0.1", min: "0" },
+                  { label: "Frequency Band (±Hz)", key: "frequencyVariation" as const, step: "0.001", min: "0" },
+                ].map(({ label, key, step, min }) => (
+                  <label key={key} className="space-y-2">
+                    <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{label}</span>
+                    <input
+                      type="number" min={min} step={step} value={form[key]}
+                      onChange={(e) => setForm((p) => ({ ...p, [key]: Number(e.target.value) }))}
+                      className="w-full rounded-xl border border-[#243245] bg-[#060d16] px-3 py-2 font-mono text-sm text-[#e7edf6] outline-none transition focus:border-[#00dcff]/60"
+                    />
+                  </label>
+                ))}
               </div>
               <div className="flex flex-col gap-3 border-t border-[#142030] pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="font-mono text-xs leading-5 tracking-[0.06em] text-[#6a8a9f]">
-                  Random-walk bounded drift model. Changes apply on next simulation tick.
+                  Random-walk bounded drift model. Changes apply on next tick.
                 </p>
-                <button
-                  type="submit"
-                  className="shrink-0 rounded-xl border border-[#00dcff]/45 bg-[#062032] px-5 py-2 font-display text-sm tracking-[0.14em] text-[#c4f5ff] transition hover:bg-[#0b2c45]"
-                >
+                <button type="submit" className="shrink-0 rounded-xl border border-[#00dcff]/45 bg-[#062032] px-5 py-2 font-display text-sm tracking-[0.14em] text-[#c4f5ff] transition hover:bg-[#0b2c45]">
                   APPLY SIMULATION
                 </button>
               </div>
@@ -385,10 +524,8 @@ export default function SimulationPage() {
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{label}</div>
                   <div className={cn(
                     "mt-0.5 font-mono text-sm tracking-[0.1em]",
-                    label.includes("Status")
-                      ? value.includes("IN BAND") ? "text-[#00f7a1]" : "text-[#ff4d5a]"
-                      : label.includes("Deviation")
-                        ? value.startsWith("+") ? "text-[#00dcff]" : "text-[#ffb347]"
+                    label.includes("Status") ? (value.includes("IN BAND") ? "text-[#00f7a1]" : "text-[#ff4d5a]")
+                      : label.includes("Deviation") ? (value.startsWith("+") ? "text-[#00dcff]" : "text-[#ffb347]")
                         : "text-[#b8c6d9]"
                   )}>
                     {value}
@@ -399,23 +536,35 @@ export default function SimulationPage() {
           </Panel>
         </div>
 
-        <Panel title={`Generator Units — ${SYSTEM.id}`} icon={<Cpu className="h-4 w-4" />}>
+        <Panel
+          title={`Generator Units — ${SYSTEM.id}`}
+          icon={<Cpu className="h-4 w-4" />}
+          openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
+        >
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+            <div className="flex items-center gap-2">
+              <LED on={anyGenActive} color={anyGenActive ? "amber" : "cyan"} />
+              <span className="font-display text-xs uppercase tracking-[0.16em] text-[#7f93ac]">
+                {anyGenActive
+                  ? `${generatorStatuses.filter((s) => s.state === "RUNNING").length} generator(s) running — ATS bus live`
+                  : "All generators standby — utility supply nominal"}
+              </span>
+            </div>
+            <a
+              href={`${import.meta.env.BASE_URL}electrical-one-line`}
+              className="ml-auto flex items-center gap-1.5 font-display text-xs tracking-[0.14em] text-[#00dcff] transition hover:text-white"
+            >
+              <Zap className="h-3.5 w-3.5" /> View in One-Line →
+            </a>
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
-            {SYSTEM.generators.map((gen) => (
-              <ElecDataCard
+            {SYSTEM.generators.map((gen, idx) => (
+              <GeneratorCard
                 key={gen.tag}
-                tag={gen.tag}
-                title={gen.name}
-                status="STANDBY / OFFLINE"
-                energized={false}
-                rows={[
-                  { parameter: "Frequency", value: `${gen.nominalFrequency.toFixed(2)} Hz`, description: "Output frequency when synchronized." },
-                  { parameter: "Voltage", value: `${gen.nominalVoltage} V`, description: "Nominal terminal voltage." },
-                  { parameter: "Current", value: "0 A", description: "Per-phase current while offline." },
-                  { parameter: "Real Power", value: "0 W", description: "Active power to bus." },
-                  { parameter: "Reactive Power", value: "0 VAR", description: "Reactive support available." },
-                  { parameter: "Fuel Level", value: `${gen.fuelLevel}%`, description: "Runtime capacity for standby." },
-                ]}
+                genIdx={idx}
+                status={generatorStatuses[idx]}
+                onStart={() => start(idx)}
+                onStop={() => stop(idx)}
               />
             ))}
           </div>

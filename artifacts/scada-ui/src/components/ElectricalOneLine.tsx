@@ -10,6 +10,7 @@ import {
 import { Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SYSTEM } from "@/config/system";
+import type { GeneratorLiveStatus } from "@/context/GeneratorSimulationContext";
 
 interface ElectricalOneLineProps {
   disconnectClosed: boolean;
@@ -25,6 +26,7 @@ interface ElectricalOneLineProps {
   activePower?: number;
   reactivePower?: number;
   apparentPower?: number;
+  generatorLiveStates?: GeneratorLiveStatus[];
   onToggleDisconnect: () => void;
   onToggleBreaker: () => void;
 }
@@ -413,9 +415,13 @@ export function ElectricalOneLine({
   activePower = 0,
   reactivePower = 0,
   apparentPower = 0,
+  generatorLiveStates,
   onToggleDisconnect,
   onToggleBreaker,
 }: ElectricalOneLineProps) {
+  const genLive = generatorLiveStates?.some(
+    (s) => s.state === "RUNNING" || (s.state === "STARTING" && s.voltage > 100),
+  ) ?? false;
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const atsRef = useRef<HTMLDivElement>(null);
@@ -426,7 +432,6 @@ export function ElectricalOneLine({
   const state = useMemo(() => {
     const supplyLive = voltage > 0;
     const meterLive = supplyLive;
-    const genLive = false;
     const atsNormal = meterLive;
     const atsPowered = atsNormal || genLive;
     const genBrkLive = genLive;
@@ -450,7 +455,7 @@ export function ElectricalOneLine({
       busLive,
       atsStatus,
     };
-  }, [voltage, disconnectClosed, breakerTripped]);
+  }, [voltage, disconnectClosed, breakerTripped, genLive]);
 
   const utilityNode: SourceNode = {
     kind: "source",
@@ -624,21 +629,52 @@ export function ElectricalOneLine({
     };
   }, [measureAtsCenter]);
 
-  const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen) => ({
-    tag: gen.tag,
-    title: gen.name,
-    status: "STANDBY / OFFLINE",
-    active: false,
-    width: 340,
-    details: [
-      { parameter: "Frequency", value: `${gen.nominalFrequency.toFixed(2)} Hz`, description: "Generator output frequency when synchronized." },
-      { parameter: "Voltage", value: `${gen.nominalVoltage} V`, description: "Nominal generator terminal voltage." },
-      { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
-      { parameter: "Real Power", value: "0 W", description: "Active power presently delivered to the bus." },
-      { parameter: "Reactive Power", value: "0 VAR", description: "Reactive support available during operation." },
-      { parameter: "Fuel Level", value: `${gen.fuelLevel}%`, description: "Available runtime capacity for standby operation." },
-    ],
-  }));
+  const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
+    const live = generatorLiveStates?.[idx];
+    const isActive = live?.state === "RUNNING" || live?.state === "STARTING";
+    const statusLabel = live && live.state !== "OFFLINE"
+      ? live.phaseLabel
+      : "STANDBY / OFFLINE";
+    return {
+      tag: gen.tag,
+      title: gen.name,
+      status: statusLabel,
+      active: isActive ?? false,
+      width: 340,
+      details: [
+        {
+          parameter: "Frequency",
+          value: live && live.state !== "OFFLINE" ? `${live.frequency.toFixed(2)} Hz` : `${gen.nominalFrequency.toFixed(2)} Hz`,
+          description: isActive ? "Live output frequency." : "Nominal frequency when synchronized.",
+        },
+        {
+          parameter: "Voltage",
+          value: live && live.state !== "OFFLINE" ? `${live.voltage.toFixed(1)} V` : `${gen.nominalVoltage} V`,
+          description: isActive ? "Live terminal voltage." : "Nominal generator terminal voltage.",
+        },
+        {
+          parameter: "Current",
+          value: live ? `${live.current.toFixed(2)} A` : "0 A",
+          description: isActive ? "Live output current." : "Per-phase current while offline.",
+        },
+        {
+          parameter: "Active Power",
+          value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
+          description: isActive ? "Active power delivered to bus." : "Active power when running.",
+        },
+        {
+          parameter: "Reactive Power",
+          value: live ? `${live.reactivePower.toFixed(1)} VAR` : "0 VAR",
+          description: "Reactive support available during operation.",
+        },
+        {
+          parameter: "Fuel Level",
+          value: `${gen.fuelLevel}%`,
+          description: "Available runtime capacity for standby operation.",
+        },
+      ],
+    };
+  });
 
   const generatorBranchWireWidth = Math.max(
     0,

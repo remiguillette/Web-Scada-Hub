@@ -18,6 +18,7 @@ import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { LED } from "@/components/LED";
 import { Panel } from "@/components/Panel";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
+import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
 import { SYSTEM } from "@/config/system";
@@ -68,6 +69,7 @@ function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: strin
 export default function Dashboard() {
   const { state, actions } = useScadaState();
   const { voltage: simulatedVoltage, frequency } = useGridSimulationContext();
+  const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
   const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
     simulatedVoltage,
     state.current,
@@ -152,6 +154,7 @@ export default function Dashboard() {
               activePower={activePower}
               reactivePower={reactivePower}
               apparentPower={apparentPower}
+              generatorLiveStates={generatorLiveStates}
               onToggleDisconnect={actions.toggleDisconnect}
               onToggleBreaker={state.breakerTripped ? actions.resetBreaker : actions.tripBreaker}
             />
