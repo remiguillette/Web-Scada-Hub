@@ -232,7 +232,7 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
             {/* Hydro One */}
             <CompactCard
               tag="UTILITY"
-              title="HYDRO ONE"
+              title="Niagara Peninsula Energy (NPE)"
               status={supplyLive ? "ENERGIZED" : "UNAVAILABLE"}
               active={supplyLive}
               accent="cyan"
