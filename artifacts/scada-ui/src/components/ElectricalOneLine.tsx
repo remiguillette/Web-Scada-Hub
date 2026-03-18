@@ -31,15 +31,23 @@ type WireProps = {
   style?: CSSProperties;
 };
 
+type DetailRow = {
+  parameter: string;
+  value: string;
+  description: string;
+};
+
 type CompactCardProps = {
   tag: string;
   title: string;
+  subtitle?: string;
   status: string;
   active: boolean;
   accent: Accent;
   icon: ReactNode;
   onClick?: () => void;
   width?: number;
+  details?: DetailRow[];
 };
 
 type BaseNode = CompactCardProps & {
@@ -165,21 +173,19 @@ function VWire({ powered, className, style }: WireProps) {
 function CompactCard({
   tag,
   title,
+  subtitle,
   status,
   active,
   accent,
   icon,
   onClick,
   width = CARD_W,
+  details,
 }: CompactCardProps) {
-  const body = (
-    <div
-      className={cn(
-        "rounded-xl border px-2.5 py-2 transition-all duration-300 shrink-0",
-        active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
-      )}
-      style={{ width }}
-    >
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const hasDetails = Boolean(details?.length);
+  const content = (
+    <>
       <div className="mb-1 flex items-start justify-between gap-1">
         <div className="min-w-0">
           <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
@@ -188,16 +194,81 @@ function CompactCard({
           <div className="font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
             {title}
           </div>
+          {subtitle ? (
+            <div className="mt-0.5 text-[9px] font-medium leading-tight text-[#b8f3ff]">
+              {subtitle}
+            </div>
+          ) : null}
         </div>
         <div className="mt-0.5 shrink-0">{icon}</div>
       </div>
-      <div className="truncate font-mono text-[8px] leading-tight tracking-[0.12em]">
-        {status}
-      </div>
-    </div>
+      <div className="font-mono text-[8px] leading-tight tracking-[0.12em]">{status}</div>
+      {hasDetails ? (
+        <div className="mt-2 border-t border-white/10 pt-2">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDetailsOpen((open) => !open);
+            }}
+            className="group inline-flex items-center gap-1.5 rounded-full border border-[#1f3b4d] bg-[#08131a] px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-[#8ecae6] transition-all duration-200 hover:scale-[1.02] hover:border-[#2a6078] hover:text-[#d9f7ff]"
+            aria-expanded={detailsOpen}
+          >
+            <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
+              {detailsOpen ? "−" : "+"}
+            </span>
+            <span>GRID DETAILS</span>
+          </button>
+
+          <div
+            data-state={detailsOpen ? "open" : "closed"}
+            className={cn(
+              "grid transition-all duration-300 ease-out",
+              detailsOpen
+                ? "mt-2 grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0",
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="overflow-hidden rounded-lg border border-white/10 bg-black/20">
+                <table className="w-full border-collapse text-left font-mono text-[8px]">
+                  <thead className="bg-white/5 text-[#9fb3c8]">
+                    <tr>
+                      <th className="px-2 py-1 font-medium">Parameter</th>
+                      <th className="px-2 py-1 font-medium">Abbreviation / Unit</th>
+                      <th className="px-2 py-1 font-medium">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {details?.map((detail) => (
+                      <tr key={detail.parameter} className="border-t border-white/10 align-top">
+                        <td className="px-2 py-1.5 text-[#dce7f3]">{detail.parameter}</td>
+                        <td className="px-2 py-1.5 text-[#8ecae6]">{detail.value}</td>
+                        <td className="px-2 py-1.5 text-[#9fb3c8]">{detail.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 
-  if (!onClick) return body;
+  const cardClasses = cn(
+    "rounded-xl border px-2.5 py-2 transition-all duration-300 shrink-0",
+    active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
+  );
+
+  if (!onClick) {
+    return (
+      <div className={cardClasses} style={{ width }}>
+        {content}
+      </div>
+    );
+  }
 
   return (
     <button
@@ -205,7 +276,9 @@ function CompactCard({
       onClick={onClick}
       className="text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
     >
-      {body}
+      <div className={cardClasses} style={{ width }}>
+        {content}
+      </div>
     </button>
   );
 }
@@ -367,10 +440,20 @@ export function ElectricalOneLine({
   const utilityNode: SourceNode = {
     kind: "source",
     tag: "UTILITY",
-    title: "Niagara Peninsula Energy (NPE)",
+    title: "Energized Grid",
+    subtitle: "Niagara Peninsula Energy (NPE)",
     status: state.supplyLive ? "ENERGIZED" : "UNAVAILABLE",
     active: state.supplyLive,
     accent: "cyan",
+    width: 340,
+    details: [
+      { parameter: "Frequency", value: "60.00 Hz", description: "Grid stability." },
+      { parameter: "Actual Power", value: "kW or MW", description: "Active load consumed." },
+      { parameter: "Voltage", value: "V or kV", description: "Phase-to-phase voltage, e.g., 13.8 kV." },
+      { parameter: "Current", value: "A (amperes)", description: "Current per phase (Ia, Ib, Ic)." },
+      { parameter: "Power Factor", value: "cos φ", description: "Indicates energy efficiency, ideally close to 1.0." },
+      { parameter: "Reactive Power", value: "kVAR", description: "Essential for grid management and balance." },
+    ],
     icon: (
       <StatusIcon
         icon="zap"
