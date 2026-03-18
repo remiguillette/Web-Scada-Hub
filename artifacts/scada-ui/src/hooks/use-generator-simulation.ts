@@ -240,7 +240,7 @@ export function useGeneratorSimulation() {
       setStatuses((prev) => {
         let changed = false;
 
-        const next = prev.map((status, idx) => {
+        const next = prev.map<GeneratorLiveStatus>((status, idx) => {
           const gen = getGeneratorConfig(idx);
           const transition = transitionsRef.current[idx];
 

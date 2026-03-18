@@ -435,7 +435,10 @@ export function ElectricalOneLine({
   const genLive =
     generatorLiveStates?.some(
       (s) =>
-        s.state === "RUNNING" || (s.state === "STARTING" && s.voltage > 100),
+        s.state === "READY" ||
+        s.state === "LOADED" ||
+        s.state === "STABILIZING" ||
+        (s.state === "STARTING" && s.voltage > 100),
     ) ?? false;
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
@@ -700,7 +703,11 @@ export function ElectricalOneLine({
 
   const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
     const live = generatorLiveStates?.[idx];
-    const isActive = live?.state === "RUNNING" || live?.state === "STARTING";
+    const isActive =
+      live?.state === "READY" ||
+      live?.state === "LOADED" ||
+      live?.state === "STABILIZING" ||
+      live?.state === "STARTING";
     const statusLabel =
       live && live.state !== "OFFLINE" ? live.phaseLabel : "STANDBY / OFFLINE";
     return {
