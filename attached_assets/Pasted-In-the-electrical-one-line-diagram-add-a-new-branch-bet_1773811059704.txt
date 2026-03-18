@@ -1,0 +1,79 @@
+In the electrical one-line diagram, add a new branch between the meter and the main panel.
+
+Draw this connection with an L-shaped line, then add a Main Panel Generator logically connected to the building's main panel.
+
+Move the existing generator so that it is correctly represented upstream or directly associated with the Main Panel Generator, ensuring consistent equipment order in the diagram.
+
+Also integrate the SCADA system in a logical location within the one-line diagram, for example, as a monitoring system connected to the main critical equipment:
+
+meter
+
+ATS (Automatic Transfer Switch)
+
+generator
+
+main panel
+
+main panel generator
+
+Add the ATSs to clearly show the transfer sequence between the normal power supply and the generator.
+
+The recommended logical order of elements would be, for example:
+
+Utility / Hydro → Meter → ATS → Main Panel
+and in parallel:
+
+Generator → Main Panel Generator / Generator Breaker → ATS → Main Panel
+
+Status signals to the SCADA
+
+For a logical animation in a web-based SCADA display:
+
+Animated energy flow in the lines when the source is active
+
+Orange color during the transfer sequence
+
+Red color in case of alarm or source loss
+
+Generator start-up animation:
+
+Loss of utility source
+
+Delay
+
+Generator start
+
+Generator stable
+
+ATS transfer to emergency
+
+Main panel powered by generator
+
+Return to normal animation:
+
+Return of utility source
+
+Re-transfer delay
+
+ATS returns to normal source
+
+Generator cooldown
+
+Generator shutdown
+
+You can also display statuses SCADA like:
+
+Utility Power: Available / Lost
+
+Generator: Running / Standby / Fault
+
+ATS Position: Normal / Emergency / Transition
+
+Main Panel Status: Energized
+
+Alarm Summary
+
+Voltage / Current / Frequency / kW
+
+
+Rework the electrical one-line diagram for the building main power system. Add a new branch between the meter and the main panel. Draw the connection in an L shape and add a “Main Panel Generator” connected logically to the main building panel. Move the generator element so it is placed in the correct sequence relative to the Main Panel Generator. Insert the SCADA at a logical monitoring point in the one-line. Reorder all elements in a clean and realistic electrical sequence, and add ATS (Automatic Transfer Switch) between utility power and generator backup. Also include logical SCADA web animation descriptions for normal operation, power loss, generator startup, ATS transfer, emergency supply, and return to normal.
