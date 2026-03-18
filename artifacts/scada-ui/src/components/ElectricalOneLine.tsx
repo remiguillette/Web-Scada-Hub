@@ -196,36 +196,6 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
     >
       <div className="min-w-max">
 
-        {/* ─── UTILITY CONDUCTORS ─── */}
-        <div className="mb-4 flex items-start gap-0" style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}>
-          <span className="shrink-0 font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mr-3">
-            UTILITY CONDUCTORS
-          </span>
-          <div className="flex flex-col gap-[5px]">
-            {CONDUCTORS.map((c) => (
-              <div key={c.label} className="flex items-center gap-2">
-                <span
-                  className="w-16 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
-                  style={{ color: c.color }}
-                >
-                  {c.label}
-                </span>
-                <div
-                  className="h-[5px] rounded-full"
-                  style={{
-                    minWidth: 600,
-                    backgroundColor: c.color,
-                    boxShadow: `0 0 7px ${c.glow}`,
-                  }}
-                />
-              </div>
-            ))}
-            <div className="mt-1 ml-[72px] rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 w-fit font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
-              SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V
-            </div>
-          </div>
-        </div>
-
         {/* ─── MAIN HORIZONTAL FLOW ─── */}
         <div className="flex items-center gap-0">
 
@@ -262,6 +232,39 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
             <VWire powered={supplyLive} style={{ height: 138 }} />
           </div>
           <HWire powered={supplyLive} className="w-6" />
+
+          {/* ── Right side: conductors above, equipment chain below ── */}
+          <div className="flex flex-col gap-2">
+
+            {/* ─── UTILITY CONDUCTORS ─── */}
+            <div className="flex items-start gap-0">
+              <span className="shrink-0 font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mr-3">
+                UTILITY CONDUCTORS
+              </span>
+              <div className="flex flex-col gap-[5px]">
+                {CONDUCTORS.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2">
+                    <span
+                      className="w-16 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
+                      style={{ color: c.color }}
+                    >
+                      {c.label}
+                    </span>
+                    <div
+                      className="h-[5px] rounded-full"
+                      style={{
+                        minWidth: 600,
+                        backgroundColor: c.color,
+                        boxShadow: `0 0 7px ${c.glow}`,
+                      }}
+                    />
+                  </div>
+                ))}
+                <div className="mt-1 ml-[72px] rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 w-fit font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
+                  SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V
+                </div>
+              </div>
+            </div>
 
           {/* ── Upstream equipment chain ── */}
           <div className="flex items-center gap-0">
@@ -423,6 +426,9 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
 
           </div>
           {/* end equipment chain */}
+
+          </div>
+          {/* end right-side flex-col */}
 
         </div>
         {/* end main horizontal flow */}
