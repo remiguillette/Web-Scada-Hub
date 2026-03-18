@@ -28,6 +28,9 @@ export function useScadaState() {
   const [uptime, setUptime] = useState(0);
   const [voltage, setVoltage] = useState(120.0);
   const [current, setCurrent] = useState(0.0);
+  const [nextFeedingTime, setNextFeedingTime] = useState<Date>(
+    new Date(Date.now() + 45 * 60 * 1000)
+  );
   
   // Alarms
   const [alarms, setAlarms] = useState<Alarm[]>([]);
@@ -134,6 +137,7 @@ export function useScadaState() {
       setFeedActive(false);
       setHopperLevel(prev => Math.max(0, prev - (8 + Math.floor(Math.random() * 4))));
       setFeedCount(prev => prev + 1);
+      setNextFeedingTime(new Date(Date.now() + 45 * 60 * 1000));
       addAlarm("FEED CYCLE COMPLETE", "INFO");
       setTimeout(() => clearAlarmActive("FEED CYCLE COMPLETE"), 3000);
     }, 3000); // 3 second feed cycle
@@ -159,6 +163,7 @@ export function useScadaState() {
       uptime,
       voltage,
       current,
+      nextFeedingTime,
       systemState,
       alarms,
       isPowered,

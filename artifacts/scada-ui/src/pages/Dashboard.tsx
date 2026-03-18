@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import {
-  Activity, AlertTriangle, Cpu, Power,
-  ShieldAlert, Zap, Database, Radio
+  Activity, AlertTriangle, Cpu,
+  Zap, Database, Radio, Timer
 } from "lucide-react";
 import { useScadaState, SystemState } from "@/hooks/use-scada-state";
 import { Panel } from "@/components/Panel";
@@ -20,11 +20,23 @@ const STATE_STYLE: Record<SystemState, { badge: string; icon: string }> = {
 export default function Dashboard() {
   const { state, actions } = useScadaState();
   const [time, setTime] = useState(new Date());
+  const calcCountdown = (target: Date) => {
+    const diff = Math.max(0, target.getTime() - Date.now());
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const [countdown, setCountdown] = useState(() => calcCountdown(state.nextFeedingTime));
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+    const timer = setInterval(() => {
+      setTime(new Date());
+      setCountdown(calcCountdown(state.nextFeedingTime));
+    }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [state.nextFeedingTime]);
 
   const formatUptime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -205,13 +217,12 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* Hopper Level */}
               <div className="bg-[#030912] border border-[#1a2e42] rounded p-3">
                 <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest block mb-2">HOPPER LEVEL</span>
                 <div className="flex items-end gap-3">
-                  {/* Mini bar */}
-                  <div className="w-6 h-20 bg-[#0d1e12] border border-[#1a2e42] rounded-sm overflow-hidden flex flex-col justify-end relative">
+                  <div className="w-5 h-16 bg-[#0d1e12] border border-[#1a2e42] rounded-sm overflow-hidden flex flex-col justify-end">
                     <div
                       className={cn(
                         "w-full transition-all duration-1000 ease-out",
@@ -224,13 +235,13 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div className={cn(
-                      "font-mono text-2xl font-bold leading-none",
+                      "font-mono text-xl font-bold leading-none",
                       state.hopperLevel > 50 ? "text-[#00ff50] text-glow-green"
                         : state.hopperLevel > 20 ? "text-[#ffb300] text-glow-amber"
                         : "text-[#ff3232] text-glow-red"
                     )}>
                       {state.hopperLevel}
-                      <span className="text-sm font-normal ml-0.5">%</span>
+                      <span className="text-xs font-normal ml-0.5">%</span>
                     </div>
                     <button
                       onClick={actions.refillHopper}
@@ -244,14 +255,28 @@ export default function Dashboard() {
 
               {/* Today's Feeds */}
               <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
-                <div className="absolute right-2 top-2 opacity-10">
-                  <Activity className="w-10 h-10 text-[#00dcff]" />
+                <div className="absolute right-1 top-1 opacity-10">
+                  <Activity className="w-8 h-8 text-[#00dcff]" />
                 </div>
                 <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">TODAY'S FEEDS</span>
-                <div className="font-mono text-3xl font-bold text-[#00dcff] text-glow-cyan mt-1 leading-none">
+                <div className="font-mono text-2xl font-bold text-[#00dcff] text-glow-cyan mt-1 leading-none">
                   {state.feedCount.toString().padStart(5, "0")}
                 </div>
                 <span className="font-display text-[8px] text-[#3a5a6a] tracking-wider">LIFETIME TOTAL</span>
+              </div>
+
+              {/* Next Feeding */}
+              <div className="bg-[#030912] border border-[#1a2e42] rounded p-3 relative overflow-hidden">
+                <div className="absolute right-1 top-1 opacity-10">
+                  <Timer className="w-8 h-8 text-[#ffb300]" />
+                </div>
+                <span className="font-display text-[9px] text-[#4a6a7a] tracking-widest">NEXT FEEDING</span>
+                <div className="font-mono text-xl font-bold text-[#ffb300] text-glow-amber mt-1 leading-none tabular-nums">
+                  {countdown || "--:--:--"}
+                </div>
+                <span className="font-display text-[8px] text-[#3a5a6a] tracking-wider">
+                  {state.nextFeedingTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
               </div>
             </div>
           </Panel>
