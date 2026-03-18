@@ -85,6 +85,8 @@ type GeneratorUnit = {
   title: string;
   status: string;
   active: boolean;
+  width?: number;
+  details?: DetailRow[];
 };
 
 type DragState = {
@@ -607,18 +609,45 @@ export function ElectricalOneLine({
       title: "GENERATOR 1",
       status: "STANDBY / OFFLINE",
       active: false,
+      width: 340,
+      details: [
+        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
+        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
+        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
+        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
+        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
+        { parameter: "Fuel Level", value: "87%", description: "Available runtime capacity for standby operation." },
+      ],
     },
     {
       tag: "GEN-002",
       title: "GENERATOR 2",
       status: "STANDBY / OFFLINE",
       active: false,
+      width: 340,
+      details: [
+        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
+        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
+        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
+        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
+        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
+        { parameter: "Fuel Level", value: "91%", description: "Available runtime capacity for standby operation." },
+      ],
     },
     {
       tag: "GEN-003",
       title: "GENERATOR 3",
       status: "STANDBY / OFFLINE",
       active: false,
+      width: 340,
+      details: [
+        { parameter: "Frequency", value: "60.00 Hz", description: "Generator output frequency when synchronized." },
+        { parameter: "Voltage", value: "480 V", description: "Nominal generator terminal voltage." },
+        { parameter: "Current", value: "0 A", description: "Per-phase output current while offline." },
+        { parameter: "Real Power", value: "0 kW", description: "Active power presently delivered to the bus." },
+        { parameter: "Reactive Power", value: "0 kVAR", description: "Reactive support available during operation." },
+        { parameter: "Fuel Level", value: "84%", description: "Available runtime capacity for standby operation." },
+      ],
     },
   ];
 
@@ -944,6 +973,8 @@ export function ElectricalOneLine({
                   status: generator.status,
                   active: generator.active,
                   accent: "amber",
+                  width: generator.width,
+                  details: generator.details,
                   icon: <Zap className="h-4 w-4 text-[#475569]" />,
                 }}
               />
