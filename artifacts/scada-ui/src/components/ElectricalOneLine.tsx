@@ -227,7 +227,7 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
             </div>
           </div>
 
-          {/* ── Sources column (Hydro One top, Generator bottom) ── */}
+          {/* ── Sources column (Niagara Peninsula Energy (NPE) top, Generator bottom) ── */}
           <div className="flex flex-col shrink-0 items-start" style={{ width: 142 }}>
             {/* Hydro One */}
             <CompactCard
