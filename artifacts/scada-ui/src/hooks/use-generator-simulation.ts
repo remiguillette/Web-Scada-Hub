@@ -1,60 +1,149 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SYSTEM } from "@/config/system";
 
-export type GenState = "OFFLINE" | "STARTING" | "RUNNING" | "STOPPING";
+export type GenState =
+  | "OFFLINE"
+  | "STARTING"
+  | "STABILIZING"
+  | "READY"
+  | "LOADED"
+  | "STOPPING";
 
 export interface GeneratorLiveStatus {
   state: GenState;
-  rampProgress: number;
+  phaseLabel: string;
+  progress: number;
   voltage: number;
   frequency: number;
   current: number;
   activePower: number;
   reactivePower: number;
-  phaseLabel: string;
   voltageHistory: number[];
 }
 
-const RAMP_UP_MS = 7000;
-const RAMP_DOWN_MS = 4000;
+interface GeneratorConfig {
+  nominalVoltage: number;
+  nominalFrequency: number;
+}
+
 const TICK_MS = 200;
 const HISTORY_MAX = 60;
 
-const GEN_NOMINAL_CURRENT = 60;
-const GEN_POWER_FACTOR = 0.9;
+const STARTING_MS = 4000;
+const STABILIZING_MS = 2500;
+const STOPPING_MS = 4000;
 
-function getPhaseLabel(state: GenState, progress: number): string {
-  if (state === "OFFLINE") return "OFFLINE";
-  if (state === "RUNNING") return "READY FOR ATS TRANSFER";
-  if (state === "STOPPING") {
-    if (progress > 0.7) return "UNLOADING";
-    if (progress > 0.3) return "SPINNING DOWN";
-    return "COASTING TO STOP";
-  }
-  if (progress < 0.2) return "CRANKING";
-  if (progress < 0.55) return "BUILDING VOLTAGE";
-  if (progress < 0.88) return "REACHING RATED SPEED";
-  return "READY FOR ATS TRANSFER";
+const READY_IDLE_CURRENT = 2.5;
+const LOADED_NOMINAL_CURRENT = 60;
+const POWER_FACTOR = 0.9;
+
+type Transition = {
+  phase: "STARTING" | "STABILIZING" | "STOPPING";
+  startedAt: number;
+};
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
-function computePower(v: number, c: number) {
-  const sP = v * c;
-  const aP = Number((sP * GEN_POWER_FACTOR).toFixed(1));
-  const rP = Number(Math.sqrt(Math.max(0, sP ** 2 - aP ** 2)).toFixed(1));
-  return { activePower: aP, reactivePower: rP };
+function round(value: number, decimals = 1): number {
+  return Number(value.toFixed(decimals));
+}
+
+function computePower(voltage: number, current: number) {
+  // Approximation simple monophasée / pédagogique.
+  // Si tu veux du triphasé 480V réel, remplace par :
+  // const apparentPower = Math.sqrt(3) * voltage * current;
+  const apparentPower = voltage * current;
+  const activePower = round(apparentPower * POWER_FACTOR, 1);
+  const reactivePower = round(
+    Math.sqrt(Math.max(0, apparentPower ** 2 - activePower ** 2)),
+    1,
+  );
+
+  return { activePower, reactivePower };
+}
+
+function getPhaseLabel(state: GenState): string {
+  switch (state) {
+    case "OFFLINE":
+      return "OFFLINE";
+    case "STARTING":
+      return "CRANKING";
+    case "STABILIZING":
+      return "STABILIZING";
+    case "READY":
+      return "READY FOR ATS TRANSFER";
+    case "LOADED":
+      return "ON EMERGENCY BUS";
+    case "STOPPING":
+      return "COASTING DOWN";
+    default:
+      return "UNKNOWN";
+  }
 }
 
 function buildOfflineStatus(): GeneratorLiveStatus {
   return {
     state: "OFFLINE",
-    rampProgress: 0,
+    phaseLabel: getPhaseLabel("OFFLINE"),
+    progress: 0,
     voltage: 0,
     frequency: 0,
     current: 0,
     activePower: 0,
     reactivePower: 0,
-    phaseLabel: "OFFLINE",
     voltageHistory: [],
+  };
+}
+
+function buildReadyStatus(gen: GeneratorConfig): GeneratorLiveStatus {
+  const voltage = gen.nominalVoltage;
+  const frequency = gen.nominalFrequency;
+  const current = READY_IDLE_CURRENT;
+  const { activePower, reactivePower } = computePower(voltage, current);
+
+  return {
+    state: "READY",
+    phaseLabel: getPhaseLabel("READY"),
+    progress: 1,
+    voltage,
+    frequency,
+    current,
+    activePower,
+    reactivePower,
+    voltageHistory: [voltage],
+  };
+}
+
+function buildLoadedStatus(gen: GeneratorConfig): GeneratorLiveStatus {
+  const voltage = gen.nominalVoltage;
+  const frequency = gen.nominalFrequency;
+  const current = LOADED_NOMINAL_CURRENT;
+  const { activePower, reactivePower } = computePower(voltage, current);
+
+  return {
+    state: "LOADED",
+    phaseLabel: getPhaseLabel("LOADED"),
+    progress: 1,
+    voltage,
+    frequency,
+    current,
+    activePower,
+    reactivePower,
+    voltageHistory: [voltage],
+  };
+}
+
+function pushHistory(history: number[], value: number): number[] {
+  return [...history, value].slice(-HISTORY_MAX);
+}
+
+function getGeneratorConfig(idx: number): GeneratorConfig {
+  const gen = SYSTEM.generators[idx];
+  return {
+    nominalVoltage: gen.nominalVoltage,
+    nominalFrequency: gen.nominalFrequency,
   };
 }
 
@@ -63,157 +152,348 @@ export function useGeneratorSimulation() {
     SYSTEM.generators.map(() => buildOfflineStatus()),
   );
 
-  const startTimestampsRef = useRef<(number | null)[]>(
+  const transitionsRef = useRef<Array<Transition | null>>(
     SYSTEM.generators.map(() => null),
   );
 
+  const setTransition = (idx: number, phase: Transition["phase"]) => {
+    transitionsRef.current[idx] = {
+      phase,
+      startedAt: Date.now(),
+    };
+  };
+
+  const clearTransition = (idx: number) => {
+    transitionsRef.current[idx] = null;
+  };
+
   const start = useCallback((idx: number) => {
     setStatuses((prev) => {
-      if (prev[idx].state !== "OFFLINE") return prev;
+      const current = prev[idx];
+      if (current.state !== "OFFLINE") return prev;
+
       const next = [...prev];
       next[idx] = {
         ...buildOfflineStatus(),
         state: "STARTING",
-        phaseLabel: "CRANKING",
+        phaseLabel: getPhaseLabel("STARTING"),
+        progress: 0,
       };
       return next;
     });
-    startTimestampsRef.current[idx] = Date.now();
+
+    setTransition(idx, "STARTING");
+  }, []);
+
+  const load = useCallback((idx: number) => {
+    setStatuses((prev) => {
+      const current = prev[idx];
+      if (current.state !== "READY") return prev;
+
+      const gen = getGeneratorConfig(idx);
+      const next = [...prev];
+      next[idx] = {
+        ...buildLoadedStatus(gen),
+        voltageHistory: pushHistory(current.voltageHistory, gen.nominalVoltage),
+      };
+      return next;
+    });
+  }, []);
+
+  const unload = useCallback((idx: number) => {
+    setStatuses((prev) => {
+      const current = prev[idx];
+      if (current.state !== "LOADED") return prev;
+
+      const gen = getGeneratorConfig(idx);
+      const next = [...prev];
+      next[idx] = {
+        ...buildReadyStatus(gen),
+        voltageHistory: pushHistory(current.voltageHistory, gen.nominalVoltage),
+      };
+      return next;
+    });
   }, []);
 
   const stop = useCallback((idx: number) => {
     setStatuses((prev) => {
-      if (prev[idx].state !== "RUNNING") return prev;
+      const current = prev[idx];
+      if (current.state !== "READY" && current.state !== "LOADED") return prev;
+
       const next = [...prev];
-      next[idx] = { ...prev[idx], state: "STOPPING", phaseLabel: "UNLOADING" };
+      next[idx] = {
+        ...current,
+        state: "STOPPING",
+        phaseLabel: getPhaseLabel("STOPPING"),
+        progress: 1,
+      };
       return next;
     });
-    startTimestampsRef.current[idx] = Date.now();
+
+    setTransition(idx, "STOPPING");
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
+    const timer = window.setInterval(() => {
       const now = Date.now();
+
       setStatuses((prev) => {
-        let anyChanged = false;
+        let changed = false;
 
-        const next = prev.map((s, idx) => {
-          const gen = SYSTEM.generators[idx];
-          const startedAt = startTimestampsRef.current[idx] ?? now;
-          const elapsed = now - startedAt;
+        const next = prev.map((status, idx) => {
+          const gen = getGeneratorConfig(idx);
+          const transition = transitionsRef.current[idx];
 
-          if (s.state === "OFFLINE") return s;
+          if (!transition) {
+            if (status.state === "READY") {
+              const driftV = (Math.random() - 0.5) * 1.2;
+              const driftF = (Math.random() - 0.5) * 0.04;
+              const voltage = round(
+                clamp(
+                  status.voltage + driftV,
+                  gen.nominalVoltage - 2,
+                  gen.nominalVoltage + 2,
+                ),
+                1,
+              );
+              const frequency = round(
+                clamp(
+                  status.frequency + driftF,
+                  gen.nominalFrequency - 0.05,
+                  gen.nominalFrequency + 0.05,
+                ),
+                2,
+              );
+              const current = round(
+                clamp(
+                  READY_IDLE_CURRENT + (Math.random() - 0.5) * 0.6,
+                  1.5,
+                  4,
+                ),
+                2,
+              );
+              const { activePower, reactivePower } = computePower(
+                voltage,
+                current,
+              );
 
-          anyChanged = true;
+              changed = true;
+              return {
+                ...status,
+                voltage,
+                frequency,
+                current,
+                activePower,
+                reactivePower,
+                voltageHistory: pushHistory(status.voltageHistory, voltage),
+              };
+            }
 
-          if (s.state === "RUNNING") {
-            const driftV = (Math.random() - 0.5) * 4;
-            const driftI = (Math.random() - 0.5) * 2;
-            const v = Number(
-              Math.max(
-                gen.nominalVoltage - 10,
-                Math.min(gen.nominalVoltage + 10, s.voltage + driftV),
-              ).toFixed(1),
-            );
-            const c = Number(
-              Math.max(
-                GEN_NOMINAL_CURRENT - 5,
-                Math.min(GEN_NOMINAL_CURRENT + 5, s.current + driftI),
-              ).toFixed(2),
-            );
-            const { activePower, reactivePower } = computePower(v, c);
-            const voltageHistory = [...s.voltageHistory, v].slice(-HISTORY_MAX);
-            return {
-              ...s,
-              voltage: v,
-              current: c,
-              activePower,
-              reactivePower,
-              voltageHistory,
-            };
+            if (status.state === "LOADED") {
+              const driftV = (Math.random() - 0.5) * 4;
+              const driftF = (Math.random() - 0.5) * 0.06;
+              const driftI = (Math.random() - 0.5) * 3;
+
+              const voltage = round(
+                clamp(
+                  status.voltage + driftV,
+                  gen.nominalVoltage - 10,
+                  gen.nominalVoltage + 10,
+                ),
+                1,
+              );
+              const frequency = round(
+                clamp(
+                  status.frequency + driftF,
+                  gen.nominalFrequency - 0.15,
+                  gen.nominalFrequency + 0.15,
+                ),
+                2,
+              );
+              const current = round(
+                clamp(
+                  status.current + driftI,
+                  LOADED_NOMINAL_CURRENT - 8,
+                  LOADED_NOMINAL_CURRENT + 8,
+                ),
+                2,
+              );
+              const { activePower, reactivePower } = computePower(
+                voltage,
+                current,
+              );
+
+              changed = true;
+              return {
+                ...status,
+                voltage,
+                frequency,
+                current,
+                activePower,
+                reactivePower,
+                voltageHistory: pushHistory(status.voltageHistory, voltage),
+              };
+            }
+
+            return status;
           }
 
-          if (s.state === "STARTING") {
-            const progress = Math.min(1, elapsed / RAMP_UP_MS);
-            const v = Number((gen.nominalVoltage * progress).toFixed(1));
-            const freq = Number(
-              (gen.nominalFrequency * Math.min(1, progress * 1.4)).toFixed(2),
+          const elapsed = now - transition.startedAt;
+
+          if (transition.phase === "STARTING") {
+            const progress = clamp(elapsed / STARTING_MS, 0, 1);
+
+            const voltage = round(gen.nominalVoltage * progress, 1);
+            const frequency = round(gen.nominalFrequency * progress, 2);
+            const current = round(READY_IDLE_CURRENT * progress, 2);
+            const { activePower, reactivePower } = computePower(
+              voltage,
+              current,
             );
-            const c = Number(
-              (GEN_NOMINAL_CURRENT * progress * progress).toFixed(2),
-            );
-            const { activePower, reactivePower } = computePower(v, c);
-            const voltageHistory = [...s.voltageHistory, v].slice(-HISTORY_MAX);
+
+            changed = true;
 
             if (progress >= 1) {
-              startTimestampsRef.current[idx] = null;
-              const fullV = gen.nominalVoltage;
-              const fullC = GEN_NOMINAL_CURRENT;
-              const { activePower: fAP, reactivePower: fRP } = computePower(
-                fullV,
-                fullC,
-              );
+              nextTickToStabilizing(idx);
               return {
-                state: "RUNNING" as GenState,
-                rampProgress: 1,
-                voltage: fullV,
+                state: "STABILIZING",
+                phaseLabel: getPhaseLabel("STABILIZING"),
+                progress: 0,
+                voltage: gen.nominalVoltage,
                 frequency: gen.nominalFrequency,
-                current: fullC,
-                activePower: fAP,
-                reactivePower: fRP,
-                phaseLabel: "READY FOR ATS TRANSFER",
-                voltageHistory: [...voltageHistory, fullV].slice(-HISTORY_MAX),
+                current: READY_IDLE_CURRENT,
+                activePower: computePower(
+                  gen.nominalVoltage,
+                  READY_IDLE_CURRENT,
+                ).activePower,
+                reactivePower: computePower(
+                  gen.nominalVoltage,
+                  READY_IDLE_CURRENT,
+                ).reactivePower,
+                voltageHistory: pushHistory(status.voltageHistory, gen.nominalVoltage),
               };
             }
 
             return {
-              ...s,
-              rampProgress: progress,
-              voltage: v,
-              frequency: freq,
-              current: c,
+              ...status,
+              state: "STARTING",
+              phaseLabel: getPhaseLabel("STARTING"),
+              progress,
+              voltage,
+              frequency,
+              current,
               activePower,
               reactivePower,
-              phaseLabel: getPhaseLabel("STARTING", progress),
-              voltageHistory,
+              voltageHistory: pushHistory(status.voltageHistory, voltage),
             };
           }
 
-          if (s.state === "STOPPING") {
-            const progress = Math.max(0, 1 - elapsed / RAMP_DOWN_MS);
-            const v = Number((gen.nominalVoltage * progress).toFixed(1));
-            const freq = Number((gen.nominalFrequency * progress).toFixed(2));
-            const c = Number((GEN_NOMINAL_CURRENT * progress).toFixed(2));
-            const { activePower, reactivePower } = computePower(v, c);
-            const voltageHistory = [...s.voltageHistory, v].slice(-HISTORY_MAX);
+          if (transition.phase === "STABILIZING") {
+            const progress = clamp(elapsed / STABILIZING_MS, 0, 1);
+
+            const driftV = (Math.random() - 0.5) * 2.5 * (1 - progress);
+            const driftF = (Math.random() - 0.5) * 0.08 * (1 - progress);
+
+            const voltage = round(
+              clamp(
+                gen.nominalVoltage + driftV,
+                gen.nominalVoltage - 3,
+                gen.nominalVoltage + 3,
+              ),
+              1,
+            );
+            const frequency = round(
+              clamp(
+                gen.nominalFrequency + driftF,
+                gen.nominalFrequency - 0.1,
+                gen.nominalFrequency + 0.1,
+              ),
+              2,
+            );
+            const current = round(READY_IDLE_CURRENT, 2);
+            const { activePower, reactivePower } = computePower(
+              voltage,
+              current,
+            );
+
+            changed = true;
+
+            if (progress >= 1) {
+              clearTransition(idx);
+              return {
+                ...buildReadyStatus(gen),
+                voltageHistory: pushHistory(status.voltageHistory, gen.nominalVoltage),
+              };
+            }
+
+            return {
+              ...status,
+              state: "STABILIZING",
+              phaseLabel: getPhaseLabel("STABILIZING"),
+              progress,
+              voltage,
+              frequency,
+              current,
+              activePower,
+              reactivePower,
+              voltageHistory: pushHistory(status.voltageHistory, voltage),
+            };
+          }
+
+          if (transition.phase === "STOPPING") {
+            const progress = clamp(1 - elapsed / STOPPING_MS, 0, 1);
+
+            const voltage = round(gen.nominalVoltage * progress, 1);
+            const frequency = round(gen.nominalFrequency * progress, 2);
+            const current = round(status.current * progress, 2);
+            const { activePower, reactivePower } = computePower(
+              voltage,
+              current,
+            );
+
+            changed = true;
 
             if (progress <= 0) {
-              startTimestampsRef.current[idx] = null;
+              clearTransition(idx);
               return buildOfflineStatus();
             }
 
             return {
-              ...s,
-              rampProgress: progress,
-              voltage: v,
-              frequency: freq,
-              current: c,
+              ...status,
+              state: "STOPPING",
+              phaseLabel: getPhaseLabel("STOPPING"),
+              progress,
+              voltage,
+              frequency,
+              current,
               activePower,
               reactivePower,
-              phaseLabel: getPhaseLabel("STOPPING", progress),
-              voltageHistory,
+              voltageHistory: pushHistory(status.voltageHistory, voltage),
             };
           }
 
-          return s;
+          return status;
         });
 
-        return anyChanged ? next : prev;
+        return changed ? next : prev;
       });
     }, TICK_MS);
 
-    return () => window.clearInterval(id);
+    function nextTickToStabilizing(idx: number) {
+      transitionsRef.current[idx] = {
+        phase: "STABILIZING",
+        startedAt: Date.now(),
+      };
+    }
+
+    return () => window.clearInterval(timer);
   }, []);
 
-  return { statuses, start, stop };
+  return {
+    statuses,
+    start,
+    load,
+    unload,
+    stop,
+  };
 }
