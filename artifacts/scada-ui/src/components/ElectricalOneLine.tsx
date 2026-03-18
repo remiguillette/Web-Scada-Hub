@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Activity, ArrowRightLeft, Gauge, Power, ShieldAlert, Siren, TowerControl, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
+import { Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ElectricalOneLineProps {
@@ -15,93 +15,99 @@ interface ElectricalOneLineProps {
   onToggleBreaker: () => void;
 }
 
-type WireTone = "active" | "emergency" | "alarm" | "idle";
-
-type AccentTone = "green" | "cyan" | "amber" | "red";
-
-const SCROLL_STEP = 140;
-
-function getWireClasses(tone: WireTone) {
-  switch (tone) {
-    case "active":
-      return "bg-[#00f7a1] shadow-[0_0_12px_rgba(0,247,161,0.82)]";
-    case "emergency":
-      return "bg-[#ff9f1a] shadow-[0_0_14px_rgba(255,159,26,0.85)]";
-    case "alarm":
-      return "bg-[#ff4d5a] shadow-[0_0_14px_rgba(255,77,90,0.82)]";
-    default:
-      return "bg-[#1e293b]";
-  }
+function HWire({ powered, className }: { powered: boolean; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "h-1.5 transition-all duration-300 rounded-full shrink-0",
+        powered ? "bg-[#00f7a1] shadow-[0_0_12px_rgba(0,247,161,0.85)]" : "bg-[#1e293b]",
+        className,
+      )}
+    />
+  );
 }
 
-function HWire({ tone, className }: { tone: WireTone; className?: string }) {
-  return <div className={cn("h-1.5 rounded-full shrink-0 transition-all duration-300", getWireClasses(tone), className)} />;
+function VWire({ powered, className, style }: { powered: boolean; className?: string; style?: CSSProperties }) {
+  return (
+    <div
+      className={cn(
+        "w-1.5 transition-all duration-300 rounded-full shrink-0",
+        powered ? "bg-[#00f7a1] shadow-[0_0_12px_rgba(0,247,161,0.85)]" : "bg-[#1e293b]",
+        className,
+      )}
+      style={style}
+    />
+  );
 }
 
-function VWire({ tone, className, style }: { tone: WireTone; className?: string; style?: CSSProperties }) {
-  return <div className={cn("w-1.5 rounded-full shrink-0 transition-all duration-300", getWireClasses(tone), className)} style={style} />;
-}
-
-function NodeCard({
+function CompactCard({
   tag,
   title,
   status,
+  active,
   accent,
   icon,
   onClick,
-  className,
 }: {
   tag: string;
   title: string;
   status: string;
-  accent: AccentTone;
+  active: boolean;
+  accent: "green" | "cyan" | "red" | "amber";
   icon: ReactNode;
   onClick?: () => void;
-  className?: string;
 }) {
-  const accentMap: Record<AccentTone, string> = {
-    green: "border-[#00f7a1] bg-[#0e1a10] text-[#d9ffe8] shadow-[0_0_16px_rgba(0,247,161,0.16)]",
-    cyan: "border-[#00dcff] bg-[#09171d] text-[#d7f7ff] shadow-[0_0_16px_rgba(0,220,255,0.16)]",
-    amber: "border-[#ffb347] bg-[#1a1207] text-[#ffe8c2] shadow-[0_0_16px_rgba(255,179,71,0.16)]",
-    red: "border-[#ff4d5a] bg-[#22070d] text-[#ffe0e3] shadow-[0_0_16px_rgba(255,77,90,0.18)]",
+  const accentMap = {
+    green: active
+      ? "border-[#00f7a1] text-[#00f7a1] bg-[#0e1a10] shadow-[0_0_14px_rgba(0,247,161,0.18)]"
+      : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    cyan: active
+      ? "border-[#00dcff] text-[#b8f3ff] bg-[#0d1a1e] shadow-[0_0_14px_rgba(0,220,255,0.16)]"
+      : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    red: active
+      ? "border-[#ff4d5a] text-[#ffd8dc] bg-[#22070d] shadow-[0_0_14px_rgba(255,77,90,0.2)]"
+      : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+    amber: active
+      ? "border-[#ffb347] text-[#ffe2af] bg-[#1e1206] shadow-[0_0_14px_rgba(255,179,71,0.18)]"
+      : "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
   };
 
-  const content = (
-    <div className={cn("w-[142px] rounded-xl border px-3 py-2.5 transition-all duration-300", accentMap[accent], className)}>
-      <div className="mb-1 flex items-start justify-between gap-2">
+  const body = (
+    <div
+      className={cn(
+        "rounded-xl border px-2.5 py-2 transition-all duration-300 w-[130px] shrink-0",
+        accentMap[accent],
+      )}
+    >
+      <div className="flex items-start justify-between gap-1 mb-1">
         <div className="min-w-0">
-          <div className="font-mono text-[8px] tracking-[0.24em] text-[#6f8596]">{tag}</div>
-          <div className="font-display text-[10px] font-semibold uppercase tracking-[0.08em] leading-tight">{title}</div>
+          <div className="font-mono text-[8px] tracking-[0.22em] text-[#70839f] truncate">{tag}</div>
+          <div className="font-display text-[10px] font-semibold uppercase tracking-[0.07em] leading-tight truncate">{title}</div>
         </div>
-        <div className="mt-0.5 shrink-0">{icon}</div>
+        <div className="shrink-0 mt-0.5">{icon}</div>
       </div>
-      <div className="font-mono text-[8px] tracking-[0.12em] leading-tight">{status}</div>
+      <div className="font-mono text-[8px] tracking-[0.12em] leading-tight truncate">{status}</div>
     </div>
   );
 
-  if (!onClick) return content;
+  if (!onClick) return body;
   return (
     <button type="button" onClick={onClick} className="text-left transition-transform hover:scale-[1.02] active:scale-[0.98]">
-      {content}
+      {body}
     </button>
   );
 }
 
-function StatusPill({ label, value, tone }: { label: string; value: string; tone: AccentTone }) {
-  const toneClasses: Record<AccentTone, string> = {
-    green: "border-[#174d32] bg-[#0f1b14] text-[#a8f5c3]",
-    cyan: "border-[#194352] bg-[#0c161b] text-[#9de7ff]",
-    amber: "border-[#5a3b12] bg-[#191208] text-[#ffd08a]",
-    red: "border-[#5a1820] bg-[#19090c] text-[#ffb1b8]",
-  };
+const CONDUCTORS = [
+  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "N",  color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+];
 
-  return (
-    <div className={cn("rounded-lg border px-3 py-2", toneClasses[tone])}>
-      <div className="font-mono text-[8px] tracking-[0.22em] text-[#7d8c9f]">{label}</div>
-      <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.06em]">{value}</div>
-    </div>
-  );
-}
+const SCROLL_STEP = 120;
+const SOURCE_COLUMN_WIDTH = 142;
+const SOURCE_BUS_WIDTH = 34;
 
 export function ElectricalOneLine(props: ElectricalOneLineProps) {
   const {
@@ -117,72 +123,26 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
     onToggleBreaker,
   } = props;
 
-  const utilityAvailable = voltage > 0;
-  const utilityWireTone: WireTone = breakerTripped ? "alarm" : utilityAvailable ? "active" : "idle";
-  const generatorRunning = !utilityAvailable;
-  const generatorHealthy = generatorRunning && !breakerTripped;
-  const generatorWireTone: WireTone = breakerTripped ? "alarm" : generatorHealthy ? "emergency" : "idle";
-  const atsPosition = utilityAvailable ? "NORMAL" : generatorHealthy ? "EMERGENCY" : "TRANSITION";
-  const transferSequence = !utilityAvailable;
-  const mainPanelLive = disconnectClosed && !breakerTripped && (utilityAvailable || generatorHealthy);
-  const mainPanelGeneratorLive = disconnectClosed && !breakerTripped && generatorHealthy;
-  const scadaHealthy = true;
-  const scadaSignalTone: WireTone = breakerTripped ? "alarm" : transferSequence ? "emergency" : "active";
-  const mainBusTone: WireTone = breakerTripped ? "alarm" : utilityAvailable ? "active" : mainPanelLive ? "emergency" : "idle";
+  const supplyLive    = voltage > 0;
+  const meterLive     = supplyLive;
+  const mainPanelLive = disconnectClosed && !breakerTripped && supplyLive;
+  const busLive       = mainPanelLive;
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; startY: number; scrollLeft: number; scrollTop: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const meterStatus = utilityAvailable ? `${voltage.toFixed(1)} VAC` : "SOURCE LOST";
-  const generatorStatus = breakerTripped
-    ? "FAULT / LOCKOUT"
-    : generatorRunning
-      ? "RUNNING / STABLE"
-      : "STANDBY / READY";
-
-  const metrics = useMemo(
-    () => [
-      { label: "UTILITY POWER", value: utilityAvailable ? "AVAILABLE" : "LOST", tone: utilityAvailable ? "cyan" : "red" },
-      { label: "GENERATOR", value: generatorRunning ? (breakerTripped ? "FAULT" : "RUNNING") : "STANDBY", tone: breakerTripped ? "red" : generatorRunning ? "amber" : "cyan" },
-      { label: "ATS POSITION", value: atsPosition, tone: atsPosition === "NORMAL" ? "green" : atsPosition === "EMERGENCY" ? "amber" : "red" },
-      { label: "MAIN PANEL", value: mainPanelLive ? "ENERGIZED" : "DE-ENERGIZED", tone: mainPanelLive ? "green" : "red" },
-      { label: "ALARMS", value: breakerTripped ? "SOURCE / BREAKER ALARM" : "NORMAL", tone: breakerTripped ? "red" : "green" },
-      { label: "ELEC DATA", value: `${voltage.toFixed(1)}V / ${current.toFixed(2)}A / 60.0Hz`, tone: mainPanelLive ? "cyan" : "amber" },
-    ],
-    [atsPosition, breakerTripped, current, generatorRunning, mainPanelLive, utilityAvailable, voltage],
-  );
-
-  const animationSteps = useMemo(
-    () => [
-      {
-        title: "Normal Operation",
-        detail: "Utility path glows green from Utility → Meter → ATS → Main Panel while the generator branch remains in standby.",
-      },
-      {
-        title: "Power Loss",
-        detail: "On loss of utility, the utility path drops dark/red, ATS enters orange transition, and SCADA raises a source-loss alarm.",
-      },
-      {
-        title: "Generator Startup",
-        detail: "After a short delay, the generator path animates orange as the generator starts, stabilizes, and closes through the Main Panel Generator breaker.",
-      },
-      {
-        title: "Emergency Supply",
-        detail: "ATS transfers to emergency, the Main Panel is fed from the generator branch, and SCADA reports Generator Running and ATS Emergency.",
-      },
-      {
-        title: "Return to Normal",
-        detail: "When utility returns, ATS waits through a re-transfer delay, shifts back to normal, then the generator performs cooldown and shutdown.",
-      },
-    ],
-    [],
-  );
-
   const scrollByAmount = useCallback((left: number, top = 0) => {
-    viewportRef.current?.scrollBy({ left, top, behavior: "smooth" });
+    viewportRef.current?.scrollBy({
+      left,
+      top,
+      behavior: "smooth",
+    });
   }, []);
 
   useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
     const handlePointerUp = () => {
       dragState.current = null;
       setIsDragging(false);
@@ -234,181 +194,244 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
       }}
       aria-label="Electrical one-line diagram viewport"
     >
-      <div className="min-w-[1720px] space-y-6 rounded-2xl border border-[#202020] bg-[#090909] p-5">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <div className="font-mono text-[10px] tracking-[0.32em] text-[#6a7a8f]">BUILDING MAIN POWER SYSTEM</div>
-            <div className="mt-1 font-display text-sm font-semibold uppercase tracking-[0.12em] text-[#dce7f5]">
-              Utility / Hydro → Meter → ATS → Main Panel with Generator Backup and SCADA Monitoring
+      <div className="min-w-max">
+
+        {/* ─── MAIN HORIZONTAL FLOW ─── */}
+        <div className="flex items-center gap-0">
+
+          {/* ── Sources column (Niagara Peninsula Energy (NPE) top, Generator bottom) ── */}
+          <div className="flex flex-col shrink-0 items-start" style={{ width: 142 }}>
+            {/* Hydro One */}
+            <CompactCard
+              tag="UTILITY"
+              title="Niagara Peninsula Energy (NPE)"
+              status={supplyLive ? "ENERGIZED" : "UNAVAILABLE"}
+              active={supplyLive}
+              accent="cyan"
+              icon={<Zap className={cn("h-4 w-4", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+            />
+
+            {/* Vertical wire between sources — fixed short height */}
+            <div className="flex justify-center" style={{ width: 130 }}>
+              <VWire powered={supplyLive} style={{ height: 10 }} />
             </div>
+
+            {/* Generator */}
+            <CompactCard
+              tag="GEN-001"
+              title="GENERATOR"
+              status="STANDBY / OFFLINE"
+              active={false}
+              accent="amber"
+              icon={<Zap className="h-4 w-4 text-[#475569]" />}
+            />
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <StatusPill label="LINE COLOR" value="GREEN = NORMAL FLOW" tone="green" />
-            <StatusPill label="LINE COLOR" value="ORANGE = TRANSFER / EMERGENCY" tone="amber" />
-            <StatusPill label="LINE COLOR" value="RED = ALARM / SOURCE LOSS" tone="red" />
+
+          {/* Vertical junction bus + horizontal stub out */}
+          <div className="flex items-center shrink-0" style={{ width: 28 }}>
+            <VWire powered={supplyLive} style={{ height: 138 }} />
           </div>
-        </div>
+          <HWire powered={supplyLive} className="w-6" />
 
-        <div className="rounded-2xl border border-[#1e293b] bg-[#060b10] p-5">
-          <div className="flex items-start gap-8">
-            <div className="flex flex-col items-center gap-4 pt-2">
-              <NodeCard
-                tag="UTIL-001"
-                title="UTILITY / HYDRO"
-                status={utilityAvailable ? "AVAILABLE / ENERGIZED" : "SOURCE LOST"}
-                accent={utilityAvailable ? "cyan" : "red"}
-                icon={<TowerControl className={cn("h-4 w-4", utilityAvailable ? "text-[#00dcff]" : "text-[#ff4d5a]")} />}
-              />
-              <NodeCard
-                tag="GEN-001"
-                title="GENERATOR"
-                status={generatorStatus}
-                accent={breakerTripped ? "red" : generatorRunning ? "amber" : "cyan"}
-                icon={<Zap className={cn("h-4 w-4", generatorRunning ? "text-[#ffb347]" : "text-[#64748b]")} />}
-              />
-            </div>
-
-            <div className="flex flex-col items-center pt-8">
-              <VWire tone={utilityWireTone} style={{ height: 64 }} />
-              <VWire tone={generatorWireTone} style={{ height: 64 }} />
-            </div>
-
-            <div className="flex flex-col gap-10 pt-2">
-              <div className="flex items-center gap-0">
-                <HWire tone={utilityWireTone} className="w-8" />
-                <NodeCard
-                  tag="MTR-UTIL"
-                  title="METER"
-                  status={meterStatus}
-                  accent={utilityAvailable ? "cyan" : "red"}
-                  icon={<Gauge className={cn("h-4 w-4", utilityAvailable ? "text-[#00dcff]" : "text-[#ff4d5a]")} />}
-                />
-                <HWire tone={utilityWireTone} className="w-10" />
-                <NodeCard
-                  tag="ATS-001"
-                  title="AUTOMATIC TRANSFER SWITCH"
-                  status={utilityAvailable ? "NORMAL SOURCE SELECTED" : generatorHealthy ? "EMERGENCY SOURCE SELECTED" : "IN TRANSITION"}
-                  accent={utilityAvailable ? "green" : generatorHealthy ? "amber" : "red"}
-                  icon={<ArrowRightLeft className={cn("h-4 w-4", utilityAvailable ? "text-[#00f7a1]" : generatorHealthy ? "text-[#ffb347]" : "text-[#ff4d5a]")} />}
-                />
-                <HWire tone={mainBusTone} className="w-10" />
-                <NodeCard
-                  tag="PNL-001"
-                  title="MAIN PANEL"
-                  status={mainPanelLive ? "ENERGIZED" : "DE-ENERGIZED"}
-                  accent={mainPanelLive ? "green" : "red"}
-                  icon={<Power className={cn("h-4 w-4", mainPanelLive ? "text-[#00f7a1]" : "text-[#ff4d5a]")} />}
+          {/* ─── UTILITY CONDUCTORS ─── */}
+          <div className="flex flex-col gap-[5px] shrink-0 mx-4">
+            <span className="font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mb-1">
+              CONDUCTORS
+            </span>
+            {CONDUCTORS.map((c) => (
+              <div key={c.label} className="flex items-center gap-2">
+                <span
+                  className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
+                  style={{ color: c.color }}
+                >
+                  {c.label}
+                </span>
+                <div
+                  className="h-[5px] rounded-full"
+                  style={{
+                    width: 300,
+                    backgroundColor: c.color,
+                    boxShadow: `0 0 7px ${c.glow}`,
+                  }}
                 />
               </div>
+            ))}
+            <div className="mt-1 ml-[72px] rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-0.5 w-fit font-mono text-[7px] tracking-[0.16em] text-[#8ecae6]">
+              SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V
+            </div>
+          </div>
 
-              <div className="ml-[170px] flex items-start gap-0">
-                <div className="flex w-[152px] flex-col items-center">
-                  <VWire tone={generatorWireTone} style={{ height: 26 }} />
-                  <HWire tone={generatorWireTone} className="w-20" />
+          <HWire powered={supplyLive} className="w-6" />
+
+          {/* ── Upstream equipment chain ── */}
+          <div className="flex items-center gap-0">
+
+            <CompactCard
+              tag="POLE-001"
+              title="RISER POLE"
+              status={supplyLive ? "4.8 KV" : "DEAD"}
+              active={supplyLive}
+              accent="cyan"
+              icon={<Power className={cn("h-4 w-4", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+            />
+            <HWire powered={supplyLive} className="w-4" />
+
+            <CompactCard
+              tag="CB-UTIL"
+              title="POLE BREAKER"
+              status={supplyLive ? "CLOSED" : "OPEN"}
+              active={supplyLive}
+              accent={supplyLive ? "green" : "amber"}
+              icon={<ShieldAlert className={cn("h-4 w-4", supplyLive ? "text-[#00f7a1]" : "text-[#ffb347]")} />}
+            />
+            <HWire powered={supplyLive} className="w-4" />
+
+            <CompactCard
+              tag="XFMR-001"
+              title="PAD-MOUNT TRANSFORMER"
+              status={supplyLive ? "4.8K→240V" : "NO FEED"}
+              active={supplyLive}
+              accent="cyan"
+              icon={<Zap className={cn("h-4 w-4", supplyLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+            />
+
+            <div className="flex flex-col gap-[5px] shrink-0 mx-4">
+              <span className="font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mb-1">
+                SECONDARY SERVICE CABLE
+              </span>
+              {CONDUCTORS.map((c) => (
+                <div key={`secondary-${c.label}`} className="flex items-center gap-2">
+                  <span
+                    className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
+                    style={{ color: c.color }}
+                  >
+                    {c.label}
+                  </span>
+                  <div
+                    className="h-[5px] rounded-full"
+                    style={{
+                      width: 220,
+                      backgroundColor: c.color,
+                      boxShadow: `0 0 7px ${c.glow}`,
+                    }}
+                  />
                 </div>
-                <NodeCard
-                  tag="GBR-001"
-                  title="MAIN PANEL GENERATOR"
-                  status={mainPanelGeneratorLive ? "BREAKER CLOSED" : generatorRunning ? "READY TO CLOSE" : "OPEN / STANDBY"}
-                  accent={mainPanelGeneratorLive ? "amber" : generatorRunning ? "cyan" : "cyan"}
-                  icon={<ShieldAlert className={cn("h-4 w-4", mainPanelGeneratorLive ? "text-[#ffb347]" : "text-[#00dcff]")} />}
-                />
-                <HWire tone={generatorWireTone} className="w-10" />
-                <div className="flex flex-col items-center">
-                  <VWire tone={generatorWireTone} style={{ height: 26 }} />
-                  <div className="font-mono text-[8px] tracking-[0.24em] text-[#7b8ba0]">L-SHAPED GENERATOR TIE</div>
-                </div>
-              </div>
+              ))}
             </div>
 
-            <div className="flex flex-col items-center pt-2">
-              <NodeCard
-                tag="SCADA-01"
-                title="SCADA MONITORING"
-                status={scadaHealthy ? "STATUS / ALARMS / ANALOGS ONLINE" : "COMMUNICATION LOST"}
-                accent={scadaHealthy ? "cyan" : "red"}
-                icon={<Activity className={cn("h-4 w-4", scadaHealthy ? "text-[#00dcff]" : "text-[#ff4d5a]")} />}
-                className="w-[186px]"
-              />
-              <div className="mt-4 flex items-center gap-3">
-                <VWire tone={scadaSignalTone} style={{ height: 50 }} />
-                <div className="font-mono text-[8px] tracking-[0.24em] text-[#7b8ba0]">STATUS SIGNALS</div>
-              </div>
-              <div className="mt-1 grid grid-cols-1 gap-2">
-                {["METER", "ATS", "GENERATOR", "MAIN PANEL", "MAIN PANEL GENERATOR"].map((point) => (
-                  <div key={point} className="flex items-center gap-2">
-                    <HWire tone={scadaSignalTone} className="w-8" />
-                    <div className="rounded-lg border border-[#203041] bg-[#0b1116] px-3 py-1 font-mono text-[8px] tracking-[0.2em] text-[#9ec9db]">
-                      {point}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+            <HWire powered={meterLive} className="w-4" />
 
-          <div className="mt-6 flex items-center gap-3">
-            <HWire tone={mainBusTone} className="w-[762px]" />
-            <NodeCard
+            <CompactCard
+              tag="MTR-UTIL"
+              title="METER"
+              status={meterLive ? `${voltage.toFixed(1)} VAC` : "0.0 VAC"}
+              active={meterLive}
+              accent="cyan"
+              icon={<Zap className={cn("h-4 w-4", meterLive ? "text-[#00dcff]" : "text-[#475569]")} />}
+            />
+            <HWire powered={meterLive} className="w-4" />
+
+            <CompactCard
+              tag="PNL-001"
+              title="MAIN PANEL"
+              status={mainPanelLive ? "ENERGIZED" : "OFFLINE"}
+              active={mainPanelLive}
+              accent={mainPanelLive ? "green" : "amber"}
+              icon={<Power className={cn("h-4 w-4", mainPanelLive ? "text-[#00f7a1]" : "text-[#ffb347]")} />}
+            />
+            <HWire powered={supplyLive} className="w-4" />
+
+            <CompactCard
               tag="MDS-001"
               title="MAIN DISCONNECT"
               status={disconnectClosed ? "CLOSED" : "OPEN"}
+              active={disconnectClosed && supplyLive}
               accent={disconnectClosed ? "green" : "amber"}
               icon={<Power className={cn("h-4 w-4", disconnectClosed ? "text-[#00f7a1]" : "text-[#ffb347]")} />}
               onClick={onToggleDisconnect}
             />
-            <HWire tone={disconnectClosed ? mainBusTone : "idle"} className="w-4" />
-            <NodeCard
+            <HWire powered={disconnectClosed && supplyLive} className="w-4" />
+
+            <CompactCard
               tag="CB-001"
-              title="MAIN BREAKER"
-              status={breakerTripped ? "TRIPPED" : "HEALTHY"}
+              title="CIRCUIT BREAKER"
+              status={breakerTripped ? "TRIPPED" : "OK"}
+              active={!breakerTripped && disconnectClosed && supplyLive}
               accent={breakerTripped ? "red" : "green"}
               icon={<ShieldAlert className={cn("h-4 w-4", breakerTripped ? "text-[#ff4d5a]" : "text-[#00f7a1]")} />}
               onClick={onToggleBreaker}
             />
-            <HWire tone={disconnectClosed && !breakerTripped ? mainBusTone : breakerTripped ? "alarm" : "idle"} className="w-6" />
-            <NodeCard
-              tag="LDS-001"
-              title="CRITICAL LOADS"
-              status={motorPowered || gateOpen ? "PROCESS LOADS ACTIVE" : "READY / MONITORED"}
-              accent={motorPowered || gateOpen ? "green" : "cyan"}
-              icon={<Zap className={cn("h-4 w-4", motorPowered || gateOpen ? "text-[#00f7a1]" : "text-[#00dcff]")} />}
-            />
-          </div>
-        </div>
+            <HWire powered={busLive} className="w-4" />
 
-        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] gap-4">
-          <div className="rounded-2xl border border-[#1f2937] bg-[#0a1015] p-4">
-            <div className="mb-3 font-display text-xs font-semibold uppercase tracking-[0.14em] text-[#cfe3f3]">
-              SCADA Status Signals and Electrical Summary
+            {/* ── Power Bus junction ── */}
+            <div className="flex flex-col items-center shrink-0">
+              <VWire powered={busLive} className="h-10" />
+              <div className={cn("font-mono text-[8px] tracking-[0.22em] px-2", busLive ? "text-[#00dcff]" : "text-[#475569]")}>
+                BUS
+              </div>
+              <VWire powered={busLive} className="h-10" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {metrics.map((metric) => (
-                <StatusPill key={metric.label} label={metric.label} value={metric.value} tone={metric.tone as AccentTone} />
-              ))}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <StatusPill label="FEEDER CONTACTOR" value={feederContactor ? "ENERGIZED" : "OPEN"} tone={feederContactor ? "green" : "cyan"} />
-              <StatusPill label="SOLENOID CONTACTOR" value={solenoidContactor ? "ENERGIZED" : "OPEN"} tone={solenoidContactor ? "green" : "cyan"} />
-            </div>
-          </div>
 
-          <div className="rounded-2xl border border-[#31220d] bg-[#140e07] p-4">
-            <div className="mb-3 flex items-center gap-2 font-display text-xs font-semibold uppercase tracking-[0.14em] text-[#ffe2af]">
-              <Siren className="h-4 w-4 text-[#ffb347]" />
-              Web SCADA Animation Logic
+            {/* ── Load branches ── */}
+            <div className="flex flex-col items-stretch gap-0 self-stretch justify-center ml-0">
+              {/* Top load: Feeder Contactor + Motor */}
+              <div className="flex items-center gap-0">
+                <HWire powered={busLive} className="w-4" />
+                <CompactCard
+                  tag="CTR-001"
+                  title="FEEDER CTR"
+                  status={feederContactor ? "ENERGIZED" : "DE-ENERGIZED"}
+                  active={feederContactor}
+                  accent={feederContactor ? "green" : "cyan"}
+                  icon={<Zap className={cn("h-4 w-4", feederContactor ? "text-[#00f7a1]" : "text-[#00dcff]")} />}
+                />
+                <HWire powered={motorPowered} className="w-4" />
+                <CompactCard
+                  tag="MTR-001"
+                  title="DISPENSER MTR"
+                  status={motorPowered ? `${current.toFixed(2)} A` : "STOPPED"}
+                  active={motorPowered}
+                  accent={motorPowered ? "green" : "cyan"}
+                  icon={
+                    <div className={cn("font-display text-base font-bold leading-none", motorPowered ? "text-[#00f7a1]" : "text-[#64748b]")}>M</div>
+                  }
+                />
+              </div>
+
+              {/* Gap between load branches */}
+              <div className="h-3" />
+
+              {/* Bottom load: Solenoid Contactor + Hopper Gate */}
+              <div className="flex items-center gap-0">
+                <HWire powered={busLive} className="w-4" />
+                <CompactCard
+                  tag="CTR-002"
+                  title="SOL CONTACTOR"
+                  status={solenoidContactor ? "ENERGIZED" : "DE-ENERGIZED"}
+                  active={solenoidContactor}
+                  accent={solenoidContactor ? "green" : "cyan"}
+                  icon={<Zap className={cn("h-4 w-4", solenoidContactor ? "text-[#00f7a1]" : "text-[#00dcff]")} />}
+                />
+                <HWire powered={gateOpen} className="w-4" />
+                <CompactCard
+                  tag="SOL-001"
+                  title="HOPPER GATE"
+                  status={gateOpen ? "OPEN" : "CLOSED"}
+                  active={gateOpen}
+                  accent={gateOpen ? "green" : "cyan"}
+                  icon={
+                    <div className={cn("font-display text-base leading-none", gateOpen ? "text-[#00f7a1]" : "text-[#64748b]")}>◫</div>
+                  }
+                />
+              </div>
             </div>
-            <div className="space-y-3">
-              {animationSteps.map((step, index) => (
-                <div key={step.title} className="rounded-xl border border-[#4a3214] bg-[#100b06] px-3 py-2">
-                  <div className="font-mono text-[8px] tracking-[0.24em] text-[#d8a861]">STEP {index + 1}</div>
-                  <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[#fff0cf]">{step.title}</div>
-                  <div className="mt-1 text-[11px] leading-5 text-[#dbc8a1]">{step.detail}</div>
-                </div>
-              ))}
-            </div>
+
           </div>
+          {/* end equipment chain */}
+
         </div>
+        {/* end main horizontal flow */}
+
       </div>
     </div>
   );
