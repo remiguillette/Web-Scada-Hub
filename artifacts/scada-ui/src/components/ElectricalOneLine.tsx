@@ -223,7 +223,7 @@ function CompactCard({
               event.stopPropagation();
               setDetailsOpen((open) => !open);
             }}
-            className="group inline-flex items-center gap-1.5 rounded-full border border-[#1f3b4d] bg-[#08131a] px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-[#8ecae6] transition-all duration-200 hover:scale-[1.02] hover:border-[#2a6078] hover:text-[#d9f7ff]"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-[#1f3b4d] bg-[#08131a] bg-none px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-[#8ecae6] transition-all duration-200 hover:scale-[1.02] hover:border-[#2a6078] hover:text-[#d9f7ff]"
             aria-expanded={detailsOpen}
           >
             <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
@@ -242,7 +242,7 @@ function CompactCard({
             )}
           >
             <div className="overflow-hidden">
-              <div className="overflow-hidden rounded-lg border border-white/10 bg-black/20">
+              <div className="overflow-hidden rounded-lg border border-white/10 bg-black/20 bg-none">
                 <table className="w-full border-collapse text-left font-mono text-[8px]">
                   <thead className="bg-white/5 text-[#9fb3c8]">
                     <tr>
@@ -283,7 +283,7 @@ function CompactCard({
   const effectiveWidth = hasDetails && detailsOpen ? width : CARD_W;
 
   const cardClasses = cn(
-    "rounded-xl border px-2.5 py-2 transition-all duration-300 shrink-0",
+    "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
   );
 
