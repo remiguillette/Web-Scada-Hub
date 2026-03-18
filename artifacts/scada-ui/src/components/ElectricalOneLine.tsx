@@ -197,7 +197,7 @@ export function ElectricalOneLine(props: ElectricalOneLineProps) {
       <div className="min-w-max">
 
         {/* ─── UTILITY CONDUCTORS ─── */}
-        <div className="mb-4 flex items-center gap-0" style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}>
+        <div className="mb-4 flex items-start gap-0" style={{ paddingLeft: SOURCE_COLUMN_WIDTH }}>
           <span className="shrink-0 font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b] mr-3">
             UTILITY CONDUCTORS
           </span>
