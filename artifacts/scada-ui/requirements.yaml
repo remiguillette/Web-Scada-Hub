@@ -1,0 +1,12 @@
+packages:
+  "framer-motion": "For SCADA animations, glowing paths, and state transitions"
+  "date-fns": "For formatting uptime and real-time clocks in the HMI"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+  "lucide-react": "For industrial-style icons in the interface"
+
+images: []
+
+notes:
+  - Frontend-only simulation, no backend connections required.
+  - State is managed entirely within React using a robust custom hook for the SCADA logic.

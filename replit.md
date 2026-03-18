@@ -16,12 +16,28 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### `artifacts/scada-ui` — CAT_FEEDER_SYS_01 SCADA Dashboard
+- React + Vite frontend-only app at preview path `/`
+- Industrial SCADA/HMI simulation for a cat food dispenser
+- All simulation state is client-side (no backend needed)
+- Key features:
+  - Animated electrical one-line diagram (120V AC → MDS-001 → CB-001 → CTR-001/002 → MTR-001/SOL-001)
+  - PLC-001 status panel with DI/DO indicators
+  - Process overview (hopper level, motor current, voltage, feed counter)
+  - Manual controls (main disconnect, circuit breaker, ESTOP, trigger feed)
+  - System alarm log (last 5 events)
+  - Real-time uptime/clock
+- Dependencies: lucide-react, framer-motion, date-fns, clsx, tailwind-merge
+
 ## Structure
 
 ```text
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server
+│   └── scada-ui/           # CAT_FEEDER_SYS_01 SCADA React app (at /)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
