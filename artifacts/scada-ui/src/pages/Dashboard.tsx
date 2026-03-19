@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import { format } from "date-fns";
 import {
   Activity,
@@ -190,10 +191,8 @@ export default function Dashboard() {
               onToggleBreaker={() => {
                 if (state.breakerTripped) {
                   actions.resetBreaker();
-                  if (state.disconnectClosed) setGridEnabled(true);
                 } else {
                   actions.tripBreaker();
-                  setGridEnabled(false);
                 }
               }}
             />
@@ -291,13 +290,13 @@ export default function Dashboard() {
             </div>
 
             <div className="mt-4">
-              <a
-                href={`${import.meta.env.BASE_URL}simulation`}
+              <Link
+                href="/simulation"
                 className="flex items-center gap-2 rounded-xl border border-[#00dcff]/30 bg-[#062032] px-4 py-2.5 font-display text-xs tracking-[0.16em] text-[#00dcff] transition hover:bg-[#0b2c45] w-fit"
               >
                 <Radio className="h-3.5 w-3.5" />
                 {t.openGridSimulation}
-              </a>
+              </Link>
             </div>
           </Panel>
 

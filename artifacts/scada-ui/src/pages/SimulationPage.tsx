@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Link } from "wouter";
 import {
   Activity,
@@ -628,12 +628,12 @@ function GeneratorCard({
           <span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">
             {t.liveValuesReflected}
           </span>
-          <a
-            href={`${import.meta.env.BASE_URL}electrical-one-line`}
+          <Link
+            href="/electrical-one-line"
             className="ml-auto shrink-0 font-display text-[10px] tracking-[0.14em] text-[#00f7a1] underline underline-offset-2 transition hover:text-white"
           >
             {t.viewDiagram}
-          </a>
+          </Link>
         </div>
       )}
     </div>
@@ -648,23 +648,11 @@ export default function SimulationPage() {
     start,
     stop,
   } = useGeneratorSimulationContext();
-  const { state, actions } = useScadaState();
+  const { state } = useScadaState();
   const { powerFactor, activePower, reactivePower, apparentPower } =
     useElectricalMetrics(voltage, state.current, state.motorPowered);
   const { t, locale, toggleLocale } = useTranslation();
 
-  // Keep SCADA connection in sync with the simulation coupling breaker.
-  // When simulation grid is enabled, close the main disconnect and clear breaker trip.
-  // When simulation grid is disabled, open the main disconnect.
-  useEffect(() => {
-    actions.setDisconnectClosed(gridEnabled);
-    if (gridEnabled) {
-      actions.setBreakerTripped(false);
-    }
-  }, [gridEnabled, actions]);
-
-  // Avoid two-way loop and this page is the source-of-truth when user toggles coupling breaker.
-  // SCADA state is updated from gridEnabled, but gridEnabled is NOT force-written every render.
 
   const voltageMin = config.baseVoltage * (1 - config.voltageVariationPct);
   const voltageMax = config.baseVoltage * (1 + config.voltageVariationPct);
@@ -900,12 +888,12 @@ export default function SimulationPage() {
                 </span>
               </div>
             )}
-            <a
-              href={`${import.meta.env.BASE_URL}electrical-one-line`}
+            <Link
+              href="/electrical-one-line"
               className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
             >
               <Zap className="h-3.5 w-3.5" /> {t.electricalOneLineLink}
-            </a>
+            </Link>
             <button
               type="button"
               onClick={toggleLocale}
@@ -1166,12 +1154,12 @@ export default function SimulationPage() {
                   : t.utilityActiveStandby}
               </span>
             </div>
-            <a
-              href={`${import.meta.env.BASE_URL}electrical-one-line`}
+            <Link
+              href="/electrical-one-line"
               className="ml-auto flex items-center gap-1.5 font-display text-xs tracking-[0.14em] text-[#00dcff] transition hover:text-white"
             >
               <Zap className="h-3.5 w-3.5" /> {t.viewInOneLine}
-            </a>
+            </Link>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {SYSTEM.generators.map((gen, idx) => (

@@ -69,10 +69,8 @@ export default function ElectricalOneLinePage() {
           onToggleBreaker={() => {
             if (state.breakerTripped) {
               actions.resetBreaker();
-              if (state.disconnectClosed) setGridEnabled(true);
             } else {
               actions.tripBreaker();
-              setGridEnabled(false);
             }
           }}
         />

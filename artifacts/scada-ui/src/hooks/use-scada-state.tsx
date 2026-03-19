@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useGridSimulationContext } from "@/context/GridSimulationContext";
 
 export type SystemState = "RUN" | "STANDBY" | "STOP" | "FAULT";
 export type AlarmType = "CRITICAL" | "WARNING" | "INFO";
@@ -73,6 +74,7 @@ export interface ScadaStateContextValue {
 const ScadaStateContext = createContext<ScadaStateContextValue | null>(null);
 
 function useScadaStateValue(): ScadaStateContextValue {
+  const { gridEnabled } = useGridSimulationContext();
   const [disconnectClosed, setDisconnectClosed] = useState(false);
   const [breakerTripped, setBreakerTripped] = useState(false);
   const [estopPressed, setEstopPressed] = useState(false);
@@ -223,6 +225,13 @@ function useScadaStateValue(): ScadaStateContextValue {
 
     return () => clearInterval(timer);
   }, [feedActive, isPowered, motorPowered]);
+
+  useEffect(() => {
+    setDisconnectClosed(gridEnabled);
+    if (gridEnabled) {
+      setBreakerTripped(false);
+    }
+  }, [gridEnabled]);
 
   useEffect(() => {
     if (!disconnectClosed) {
