@@ -120,6 +120,26 @@
     animation: alarm-blink 1s steps(1) infinite;
   }
 
+  /* ─── CONDUCTOR FLOW ANIMATION ──────────────────────── */
+  @keyframes conductor-flow {
+    0%   { background-position: 0% center; }
+    100% { background-position: 100% center; }
+  }
+
+  .conductor-flow {
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 40%,
+      color-mix(in srgb, var(--flow-color) 60%, transparent) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 60px 100%;
+    animation: conductor-flow var(--flow-duration, 1.5s) linear infinite;
+    border-radius: 9999px;
+  }
+
   /* ─── HIDE NATIVE SCROLLBAR CHROME ─────────────────── */
   .scrollbar-hidden {
     scrollbar-width: none;

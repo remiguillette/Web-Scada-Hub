@@ -4,10 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
-import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
-import SimulationPage from "@/pages/SimulationPage";
-import { GridSimulationProvider } from "@/context/GridSimulationContext";
-import { GeneratorSimulationProvider } from "@/context/GeneratorSimulationContext";
+import TeacherPage from "@/pages/TeacherPage";
+import { GridStateProvider } from "@/context/GridStateContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const queryClient = new QueryClient();
@@ -16,8 +14,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/electrical-one-line" component={ElectricalOneLinePage} />
-      <Route path="/simulation" component={SimulationPage} />
+      <Route path="/teacher" component={TeacherPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -28,13 +25,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LanguageProvider>
-          <GridSimulationProvider>
-            <GeneratorSimulationProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-              </WouterRouter>
-            </GeneratorSimulationProvider>
-          </GridSimulationProvider>
+          <GridStateProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+          </GridStateProvider>
         </LanguageProvider>
         <Toaster />
       </TooltipProvider>
