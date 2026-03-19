@@ -24,8 +24,8 @@ export const SYSTEM = {
   },
 
   generators: [
-    { tag: "GEN-001", name: "GENERATOR 1", nominalVoltage: 480, nominalFrequency: 60, fuelLevel: 87 },
-    { tag: "GEN-002", name: "GENERATOR 2", nominalVoltage: 480, nominalFrequency: 60, fuelLevel: 91 },
-    { tag: "GEN-003", name: "GENERATOR 3", nominalVoltage: 480, nominalFrequency: 60, fuelLevel: 84 },
+    { tag: "GEN-001", name: "GENERATOR 1", nominalVoltage: 13800, nominalFrequency: 60, fuelLevel: 87 },
+    { tag: "GEN-002", name: "GENERATOR 2", nominalVoltage: 13800, nominalFrequency: 60, fuelLevel: 91 },
+    { tag: "GEN-003", name: "GENERATOR 3", nominalVoltage: 13800, nominalFrequency: 60, fuelLevel: 84 },
   ],
 } as const;

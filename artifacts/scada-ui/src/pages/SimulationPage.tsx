@@ -99,6 +99,13 @@ function Sparkline({
   );
 }
 
+function formatVoltageDisplay(value: number) {
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(2)} kV`;
+  }
+  return `${value.toFixed(1)} V`;
+}
+
 function StatusBadge({
   ok,
   okLabel,
@@ -641,7 +648,7 @@ function GeneratorCard({
 }
 
 export default function SimulationPage() {
-  const { voltage, frequency, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig } =
+  const { voltage, frequency, gridState, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig } =
     useGridSimulationContext();
   const {
     statuses: generatorStatuses,
@@ -676,12 +683,21 @@ export default function SimulationPage() {
     applyConfig();
   };
 
+  const runningGeneratorFreqs = generatorStatuses
+    .filter((s) => s.state !== "OFFLINE")
+    .map((s) => s.frequency);
+  const plantFrequency =
+    runningGeneratorFreqs.length > 0
+      ? runningGeneratorFreqs.reduce((sum, f) => sum + f, 0) / runningGeneratorFreqs.length
+      : config.baseFrequency;
+
   const gridDetails = useMemo(
     () => [
-      { label: t.nominalVoltage, value: `${config.baseVoltage.toFixed(1)} V` },
-      { label: t.liveVoltage, value: `${voltage.toFixed(2)} V` },
-      { label: t.minAllowed, value: `${voltageMin.toFixed(2)} V` },
-      { label: t.maxAllowed, value: `${voltageMax.toFixed(2)} V` },
+      { label: t.nominalVoltage, value: formatVoltageDisplay(config.baseVoltage) },
+      { label: t.liveVoltage, value: formatVoltageDisplay(voltage) },
+      { label: t.internalBus, value: gridState === "CONNECTED" ? t.busClosed : t.busOpen },
+      { label: t.minAllowed, value: formatVoltageDisplay(voltageMin) },
+      { label: t.maxAllowed, value: formatVoltageDisplay(voltageMax) },
       {
         label: t.voltageDeviation,
         value: `${Number(voltageDeviation) >= 0 ? "+" : ""}${voltageDeviation} V`,
@@ -730,19 +746,27 @@ export default function SimulationPage() {
       voltageInBand,
       freqInBand,
       history.length,
+      gridState,
+      plantFrequency,
+      generatorStatuses,
     ],
   );
 
   const utilityRows = useMemo(
     () => [
       {
-        parameter: t.frequency,
+        parameter: t.gridFrequency,
         value: `${frequency.toFixed(2)} Hz`,
         description: t.gridStabilityDesc,
       },
       {
+        parameter: t.plantFrequency,
+        value: `${plantFrequency.toFixed(2)} Hz`,
+        description: "Average generator frequency before and during grid injection",
+      },
+      {
         parameter: t.voltage,
-        value: `${voltage.toFixed(1)} V`,
+        value: `${formatVoltageDisplay(voltage)}`,
         description: t.supplyAtMccShort(SYSTEM.utility.nominalVoltage),
       },
       {
@@ -837,16 +861,52 @@ export default function SimulationPage() {
   ).length;
   const hydroUnitCount = 10;
   const hydroUnitCapacityMw = 54.8;
-  const hydroActiveUnits = gridEnabled ? 6 : Math.max(availableGenCount, 6);
-  const hydroTargetMw = hydroActiveUnits * 50;
-  const hydroInjectedMw = gridEnabled ? hydroActiveUnits * 55 : 0;
-  const hydroGridState = gridEnabled ? t.baseloadMode : t.syncReady;
+  const gridDemandMw = 400;
+  const hydroActiveUnits = Math.min(
+    hydroUnitCount,
+    Math.max(1, Math.ceil(gridDemandMw / hydroUnitCapacityMw)),
+  );
+
+  const hydroTargetMw = hydroActiveUnits * hydroUnitCapacityMw;
+  const hydroInjectedMw = gridEnabled ? hydroTargetMw : 0;
+  const hydroGridState =
+    gridState === "CONNECTED"
+      ? t.gridConnected
+      : gridState === "SYNCHRONIZING"
+      ? t.syncInProgress
+      : t.couplingStatus;
+
   const hydroSteps = [
-    { label: t.unitOffline, description: 'Turbine stopped · 0 MW', active: false, complete: gridEnabled || hydroActiveUnits > 0 },
-    { label: t.startupWaterToTurbine, description: 'Speed ramps to rated frequency', active: !gridEnabled, complete: hydroActiveUnits > 0 },
-    { label: t.gridSynchronizationStep, description: 'Match voltage, phase, and 60 Hz before breaker close', active: !gridEnabled, complete: gridEnabled },
-    { label: t.loadRamp, description: `Dispatch setpoint ramps to ${hydroTargetMw} MW`, active: gridEnabled, complete: gridEnabled },
-    { label: t.baseloadStep, description: 'Steady hydro production with grid injection enabled', active: gridEnabled, complete: gridEnabled },
+    {
+      label: t.unitOffline,
+      description: "Turbine stopped · 0 MW",
+      active: gridState === "DISCONNECTED",
+      complete: gridState !== "DISCONNECTED",
+    },
+    {
+      label: t.startupWaterToTurbine,
+      description: "Speed ramps to rated frequency",
+      active: gridState === "SYNCHRONIZING",
+      complete: gridState !== "DISCONNECTED",
+    },
+    {
+      label: t.gridSynchronizationStep,
+      description: "Match voltage, phase, and 60 Hz before breaker close",
+      active: gridState === "SYNCHRONIZING",
+      complete: gridState === "CONNECTED",
+    },
+    {
+      label: t.loadRamp,
+      description: `Ramp generated output: 120 → 180 → 240 → ${hydroTargetMw.toFixed(0)} MW`,
+      active: gridState === "CONNECTED",
+      complete: gridState === "CONNECTED",
+    },
+    {
+      label: t.baseloadStep,
+      description: "Steady hydro production with grid injection enabled",
+      active: gridState === "CONNECTED",
+      complete: gridState === "CONNECTED",
+    },
   ];
 
   const utilityStatus = state.isPowered ? t.utility.status.energized : t.utility.status.unavailable;
@@ -944,13 +1004,17 @@ export default function SimulationPage() {
             <div className="ml-auto flex items-center gap-3">
               <span className={cn(
                 "flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] tracking-[0.16em] transition-all duration-300",
-                gridEnabled
+                gridState === "CONNECTED"
                   ? "border-[#00f7a1]/30 bg-[#00f7a1]/10 text-[#00f7a1]"
-                  : "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]"
+                  : gridState === "SYNCHRONIZING"
+                    ? "border-[#ffd166]/30 bg-[#ffd166]/10 text-[#ffd166]"
+                    : "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]"
               )}>
-                {gridEnabled
-                  ? <><CheckCircle2 className="h-3 w-3" /> {t.connected}</>
-                  : <><AlertTriangle className="h-3 w-3" /> {t.disconnected}</>
+                {gridState === "CONNECTED"
+                  ? <><CheckCircle2 className="h-3 w-3" /> {t.gridConnected}</>
+                  : gridState === "SYNCHRONIZING"
+                    ? <><Activity className="h-3 w-3" /> {t.syncInProgress}</>
+                    : <><AlertTriangle className="h-3 w-3" /> {t.disconnected}</>
                 }
               </span>
             </div>
@@ -964,7 +1028,7 @@ export default function SimulationPage() {
               )}>
                 <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.sourceVoltage}</div>
                 <div className={cn("mt-1 font-mono text-2xl font-semibold tracking-[0.06em] transition-colors duration-500", gridEnabled ? "text-[#00dcff]" : "text-[#334155]")}>
-                  {gridEnabled ? voltage.toFixed(1) : "0.0"} <span className="text-sm font-normal text-[#5a7a8a]">V</span>
+                  {gridEnabled ? formatVoltageDisplay(voltage) : "0.00 kV"}
                 </div>
               </div>
               <div className={cn(
@@ -979,9 +1043,9 @@ export default function SimulationPage() {
               <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
                 <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.syncIndicator}</div>
                 <div className="mt-1 flex items-center gap-2">
-                  <LED on={gridEnabled} color={gridEnabled ? "green" : "cyan"} size="md" />
-                  <span className={cn("font-mono text-sm tracking-[0.1em] transition-colors duration-300", gridEnabled ? "text-[#00f7a1]" : "text-[#475569]")}>
-                    {gridEnabled ? t.gridInjection : t.couplingStatus}
+                  <LED on={gridState === "CONNECTED"} color={gridState === "CONNECTED" ? "green" : gridState === "SYNCHRONIZING" ? "amber" : "cyan"} size="md" />
+                  <span className={cn("font-mono text-sm tracking-[0.1em] transition-colors duration-300", gridState === "CONNECTED" ? "text-[#00f7a1]" : gridState === "SYNCHRONIZING" ? "text-[#ffd166]" : "text-[#475569]")}>
+                    {gridState === "CONNECTED" ? t.gridConnected : gridState === "SYNCHRONIZING" ? t.syncInProgress : t.couplingStatus}
                   </span>
                 </div>
                 <div className="mt-1 font-mono text-[10px] text-[#4a5a6a]">{t.powerSourceDesc}</div>
@@ -994,12 +1058,16 @@ export default function SimulationPage() {
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.plantOverview}</div>
                   <div className="font-mono text-[11px] tracking-[0.12em] text-[#8aa0b6]">548 MW / 10 hydro units / {hydroUnitCapacityMw.toFixed(1)} MW per unit</div>
                 </div>
-                <StatusBadge ok={gridEnabled} okLabel={t.gridEnergized} faultLabel={t.syncReady} />
+                <StatusBadge ok={gridState === "CONNECTED"} okLabel={t.gridEnergized} faultLabel={gridState === "SYNCHRONIZING" ? t.syncInProgress : t.syncReady} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.activeUnits}</div>
                   <div className="mt-1 font-mono text-2xl font-semibold tracking-[0.06em] text-[#00f7a1]">{hydroActiveUnits} <span className="text-sm font-normal text-[#5a7a8a]">/ {hydroUnitCount}</span></div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.gridDemand}</div>
+                  <div className="mt-1 font-mono text-2xl font-semibold tracking-[0.06em] text-[#00dcff]">{gridDemandMw.toFixed(0)} <span className="text-sm font-normal text-[#5a7a8a]">MW</span></div>
                 </div>
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.totalInjectedPower}</div>
