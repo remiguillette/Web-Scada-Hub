@@ -10,10 +10,9 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
-  Cpu,
+  Droplets,
   Power,
-  ToggleLeft,
-  ToggleRight,
+  Waves,
 } from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { LED } from "@/components/LED";
@@ -104,6 +103,12 @@ function formatVoltageDisplay(value: number) {
     return `${(value / 1000).toFixed(2)} kV`;
   }
   return `${value.toFixed(1)} V`;
+}
+
+function formatSimulationTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
 }
 
 function StatusBadge({
@@ -648,7 +653,7 @@ function GeneratorCard({
 }
 
 export default function SimulationPage() {
-  const { voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, toggleGrid, setForm, applyConfig } =
+  const { voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, simulationTimeMinutes, inflowRate, reservoirLevel, generatedPowerMw, hydraulicHeadMeters, waterFlowActiveUnits, waterToWireEfficiency, toggleGrid, setForm, applyConfig } =
     useGridSimulationContext();
   const {
     statuses: generatorStatuses,
@@ -862,12 +867,10 @@ export default function SimulationPage() {
   ).length;
   const hydroUnitCount = 10;
   const hydroUnitCapacityMw = 54.8;
-  const hydroActiveUnits = gridDemandMw > 0
-    ? Math.min(hydroUnitCount, Math.max(1, Math.ceil(gridDemandMw / hydroUnitCapacityMw)))
-    : 0;
+  const hydroActiveUnits = waterFlowActiveUnits;
 
   const hydroTargetMw = hydroActiveUnits * hydroUnitCapacityMw;
-  const hydroInjectedMw = gridEnabled ? Math.min(gridDemandMw, hydroTargetMw) : 0;
+  const hydroInjectedMw = generatedPowerMw;
   const hydroPerUnitMw = hydroActiveUnits > 0 ? hydroInjectedMw / hydroActiveUnits : 0;
   const hydroGridState =
     gridState === "CONNECTED"
@@ -875,6 +878,10 @@ export default function SimulationPage() {
       : gridState === "SYNCHRONIZING"
       ? t.syncInProgress
       : t.couplingStatus;
+  const waterFlowPct = Math.max(0, Math.min(100, (inflowRate / 600) * 100));
+  const reservoirPct = Math.max(0, Math.min(100, ((reservoirLevel - 92) / (108 - 92)) * 100));
+  const demandCoveragePct = gridDemandMw > 0 ? Math.min(100, (hydroInjectedMw / gridDemandMw) * 100) : 0;
+  const dayBrightness = Math.max(0.35, Math.sin((simulationTimeMinutes / 1440) * Math.PI));
 
   const hydroSteps = [
     {
@@ -1127,6 +1134,85 @@ export default function SimulationPage() {
             </div>
           </div>
 
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)]">
+            <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.waterFlowPanel}</div>
+                  <div className="font-mono text-[11px] tracking-[0.12em] text-[#8aa0b6]">{t.waterFlowSubtitle}</div>
+                </div>
+                <StatusBadge ok={gridEnabled} okLabel={t.waterDrivingTurbines} faultLabel={t.waterOnStandby} />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#114156] bg-[#071520] p-4">
+                  <div className="flex items-center gap-2 text-[#5cc8ff]">
+                    <Droplets className="h-4 w-4" />
+                    <span className="font-display text-[10px] uppercase tracking-[0.18em]">{t.waterFlowRate}</span>
+                  </div>
+                  <div className="mt-2 font-mono text-2xl font-semibold text-[#dff8ff]">{inflowRate.toFixed(1)} <span className="text-sm font-normal text-[#7fb2cf]">m³/s</span></div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#0d2532]">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#1b7da7] via-[#27b7ff] to-[#78e3ff]" style={{ width: `${waterFlowPct}%` }} />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#144e44] bg-[#081712] p-4">
+                  <div className="flex items-center gap-2 text-[#00f7a1]">
+                    <Waves className="h-4 w-4" />
+                    <span className="font-display text-[10px] uppercase tracking-[0.18em]">{t.reservoirLevelLabel}</span>
+                  </div>
+                  <div className="mt-2 font-mono text-2xl font-semibold text-[#e7fff4]">{reservoirLevel.toFixed(2)} <span className="text-sm font-normal text-[#7fb2cf]">m</span></div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#0b241d]">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#0d6b52] via-[#00c27d] to-[#8cf7cb]" style={{ width: `${reservoirPct}%` }} />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.hydraulicHead}</div>
+                  <div className="mt-1 font-mono text-xl font-semibold text-[#ffd166]">{hydraulicHeadMeters.toFixed(1)} <span className="text-sm font-normal text-[#7f93ac]">m</span></div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.waterToWireEfficiencyLabel}</div>
+                  <div className="mt-1 font-mono text-xl font-semibold text-[#00dcff]">{(waterToWireEfficiency * 100).toFixed(0)} <span className="text-sm font-normal text-[#7f93ac]">%</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.waterFlowScriptTitle}</div>
+                  <div className="font-mono text-[11px] tracking-[0.12em] text-[#8aa0b6]">{t.waterFlowScriptDesc}</div>
+                </div>
+                <div className="rounded-lg border border-[#1c2c40] bg-[#0c1520] px-3 py-2 text-right">
+                  <div className="font-display text-[9px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.simulationClock}</div>
+                  <div className="font-mono text-sm text-white">{formatSimulationTime(simulationTimeMinutes)}</div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden rounded-2xl border border-[#123246] bg-gradient-to-r from-[#081721] via-[#0b1c25] to-[#0e171d] p-4">
+                <div className="pointer-events-none absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 20% 20%, rgba(39,183,255,${dayBrightness}), transparent 40%)` }} />
+                <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
+                  <div className="rounded-xl border border-[#114156] bg-[#071520]/90 p-3">
+                    <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5cc8ff]">{t.waterIntake}</div>
+                    <div className="mt-1 font-mono text-sm text-white">{inflowRate.toFixed(1)} m³/s · {hydraulicHeadMeters.toFixed(1)} m</div>
+                    <div className="mt-1 font-mono text-[10px] leading-4 text-[#7fb2cf]">{t.waterIntakeDesc}</div>
+                  </div>
+                  <div className="hidden md:block font-mono text-xl text-[#27b7ff]">→</div>
+                  <div className="rounded-xl border border-[#144e44] bg-[#081712]/90 p-3">
+                    <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#00f7a1]">{t.turbineGovernor}</div>
+                    <div className="mt-1 font-mono text-sm text-white">{hydroActiveUnits} / {hydroUnitCount} {t.activeUnits.toLowerCase()}</div>
+                    <div className="mt-1 font-mono text-[10px] leading-4 text-[#8acfb6]">{t.turbineGovernorDesc}</div>
+                  </div>
+                  <div className="hidden md:block font-mono text-xl text-[#ffd166]">→</div>
+                  <div className="rounded-xl border border-[#3b3320] bg-[#171108]/90 p-3">
+                    <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#ffd166]">{t.teacherDeliveryNode}</div>
+                    <div className="mt-1 font-mono text-sm text-white">{hydroInjectedMw.toFixed(1)} MW · {demandCoveragePct.toFixed(0)}%</div>
+                    <div className="mt-1 font-mono text-[10px] leading-4 text-[#d1b77b]">{t.teacherDeliveryNodeDesc}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-4 rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
             <div className="mb-3 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-[#00dcff]" />
@@ -1284,7 +1370,7 @@ export default function SimulationPage() {
 
         <Panel
           title={`${t.generatorUnits} — ${SYSTEM.id}`}
-          icon={<Cpu className="h-4 w-4" />}
+          icon={<Droplets className="h-4 w-4" />}
           openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
         >
           <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
