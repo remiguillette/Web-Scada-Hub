@@ -457,7 +457,7 @@ function UtilityBusBackground({
     >
       <text
         x={firstCX + totalHSpan / 2}
-        y={18}
+        y={10}
         fill={utilityActive ? "#4ade80" : "#4b5563"}
         fontSize="10"
         fontWeight="bold"
