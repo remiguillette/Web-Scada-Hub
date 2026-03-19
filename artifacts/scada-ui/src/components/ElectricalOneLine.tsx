@@ -121,19 +121,19 @@ const CONDUCTORS = [
 const STREET_BUS_CONDUCTORS = [
   {
     label: "L1",
-    lines: ["L1", "347 V", "~675 A"],
+    lines: ["L1", "347 V", "675 A"],
     color: "#3b82f6",
     glow: "rgba(59,130,246,0.55)",
   },
   {
     label: "L2",
-    lines: ["L2", "347 V", "~675 A"],
+    lines: ["L2", "347 V", "675 A"],
     color: "#ef4444",
     glow: "rgba(239,68,68,0.50)",
   },
   {
     label: "L3",
-    lines: ["L3", "347 V", "~675 A"],
+    lines: ["L3", "347 V", "675 A"],
     color: "#f59e0b",
     glow: "rgba(245,158,11,0.50)",
   },
@@ -557,14 +557,23 @@ function UtilityBusAnnotations({
               textShadow: utilityActive ? `0 0 10px ${conductor.glow}` : "none",
             }}
           >
-            {conductor.lines.map((line, lineIndex) => (
-              <span
-                key={`${conductor.label}-${line}-${lineIndex}`}
-                className={lineIndex === 0 ? "text-[7px] font-semibold tracking-[0.14em]" : "text-[6px] tracking-[0.08em]"}
-              >
-                {line}
-              </span>
-            ))}
+            {conductor.lines.map((line, lineIndex) => {
+              const className =
+                lineIndex === 0
+                  ? "text-[8px] font-semibold tracking-[0.14em]"
+                  : lineIndex === 1
+                  ? "text-[7px] tracking-[0.08em]"
+                  : "text-[6px] tracking-[0.08em] opacity-70";
+
+              return (
+                <span
+                  key={`${conductor.label}-${line}-${lineIndex}`}
+                  className={className}
+                >
+                  {line}
+                </span>
+              );
+            })}
           </div>
         );
       })}
