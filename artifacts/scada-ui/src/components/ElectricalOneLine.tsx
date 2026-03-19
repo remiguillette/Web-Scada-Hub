@@ -392,136 +392,104 @@ function UtilityServiceEntry({
 }: {
   utilityActive: boolean;
 }) {
-  // Vertical utility trunk (left)
-  const trunkX = 100;
+  // SVG canvas: 240 × 120
+  const W = 240;
+  const H = 120;
 
-  // Vertical riser pole (right)
-  const riserX = 252;
+  // X positions for the two vertical elements
+  const trunkX = 14;
+  const riserX = 226;
 
-  // Conductors — horizontal, evenly spaced, centered in the panel
-  const conductorCount = CONDUCTORS.length;
-  const conductorSpacing = 24;
-  const totalHeight = (conductorCount - 1) * conductorSpacing;
-  const midY = 84;
-  const firstY = midY - totalHeight / 2;
+  // Conductors evenly spaced, vertically centred
+  const spacing = 22;
+  const count = CONDUCTORS.length;
+  const totalSpan = (count - 1) * spacing;
+  const firstY = H / 2 - totalSpan / 2; // = 60 - 33 = 27
 
-  // Trunk spans above first and below last conductor
-  const trunkTop = firstY - 18;
-  const trunkBottom = firstY + totalHeight + 18;
-
-  // Riser pole spans same range
-  const poleTop = trunkTop;
-  const poleBottom = trunkBottom;
-
-  // Label column sits left of the trunk
-  const labelX = trunkX - 8;
+  // Vertical elements extend 14 px beyond the outermost conductors
+  const vTop = firstY - 14;
+  const vBottom = firstY + totalSpan + 14;
+  const midY = H / 2;
 
   return (
-    <div className="relative ml-6 mr-4 flex h-[168px] w-[340px] shrink-0 flex-col justify-start rounded-[24px] border border-white/8 bg-[#0a0f12]/80 px-4 py-3">
-      <div className="absolute left-6 top-2 font-mono text-[9px] tracking-[0.34em] text-[#6b7a6b]">
-        STREET
-      </div>
+    <svg
+      className="shrink-0"
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      aria-label="Utility service entrance"
+    >
+      {/* Utility trunk — dashed vertical */}
+      <line
+        x1={trunkX} y1={vTop}
+        x2={trunkX} y2={vBottom}
+        stroke={utilityActive ? '#4a6080' : '#1f2937'}
+        strokeWidth="2.5"
+        strokeDasharray="5 5"
+        strokeLinecap="round"
+        opacity={0.85}
+      />
 
-      <div className="absolute left-6 top-7 rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-1 font-mono text-[8px] tracking-[0.2em] text-[#8ecae6]">
-        UTILITY
-      </div>
+      {/* Riser pole — solid vertical */}
+      <line
+        x1={riserX} y1={vTop}
+        x2={riserX} y2={vBottom}
+        stroke={utilityActive ? '#c8d8e8' : '#64748b'}
+        strokeWidth="4"
+        strokeLinecap="round"
+        opacity={utilityActive ? 0.92 : 0.45}
+      />
 
-      <svg
-        className="absolute inset-0 h-full w-full overflow-visible"
-        viewBox="0 0 340 168"
-        aria-label="Utility service entrance"
-      >
-        {/* Vertical utility trunk (dashed) */}
-        <line
-          x1={trunkX}
-          y1={trunkTop}
-          x2={trunkX}
-          y2={trunkBottom}
-          stroke={utilityActive ? '#4a6080' : '#1f2937'}
-          strokeWidth="2.5"
-          strokeDasharray="5 5"
-          strokeLinecap="round"
-          opacity={0.85}
-        />
+      {CONDUCTORS.map((conductor, index) => {
+        const y = firstY + index * spacing;
+        return (
+          <g key={`svc-${conductor.label}`}>
+            {/* Phase label */}
+            <text
+              x={trunkX - 4}
+              y={y + 3}
+              fill={conductor.color}
+              fontSize="8"
+              letterSpacing="1.2"
+              textAnchor="end"
+              style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
+            >
+              {conductor.label}
+            </text>
 
-        {/* Vertical riser pole (solid) */}
-        <line
-          x1={riserX}
-          y1={poleTop}
-          x2={riserX}
-          y2={poleBottom}
-          stroke={utilityActive ? '#c8d8e8' : '#64748b'}
-          strokeWidth="4"
-          strokeLinecap="round"
-          opacity={utilityActive ? 0.92 : 0.45}
-        />
+            {/* Horizontal conductor — full span trunk → riser */}
+            <line
+              x1={trunkX} y1={y}
+              x2={riserX} y2={y}
+              stroke={conductor.color}
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              opacity={utilityActive ? 1 : 0.28}
+              style={{ filter: `drop-shadow(0 0 7px ${conductor.glow})` }}
+            />
 
-        {CONDUCTORS.map((conductor, index) => {
-          const y = firstY + index * conductorSpacing;
+            {/* Junction dot at trunk */}
+            <circle cx={trunkX} cy={y} r="3"
+              fill={conductor.color}
+              opacity={utilityActive ? 0.85 : 0.2}
+            />
 
-          return (
-            <g key={`service-${conductor.label}`}>
-              {/* Phase label */}
-              <text
-                x={labelX}
-                y={y + 3}
-                fill={conductor.color}
-                fontSize="8"
-                letterSpacing="1.4"
-                textAnchor="end"
-                style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
-              >
-                {conductor.label}
-              </text>
+            {/* Junction dot at riser */}
+            <circle cx={riserX} cy={y} r="3"
+              fill={conductor.color}
+              opacity={utilityActive ? 0.9 : 0.25}
+            />
+          </g>
+        );
+      })}
 
-              {/* Horizontal conductor — trunk to riser pole (true T-shape) */}
-              <line
-                x1={trunkX}
-                y1={y}
-                x2={riserX}
-                y2={y}
-                stroke={conductor.color}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                opacity={utilityActive ? 1 : 0.28}
-                style={{ filter: `drop-shadow(0 0 7px ${conductor.glow})` }}
-              />
-
-              {/* Junction dot on trunk */}
-              <circle
-                cx={trunkX}
-                cy={y}
-                r="3"
-                fill={conductor.color}
-                opacity={utilityActive ? 0.8 : 0.2}
-              />
-
-              {/* Junction dot on riser */}
-              <circle
-                cx={riserX}
-                cy={y}
-                r="3"
-                fill={conductor.color}
-                opacity={utilityActive ? 0.9 : 0.25}
-              />
-            </g>
-          );
-        })}
-
-        {/* Insulator at mid-point of riser */}
-        <circle
-          cx={riserX}
-          cy={midY}
-          r="6"
-          fill={utilityActive ? '#e2e8f0' : '#4a5568'}
-          opacity="0.95"
-        />
-      </svg>
-
-      <div className="pointer-events-none absolute bottom-3 left-6 font-mono text-[8px] tracking-[0.18em] text-[#64748b]">
-        SERVICE DROP TO RISER
-      </div>
-    </div>
+      {/* Insulator circle at centre of riser */}
+      <circle
+        cx={riserX} cy={midY} r="6"
+        fill={utilityActive ? '#e2e8f0' : '#4a5568'}
+        opacity="0.95"
+      />
+    </svg>
   );
 }
 
