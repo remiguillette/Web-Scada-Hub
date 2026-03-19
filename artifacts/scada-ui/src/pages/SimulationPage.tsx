@@ -421,19 +421,9 @@ function GeneratorCard({
   const isOffline = status.state === "OFFLINE";
   const isStopping = status.state === "STOPPING";
 
-  const isFr = t.fuel === "CARBURANT";
-  const paramLabel = {
-    frequency: isFr ? "Fréquence" : "Frequency",
-    voltage: isFr ? "Tension" : "Voltage",
-    current: isFr ? "Courant" : "Current",
-    activePower: isFr ? "Puissance active" : "Active Power",
-    reactivePower: isFr ? "Puissance réactive" : "Reactive Power",
-    fuelLevel: isFr ? "Niveau carburant" : "Fuel Level",
-  };
-
   const translatedRows = [
     {
-      parameter: paramLabel.frequency,
+      parameter: t.frequency,
       value:
         status.state !== "OFFLINE"
           ? `${status.frequency.toFixed(2)} Hz`
@@ -441,7 +431,7 @@ function GeneratorCard({
       description: isAvailable ? t.genLiveFreqDesc : t.genNominalFreqDesc,
     },
     {
-      parameter: paramLabel.voltage,
+      parameter: t.voltage,
       value:
         status.state !== "OFFLINE"
           ? `${status.voltage.toFixed(1)} V`
@@ -449,22 +439,22 @@ function GeneratorCard({
       description: isAvailable ? t.genLiveVoltageDesc : t.genNominalVoltageDesc,
     },
     {
-      parameter: paramLabel.current,
+      parameter: t.current,
       value: `${status.current.toFixed(2)} A`,
       description: isAvailable ? t.genLiveCurrentDesc : t.genOfflineCurrentDesc,
     },
     {
-      parameter: paramLabel.activePower,
+      parameter: t.activePower,
       value: `${status.activePower.toFixed(1)} W`,
       description: isAvailable ? t.genEmergencyPowerDesc : t.genZeroWhileOffline,
     },
     {
-      parameter: paramLabel.reactivePower,
+      parameter: t.reactivePower,
       value: `${status.reactivePower.toFixed(1)} VAR`,
       description: t.genReactiveDesc,
     },
     {
-      parameter: paramLabel.fuelLevel,
+      parameter: t.fuelLevel,
       value: `${gen.fuelLevel}%`,
       description: t.genFuelDesc,
     },
@@ -743,37 +733,37 @@ export default function SimulationPage() {
   const utilityRows = useMemo(
     () => [
       {
-        parameter: "Frequency",
+        parameter: t.frequency,
         value: `${frequency.toFixed(2)} Hz`,
         description: t.gridStabilityDesc,
       },
       {
-        parameter: "Voltage",
+        parameter: t.voltage,
         value: `${voltage.toFixed(1)} V`,
         description: t.supplyAtMccShort(SYSTEM.utility.nominalVoltage),
       },
       {
-        parameter: "Current",
+        parameter: t.current,
         value: `${state.current.toFixed(2)} A`,
         description: t.totalLoadCurrentShort,
       },
       {
-        parameter: "Active Power",
+        parameter: t.activePower,
         value: `${activePower.toFixed(1)} W`,
         description: t.realPowerConsumed,
       },
       {
-        parameter: "Apparent Power",
+        parameter: t.apparentPower,
         value: `${apparentPower.toFixed(1)} VA`,
         description: t.totalVAShort,
       },
       {
-        parameter: "Reactive Power",
+        parameter: t.reactivePower,
         value: `${reactivePower.toFixed(1)} VAR`,
         description: t.reactiveInductive,
       },
       {
-        parameter: "Power Factor",
+        parameter: t.powerFactor,
         value: `${state.motorPowered ? powerFactor.toFixed(3) : "1.000"} cos\u03C6`,
         description: t.motorPfNominalShort(SYSTEM.motor.powerFactor),
       },
@@ -794,34 +784,34 @@ export default function SimulationPage() {
   const motorRows = useMemo(
     () => [
       {
-        parameter: "Frequency",
+        parameter: t.frequency,
         value: `${frequency.toFixed(2)} Hz`,
         description: t.motorFreqDesc(SYSTEM.motor.nominalFrequency),
       },
       {
-        parameter: "Voltage",
+        parameter: t.voltage,
         value: `${state.motorPowered ? voltage.toFixed(1) : "0.0"} V`,
         description: t.motorVoltageDesc(SYSTEM.motor.nominalVoltage),
       },
       {
-        parameter: "Current",
+        parameter: t.current,
         value: `${state.current.toFixed(2)} A`,
         description: state.motorPowered
           ? t.motorCurrentRunning
           : t.motorCurrentStopped,
       },
       {
-        parameter: "Active Power",
+        parameter: t.activePower,
         value: `${activePower.toFixed(1)} W`,
         description: t.motorShaftPower,
       },
       {
-        parameter: "Reactive Power",
+        parameter: t.reactivePower,
         value: `${reactivePower.toFixed(1)} VAR`,
         description: t.motorMagnitisingReactive,
       },
       {
-        parameter: "Power Factor",
+        parameter: t.powerFactor,
         value: `${state.motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
         description: t.motorPfDesc(SYSTEM.motor.powerFactor),
       },

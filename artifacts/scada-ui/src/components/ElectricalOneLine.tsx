@@ -602,37 +602,37 @@ function buildUtilityDetails(
 ): DetailRow[] {
   return [
     {
-      parameter: "Frequency",
+      parameter: t.frequency,
       value: `${frequency.toFixed(2)} Hz`,
       description: t.gridStabilityDesc,
     },
     {
-      parameter: "Voltage",
+      parameter: t.voltage,
       value: `${voltage.toFixed(1)} V`,
       description: t.supplyVoltageDesc(SYSTEM.utility.nominalVoltage),
     },
     {
-      parameter: "Current",
+      parameter: t.current,
       value: `${current.toFixed(2)} A`,
       description: t.totalLoadCurrentDesc,
     },
     {
-      parameter: "Active Power",
+      parameter: t.activePower,
       value: `${activePower.toFixed(1)} W`,
       description: t.realPowerDesc,
     },
     {
-      parameter: "Apparent Power",
+      parameter: t.apparentPower,
       value: `${apparentPower.toFixed(1)} VA`,
       description: t.totalVADesc,
     },
     {
-      parameter: "Reactive Power",
+      parameter: t.reactivePower,
       value: `${reactivePower.toFixed(1)} VAR`,
       description: t.reactiveDesc,
     },
     {
-      parameter: "Power Factor",
+      parameter: t.powerFactor,
       value: `${powerFactor.toFixed(3)} cos\u03C6`,
       description: t.efficiencyDesc,
     },
@@ -651,32 +651,32 @@ function buildMotorDetails(
 ): DetailRow[] {
   return [
     {
-      parameter: "Voltage",
+      parameter: t.voltage,
       value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`,
       description: t.motorVoltageDesc(SYSTEM.motor.nominalVoltage),
     },
     {
-      parameter: "Current",
+      parameter: t.current,
       value: `${current.toFixed(2)} A`,
       description: motorPowered ? t.motorCurrentRunning : t.motorCurrentStopped,
     },
     {
-      parameter: "Frequency",
+      parameter: t.frequency,
       value: `${frequency.toFixed(2)} Hz`,
       description: t.motorFreqDesc(SYSTEM.motor.nominalFrequency),
     },
     {
-      parameter: "Active Power",
+      parameter: t.activePower,
       value: `${activePower.toFixed(1)} W`,
       description: t.motorShaftPowerDelivered,
     },
     {
-      parameter: "Power Factor",
+      parameter: t.powerFactor,
       value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
       description: t.motorPfNominal(SYSTEM.motor.powerFactor),
     },
     {
-      parameter: "Reactive Power",
+      parameter: t.reactivePower,
       value: `${reactivePower.toFixed(1)} VAR`,
       description: t.motorMagnitisingReactive,
     },
@@ -691,7 +691,7 @@ function buildGeneratorDetails(
 ): DetailRow[] {
   return [
     {
-      parameter: "Frequency",
+      parameter: t.frequency,
       value:
         live && live.state !== "OFFLINE"
           ? `${live.frequency.toFixed(2)} Hz`
@@ -699,7 +699,7 @@ function buildGeneratorDetails(
       description: isActive ? t.genLiveFreqDesc : t.genNominalFreqDesc,
     },
     {
-      parameter: "Voltage",
+      parameter: t.voltage,
       value:
         live && live.state !== "OFFLINE"
           ? `${live.voltage.toFixed(1)} V`
@@ -707,22 +707,22 @@ function buildGeneratorDetails(
       description: isActive ? t.genLiveVoltageDesc : t.genNominalVoltageDescOneline,
     },
     {
-      parameter: "Current",
+      parameter: t.current,
       value: live ? `${live.current.toFixed(2)} A` : "0 A",
       description: isActive ? t.genLiveCurrentDesc : t.genOfflineCurrentDesc,
     },
     {
-      parameter: "Active Power",
+      parameter: t.activePower,
       value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
       description: isActive ? t.genEmergencyPowerDescOneline : t.genActivePowerRunning,
     },
     {
-      parameter: "Reactive Power",
+      parameter: t.reactivePower,
       value: live ? `${live.reactivePower.toFixed(1)} VAR` : "0 VAR",
       description: t.genReactiveDescFull,
     },
     {
-      parameter: "Fuel Level",
+      parameter: t.fuelLevel,
       value: `${gen.fuelLevel}%`,
       description: t.genFuelDescFull,
     },
@@ -853,7 +853,7 @@ export function ElectricalOneLine({
       control: {
         kind: "equipment",
         tag: "CTR-001",
-        title: "FEEDER CTR",
+        title: t.feederCtr,
         status: feederContactor ? t.energized : t.deEnergized,
         active: feederContactor,
         accent: feederContactor ? "green" : "cyan",
@@ -902,7 +902,7 @@ export function ElectricalOneLine({
       control: {
         kind: "equipment",
         tag: "CTR-002",
-        title: "SOL CONTACTOR",
+        title: t.solContactor,
         status: solenoidContactor ? t.energized : t.deEnergized,
         active: solenoidContactor,
         accent: solenoidContactor ? "green" : "cyan",
@@ -918,7 +918,7 @@ export function ElectricalOneLine({
       load: {
         kind: "equipment",
         tag: "SOL-001",
-        title: "HOPPER GATE",
+        title: t.hopperGate,
         status: gateOpen ? t.open : t.closed,
         active: gateOpen,
         accent: gateOpen ? "green" : "cyan",
@@ -1080,7 +1080,7 @@ export function ElectricalOneLine({
       <div ref={diagramRef} className="min-w-max">
         <div className="flex items-center gap-0">
           <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
-            <UtilityBusBackground utilityActive={state.supplyLive} streetLabel="STREET" />
+            <UtilityBusBackground utilityActive={state.supplyLive} streetLabel={t.street} />
             <div
               className="absolute left-0 flex items-start"
               style={{ width: CARD_W, zIndex: 1, top: 65 }}
@@ -1095,7 +1095,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "POLE-001",
-              title: "RISER POLE",
+              title: t.riserPole,
               status: state.supplyLive ? "4.8 KV" : t.dead,
               active: state.supplyLive,
               accent: "cyan",
@@ -1115,7 +1115,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "CB-UTIL",
-              title: "POLE BREAKER",
+              title: t.poleBreaker,
               status: state.supplyLive ? t.closed : t.open,
               active: state.supplyLive,
               accent: state.supplyLive ? "green" : "amber",
@@ -1136,7 +1136,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "XFMR-001",
-              title: "PAD-MOUNT TRANSFORMER",
+              title: t.padMountTransformer,
               status: state.supplyLive ? "4.8K→240V" : t.noFeed,
               active: state.supplyLive,
               accent: "cyan",
@@ -1158,7 +1158,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "MTR-UTIL",
-              title: "METER",
+              title: t.meter,
               status: state.meterLive ? `${voltage.toFixed(1)} VAC` : "0.0 VAC",
               active: state.meterLive,
               accent: "cyan",
@@ -1184,7 +1184,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "PNL-001",
-              title: "MAIN PANEL",
+              title: t.mainPanel,
               status: state.mainPanelLive ? t.energized : t.genStateOffline,
               active: state.mainPanelLive,
               accent: state.mainPanelLive ? "green" : "amber",
@@ -1207,7 +1207,7 @@ export function ElectricalOneLine({
               node={{
                 kind: "equipment",
                 tag: "SCADA-01",
-                title: "SCADA MONITOR",
+                title: t.scadaMonitor,
                 status: state.mainPanelLive ? t.monitoring : t.genStateOffline,
                 active: state.mainPanelLive,
                 accent: "violet",
@@ -1229,7 +1229,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "MDS-001",
-              title: "MAIN DISCONNECT",
+              title: t.mainDisconnect,
               status: disconnectClosed ? t.closed : t.open,
               active: disconnectClosed && state.atsPowered,
               accent: disconnectClosed ? "green" : "amber",
@@ -1254,7 +1254,7 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "CB-001",
-              title: "CIRCUIT BREAKER",
+              title: t.circuitBreaker,
               status: breakerTripped ? t.tripped : t.ok,
               active: !breakerTripped && disconnectClosed && state.atsPowered,
               accent: breakerTripped ? "red" : "green",
@@ -1341,7 +1341,7 @@ export function ElectricalOneLine({
               node={{
                 kind: "equipment",
                 tag: "CB-GEN",
-                title: "MAIN PANEL GEN",
+                title: t.mainPanelGen,
                 status: state.genBrkLive ? t.closed : t.openStandby,
                 active: state.genBrkLive,
                 accent: "amber",
