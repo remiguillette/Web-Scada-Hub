@@ -8,16 +8,16 @@ export const SYSTEM = {
 
   utility: {
     tag: "UTILITY",
-    name: "Energized Grid",
+    name: "Hydro Grid Intertie",
     provider: "Niagara Peninsula Energy (NPE)",
-    nominalVoltage: 120,
+    nominalVoltage: 13800,
     nominalFrequency: 60,
   },
 
   motor: {
     tag: "MTR-001",
     name: "DISPENSER MTR",
-    nominalVoltage: 120,
+    nominalVoltage: 600,
     nominalFrequency: 60,
     nominalCurrent: 2.2,
     powerFactor: 0.88,

@@ -138,7 +138,7 @@ export const translations = {
 
     gridStabilityDesc: "Grid stability indicator.",
     supplyVoltageDesc: (nominalVoltage: number) =>
-      `Supply voltage at MCC bus (nominal ${nominalVoltage} V).`,
+      `Generator/intertie bus voltage (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
     totalLoadCurrentDesc: "Total load current drawn from supply.",
     realPowerDesc: "Real power actively consumed by load.",
     totalVADesc: "Total volt-ampere demand on the supply.",
@@ -177,7 +177,7 @@ export const translations = {
     genLiveOutputCurrent: "Live output current.",
 
     supplyAtMccShort: (nominalVoltage: number) =>
-      `Supply at MCC bus (nominal ${nominalVoltage} V).`,
+      `Intertie bus voltage (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
     totalLoadCurrentShort: "Total load current drawn from supply.",
     realPowerConsumed: "Real power consumed by load.",
     totalVAShort: "Total VA demand on the supply.",
@@ -272,15 +272,15 @@ export const translations = {
       },
       value: {
         serviceType: {
-          "600y347": "3-phase 4-wire, 600Y/347 V",
-          "120208": "3-phase 4-wire, 120/208Y V",
-          "120240split": "Single-phase 3-wire, 120/240 V",
+          "600y347": "3-phase generator step-up / intertie",
+          "120208": "Medium-voltage plant service",
+          "120240split": "Auxiliary low-voltage service",
         },
         notAvailable: "—",
       },
     },
 
-    utilityName: "Energized Grid",
+    utilityName: "Hydro Grid Intertie",
     motorName: "DISPENSER MTR",
     secondaryServiceCable: "SECONDARY SERVICE CABLE",
 
@@ -318,7 +318,7 @@ export const translations = {
     isolateGrid: "OPEN GRID COUPLING",
     connected: "CONNECTED",
     disconnected: "DISCONNECTED",
-    powerSourceDesc: "Separates hydro production from grid injection so units can synchronize before exporting power.",
+    powerSourceDesc: "Separates hydro production from grid injection so units can synchronize before exporting power to the utility.",
     syncIndicator: "GRID SYNCHRONIZATION",
     sourceVoltage: "SOURCE VOLTAGE",
     sourceFrequency: "SOURCE FREQUENCY",
@@ -333,7 +333,7 @@ export const translations = {
     baseloadMode: "BASELOAD",
     syncReady: "SYNCHRONIZING",
     gridEnergized: "GRID ENERGIZED",
-    receivedPower: "RECEIVED POWER",
+    injectedPower: "INJECTED POWER",
     hydroProcess: "HYDRO PROCESS",
     unitOffline: "UNIT OFFLINE",
     startupWaterToTurbine: "START-UP · WATER → TURBINE",
@@ -480,7 +480,7 @@ export const translations = {
 
     gridStabilityDesc: "Indicateur de stabilité du réseau.",
     supplyVoltageDesc: (nominalVoltage: number) =>
-      `Tension d'alimentation au bus MCC (nominal ${nominalVoltage} V).`,
+      `Tension du bus d'interconnexion (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
     totalLoadCurrentDesc:
       "Courant de charge total tiré de l'alimentation.",
     realPowerDesc: "Puissance active réellement consommée par la charge.",
@@ -525,7 +525,7 @@ export const translations = {
     genLiveOutputCurrent: "Courant de sortie en direct.",
 
     supplyAtMccShort: (nominalVoltage: number) =>
-      `Alimentation au bus MCC (nominal ${nominalVoltage} V).`,
+      `Tension du bus d'interconnexion (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
     totalLoadCurrentShort:
       "Courant de charge total tiré de l'alimentation.",
     realPowerConsumed: "Puissance active consommée par la charge.",
@@ -622,15 +622,15 @@ export const translations = {
       },
       value: {
         serviceType: {
-          "600y347": "Triphasé 4 conducteurs, 600Y/347 V",
-          "120208": "Triphasé 4 conducteurs, 120/208Y V",
-          "120240split": "Monophasé 3 conducteurs, 120/240 V",
+          "600y347": "Triphasé, transformateur élévateur / interconnexion",
+          "120208": "Service auxiliaire moyenne tension",
+          "120240split": "Service auxiliaire basse tension",
         },
         notAvailable: "—",
       },
     },
 
-    utilityName: "Réseau électrique",
+    utilityName: "Interconnexion réseau hydro",
     motorName: "MTR DISTRIBUTEUR",
     secondaryServiceCable: "CÂBLE SERVICE SECONDAIRE",
 
@@ -680,7 +680,7 @@ export const translations = {
     baseloadMode: "CHARGE DE BASE",
     syncReady: "SYNCHRONISATION",
     gridEnergized: "RÉSEAU ÉNERGISÉ",
-    receivedPower: "PUISSANCE REÇUE",
+    injectedPower: "PUISSANCE INJECTÉE",
     hydroProcess: "PROCESSUS HYDRO",
     internalBus: "BUS INTERNE",
     busOpen: "OUVERT",

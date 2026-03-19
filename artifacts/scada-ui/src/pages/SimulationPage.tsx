@@ -150,7 +150,7 @@ function MetricCard({
 }: {
   label: string;
   value: string;
-  unit: string;
+  unit?: string;
   nominal: string;
   deviation: string;
   toleranceBand: string;
@@ -198,7 +198,7 @@ function MetricCard({
         <span className="font-mono text-5xl font-semibold tracking-[0.06em]">
           {value}
         </span>
-        <span className="pb-1 font-mono text-sm text-[#8ca5bf]">{unit}</span>
+        {unit ? <span className="pb-1 font-mono text-sm text-[#8ca5bf]">{unit}</span> : null}
       </div>
       <div className="h-[50px] overflow-hidden rounded-lg">
         <Sparkline values={sparkValues} color={sparkColor} />
@@ -209,7 +209,7 @@ function MetricCard({
             {t.nominal}
           </div>
           <div className="font-mono text-sm text-[#b8c6d9]">
-            {nominal} {unit}
+            {nominal}{unit ? ` ${unit}` : ""}
           </div>
         </div>
         <div>
@@ -222,7 +222,7 @@ function MetricCard({
               inBand ? "text-[#00f7a1]" : "text-[#ff4d5a]",
             )}
           >
-            {deviation} {unit}
+            {deviation}{unit ? ` ${unit}` : ""}
           </div>
         </div>
         <div>
@@ -230,7 +230,7 @@ function MetricCard({
             {t.band}
           </div>
           <div className="font-mono text-sm text-[#b8c6d9]">
-            {toleranceBand} {unit}
+            {toleranceBand}{unit ? ` ${unit}` : ""}
           </div>
         </div>
       </div>
@@ -648,7 +648,7 @@ function GeneratorCard({
 }
 
 export default function SimulationPage() {
-  const { voltage, frequency, gridState, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig } =
+  const { voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, toggleGrid, setForm, applyConfig } =
     useGridSimulationContext();
   const {
     statuses: generatorStatuses,
@@ -695,7 +695,7 @@ export default function SimulationPage() {
     () => [
       { label: t.nominalVoltage, value: formatVoltageDisplay(config.baseVoltage) },
       { label: t.liveVoltage, value: formatVoltageDisplay(voltage) },
-      { label: t.internalBus, value: gridState === "CONNECTED" ? t.busClosed : t.busOpen },
+      { label: t.internalBus, value: gridState === "DISCONNECTED" ? t.busOpen : t.busClosed },
       { label: t.minAllowed, value: formatVoltageDisplay(voltageMin) },
       { label: t.maxAllowed, value: formatVoltageDisplay(voltageMax) },
       {
@@ -711,6 +711,7 @@ export default function SimulationPage() {
         value: `${config.baseFrequency.toFixed(2)} Hz`,
       },
       { label: t.liveFrequency, value: `${frequency.toFixed(3)} Hz` },
+      { label: t.plantFrequency, value: `${plantFrequency.toFixed(3)} Hz` },
       { label: t.freqMin, value: `${freqMin.toFixed(3)} Hz` },
       { label: t.freqMax, value: `${freqMax.toFixed(3)} Hz` },
       {
@@ -861,14 +862,13 @@ export default function SimulationPage() {
   ).length;
   const hydroUnitCount = 10;
   const hydroUnitCapacityMw = 54.8;
-  const gridDemandMw = 400;
-  const hydroActiveUnits = Math.min(
-    hydroUnitCount,
-    Math.max(1, Math.ceil(gridDemandMw / hydroUnitCapacityMw)),
-  );
+  const hydroActiveUnits = gridDemandMw > 0
+    ? Math.min(hydroUnitCount, Math.max(1, Math.ceil(gridDemandMw / hydroUnitCapacityMw)))
+    : 0;
 
   const hydroTargetMw = hydroActiveUnits * hydroUnitCapacityMw;
-  const hydroInjectedMw = gridEnabled ? hydroTargetMw : 0;
+  const hydroInjectedMw = gridEnabled ? Math.min(gridDemandMw, hydroTargetMw) : 0;
+  const hydroPerUnitMw = hydroActiveUnits > 0 ? hydroInjectedMw / hydroActiveUnits : 0;
   const hydroGridState =
     gridState === "CONNECTED"
       ? t.gridConnected
@@ -897,13 +897,15 @@ export default function SimulationPage() {
     },
     {
       label: t.loadRamp,
-      description: `Ramp generated output: 120 → 180 → 240 → ${hydroTargetMw.toFixed(0)} MW`,
+      description: `Ramp generated output: 120 → 180 → 240 → ${hydroInjectedMw.toFixed(0)} MW`,
       active: gridState === "CONNECTED",
       complete: gridState === "CONNECTED",
     },
     {
       label: t.baseloadStep,
-      description: "Steady hydro production with grid injection enabled",
+      description: hydroActiveUnits > 0
+        ? `Dispatch settled: ${hydroActiveUnits} unit(s) at ${hydroPerUnitMw.toFixed(1)} MW each`
+        : "No hydro units dispatched",
       active: gridState === "CONNECTED",
       complete: gridState === "CONNECTED",
     },
@@ -921,6 +923,7 @@ export default function SimulationPage() {
     { label: t.baseFrequency, key: "baseFrequency" as const, step: "0.001", min: "1" },
     { label: t.voltageTolerance2, key: "voltageTolerancePct" as const, step: "0.1", min: "0" },
     { label: t.frequencyBand, key: "frequencyVariation" as const, step: "0.001", min: "0" },
+    { label: t.gridDemand, key: "gridDemandMw" as const, step: "1", min: "0" },
   ];
 
   return (
@@ -1064,6 +1067,7 @@ export default function SimulationPage() {
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.activeUnits}</div>
                   <div className="mt-1 font-mono text-2xl font-semibold tracking-[0.06em] text-[#00f7a1]">{hydroActiveUnits} <span className="text-sm font-normal text-[#5a7a8a]">/ {hydroUnitCount}</span></div>
+                  <div className="mt-1 font-mono text-[10px] tracking-[0.12em] text-[#6f8ca1]">{hydroActiveUnits > 0 ? `${hydroPerUnitMw.toFixed(1)} MW per unit` : "No units dispatched"}</div>
                 </div>
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.gridDemand}</div>
@@ -1078,8 +1082,9 @@ export default function SimulationPage() {
                   <div className={cn("mt-1 font-mono text-sm tracking-[0.12em]", gridEnabled ? "text-[#00f7a1]" : "text-[#ffd166]")}>{hydroGridState}</div>
                 </div>
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
-                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.receivedPower}</div>
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.injectedPower}</div>
                   <div className="mt-1 font-mono text-sm tracking-[0.12em] text-[#b8c6d9]">{gridEnabled ? hydroInjectedMw.toFixed(0) : '0'} MW @ {gridEnabled ? frequency.toFixed(2) : '60.00'} Hz</div>
+                  <div className="mt-1 font-mono text-[10px] tracking-[0.12em] text-[#6f8ca1]">{hydroActiveUnits > 0 ? `${hydroPerUnitMw.toFixed(1)} MW per unit` : "Awaiting dispatch"}</div>
                 </div>
               </div>
             </div>
@@ -1154,11 +1159,10 @@ export default function SimulationPage() {
 
         <div className="grid gap-5 xl:grid-cols-2">
           <MetricCard
-            label={t.supplyVoltage}
-            value={voltage.toFixed(2)}
-            unit="V"
-            nominal={config.baseVoltage.toFixed(1)}
-            deviation={`${Number(voltageDeviation) >= 0 ? "+" : ""}${voltageDeviation}`}
+            label={t.sourceVoltage}
+            value={formatVoltageDisplay(voltage)}
+            nominal={formatVoltageDisplay(config.baseVoltage)}
+            deviation={`${Number(voltageDeviation) >= 0 ? "+" : ""}${voltageDeviation} V`}
             toleranceBand={voltageBand}
             inBand={voltageInBand}
             icon={<Zap className="h-5 w-5" />}

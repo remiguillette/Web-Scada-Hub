@@ -6,6 +6,7 @@ export interface GridFormValues {
   baseFrequency: number;
   voltageTolerancePct: number;
   frequencyVariation: number;
+  gridDemandMw: number;
 }
 
 export interface GridReading {
@@ -17,12 +18,14 @@ export interface GridReading {
 export type GridCouplingState = "DISCONNECTED" | "SYNCHRONIZING" | "CONNECTED";
 
 const HISTORY_MAX = 60;
+const SYNC_DELAY_MS = 2500;
 
 const DEFAULT_FORM: GridFormValues = {
   baseVoltage: 13800,
   baseFrequency: 60,
   voltageTolerancePct: 2,
   frequencyVariation: 0.05,
+  gridDemandMw: 400,
 };
 
 const GRID_ENABLED_STORAGE_KEY = "scada.grid.enabled";
@@ -43,8 +46,9 @@ interface GridSimulationContextValue {
   form: GridFormValues;
   config: GridSimulationConfig;
   gridEnabled: boolean;
+  gridDemandMw: number;
   toggleGrid: () => void;
-  setGridEnabled: (value: boolean) => void;
+  requestGridConnection: (nextConnected: boolean) => void;
   setForm: (updater: (prev: GridFormValues) => GridFormValues) => void;
   applyConfig: () => void;
 }
@@ -58,38 +62,61 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     const saved = window.localStorage.getItem(GRID_ENABLED_STORAGE_KEY);
     return saved === "true";
   });
-  const [gridState, setGridState] = useState<GridCouplingState>("DISCONNECTED");
+  const [gridState, setGridState] = useState<GridCouplingState>(gridEnabled ? "CONNECTED" : "DISCONNECTED");
   const [form, setForm] = useState<GridFormValues>(DEFAULT_FORM);
   const [config, setConfig] = useState<GridSimulationConfig>(DEFAULT_CONFIG);
   const [history, setHistory] = useState<GridReading[]>([]);
+  const syncTimeoutRef = useRef<number | null>(null);
 
-  const setGridEnabled = useCallback((value: boolean) => {
+  const persistGridEnabled = useCallback((value: boolean) => {
     setGridEnabledState(value);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(GRID_ENABLED_STORAGE_KEY, String(value));
     }
   }, []);
 
+  const clearSyncTimeout = useCallback(() => {
+    if (syncTimeoutRef.current !== null) {
+      window.clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = null;
+    }
+  }, []);
+
+  const disconnectGrid = useCallback(() => {
+    clearSyncTimeout();
+    setGridState("DISCONNECTED");
+    persistGridEnabled(false);
+  }, [clearSyncTimeout, persistGridEnabled]);
+
+  const requestGridConnection = useCallback((nextConnected: boolean) => {
+    if (!nextConnected) {
+      disconnectGrid();
+      return;
+    }
+
+    if (gridState === "CONNECTED" || gridState === "SYNCHRONIZING") {
+      return;
+    }
+
+    clearSyncTimeout();
+    setGridState("SYNCHRONIZING");
+    persistGridEnabled(false);
+    syncTimeoutRef.current = window.setTimeout(() => {
+      setGridState("CONNECTED");
+      persistGridEnabled(true);
+      syncTimeoutRef.current = null;
+    }, SYNC_DELAY_MS);
+  }, [clearSyncTimeout, disconnectGrid, gridState, persistGridEnabled]);
+
   const { voltage: rawVoltage, frequency: rawFrequency } = useGridSimulation(config);
 
   const voltage = gridEnabled ? rawVoltage : 0;
   const frequency = gridEnabled ? rawFrequency : 0;
+  const gridDemandMw = form.gridDemandMw;
 
   const toggleGrid = useCallback(() => {
-    if (gridState === "CONNECTED") {
-      setGridState("DISCONNECTED");
-      setGridEnabled(false);
-      return;
-    }
-    if (gridState === "DISCONNECTED") {
-      setGridState("SYNCHRONIZING");
-      setGridEnabled(false);
-      window.setTimeout(() => {
-        setGridState("CONNECTED");
-        setGridEnabled(true);
-      }, 2500);
-    }
-  }, [gridState, setGridEnabled]);
+    requestGridConnection(gridState !== "CONNECTED");
+  }, [gridState, requestGridConnection]);
 
   const applyConfig = useCallback(() => {
     setConfig({
@@ -108,13 +135,14 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== GRID_ENABLED_STORAGE_KEY) return;
       const enabled = event.newValue === "true";
+      clearSyncTimeout();
       setGridEnabledState(enabled);
       setGridState(enabled ? "CONNECTED" : "DISCONNECTED");
     };
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  }, [clearSyncTimeout]);
 
   useEffect(() => {
     if (voltage !== prevVoltageRef.current || frequency !== prevFrequencyRef.current) {
@@ -127,8 +155,10 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     }
   }, [voltage, frequency]);
 
+  useEffect(() => () => clearSyncTimeout(), [clearSyncTimeout]);
+
   return (
-    <GridSimulationContext.Provider value={{ voltage, frequency, gridState, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig }}>
+    <GridSimulationContext.Provider value={{ voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, toggleGrid, requestGridConnection, setForm, applyConfig }}>
       {children}
     </GridSimulationContext.Provider>
   );
