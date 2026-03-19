@@ -457,7 +457,7 @@ function UtilityBusBackground({
     >
       <text
         x={firstCX + totalHSpan / 2}
-        y={16}
+        y={7}
         fill={utilityActive ? "#4ade80" : "#4b5563"}
         fontSize="14"
         fontWeight="bold"
@@ -519,7 +519,7 @@ function UtilityBusBackground({
           <text
             key={`bus-label-${conductor.label}`}
             x={cx}
-            y={36}
+            y={11}
             fill={conductor.color}
             fontSize="6"
             textAnchor="middle"
@@ -529,7 +529,7 @@ function UtilityBusBackground({
               <tspan
                 key={`${conductor.label}-${line}-${lineIndex}`}
                 x={cx}
-                dy={lineIndex === 0 ? 0 : 8}
+                dy={lineIndex === 0 ? 0 : 6}
               >
                 {line}
               </tspan>
