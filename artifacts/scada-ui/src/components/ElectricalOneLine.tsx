@@ -121,35 +121,49 @@ const CONDUCTORS = [
 const STREET_BUS_CONDUCTORS = [
   {
     label: "L1",
-    lines: ["L1", "347 V", "675 A"],
     color: "#5a82b5",
     glow: "rgba(90,130,181,0.14)",
   },
   {
     label: "L2",
-    lines: ["L2", "347 V", "675 A"],
     color: "#c96a6a",
     glow: "rgba(201,106,106,0.14)",
   },
   {
     label: "L3",
-    lines: ["L3", "347 V", "675 A"],
     color: "#c48e3b",
     glow: "rgba(196,142,59,0.14)",
   },
   {
     label: "N",
-    lines: ["N", "0 V"],
     color: "#8f8f8f",
     glow: "rgba(143,143,143,0.08)",
   },
   {
     label: "GND",
-    lines: ["GND", "0 V"],
     color: "#5b8f6b",
     glow: "rgba(91,143,107,0.14)",
   },
 ] as const;
+
+type StreetBusMetric = {
+  label: string;
+  lines: string[];
+  color: string;
+  glow: string;
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function formatBusVoltage(value: number) {
+  return `${Math.round(value)} V`;
+}
+
+function formatBusCurrent(value: number) {
+  return `${Math.max(0, Math.round(value))} A`;
+}
 
 const UTILITY_BUS_GEOMETRY = {
   width: CARD_W + 220,
@@ -579,9 +593,11 @@ function UtilityBusBackground({
 function UtilityBusAnnotations({
   utilityActive,
   streetLabel,
+  conductorMetrics,
 }: {
   utilityActive: boolean;
   streetLabel: string;
+  conductorMetrics: StreetBusMetric[];
 }) {
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
@@ -605,7 +621,7 @@ function UtilityBusAnnotations({
         </span>
       </div>
 
-      {STREET_BUS_CONDUCTORS.map((conductor, index) => {
+      {conductorMetrics.map((conductor, index) => {
         const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
         const width = UTILITY_BUS_GEOMETRY.annotationWidth;
         const left = cx - width / 2;
@@ -855,6 +871,77 @@ export function ElectricalOneLine({
   onToggleBreaker,
 }: ElectricalOneLineProps) {
   const { t } = useTranslation();
+  const utilityActive = voltage > 0;
+  const [busSample, setBusSample] = useState(0);
+
+  useEffect(() => {
+    if (!utilityActive) {
+      setBusSample(0);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setBusSample((sample) => sample + 1);
+    }, 350);
+
+    return () => window.clearInterval(interval);
+  }, [utilityActive]);
+
+  const conductorMetrics = useMemo<StreetBusMetric[]>(() => {
+    const basePhaseVoltage = clamp(voltage > 0 ? voltage : 347, 338, 354);
+    const phaseOffsets = [1, -1, 0.5];
+    const phaseCurrents = [
+      current * 1.01,
+      current * 0.98,
+      current * 1.02,
+    ];
+    const cycle = Date.now() / 1000;
+    const startingPulse = motorPowered ? (Math.sin(cycle * 3.6) > 0.985 ? 1.2 : 1) : 0;
+    const phaseLabels = ["L1", "L2", "L3"];
+
+    const phaseMetrics = phaseLabels.map((label, index) => {
+      const drift = Math.sin(cycle * (0.18 + index * 0.03)) * 1.2;
+      const noise = Math.sin(cycle * (3.3 + index * 0.4)) * (motorPowered ? current * 0.012 : 0);
+      const burst = index === 2 ? startingPulse : 1;
+      const liveVoltage = utilityActive ? clamp(basePhaseVoltage + phaseOffsets[index] + drift, 338, 354) : 0;
+      const liveCurrent = utilityActive
+        ? clamp(phaseCurrents[index] * burst + noise, 0, current * 1.25 + 25)
+        : 0;
+
+      return {
+        label,
+        lines: [label, formatBusVoltage(liveVoltage), formatBusCurrent(liveCurrent)],
+        color: STREET_BUS_CONDUCTORS[index].color,
+        glow: STREET_BUS_CONDUCTORS[index].glow,
+      };
+    });
+
+    const neutralCurrent = utilityActive
+      ? clamp(Math.abs(phaseMetrics.reduce((sum, phase) => sum + Number.parseFloat(phase.lines[2]), 0) / 100) + 8 + Math.sin(cycle * 2.1) * 6, 5, 25)
+      : 0;
+    const neutralVoltage = utilityActive
+      ? clamp(1.4 + Math.sin(cycle * 0.7) * 0.8, 0.5, 3)
+      : 0;
+    const groundVoltage = utilityActive
+      ? clamp(0.15 + Math.sin(cycle * 0.45) * 0.05, 0.1, 0.2)
+      : 0;
+
+    return [
+      ...phaseMetrics,
+      {
+        label: "N",
+        lines: ["N", `${neutralVoltage.toFixed(1)} V`, formatBusCurrent(neutralCurrent)],
+        color: STREET_BUS_CONDUCTORS[3].color,
+        glow: STREET_BUS_CONDUCTORS[3].glow,
+      },
+      {
+        label: "GND",
+        lines: ["GND", `${groundVoltage.toFixed(1)} V`],
+        color: STREET_BUS_CONDUCTORS[4].color,
+        glow: STREET_BUS_CONDUCTORS[4].glow,
+      },
+    ];
+  }, [voltage, current, motorPowered, utilityActive, busSample]);
 
   const genLive =
     generatorLiveStates?.some(
@@ -1197,6 +1284,7 @@ export function ElectricalOneLine({
             <UtilityBusAnnotations
               utilityActive={state.supplyLive}
               streetLabel={t.street}
+              conductorMetrics={conductorMetrics}
             />
             <div
               className="absolute left-0 flex items-start"
