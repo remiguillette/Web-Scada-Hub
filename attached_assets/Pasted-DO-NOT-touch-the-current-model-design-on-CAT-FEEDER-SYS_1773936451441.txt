@@ -1,0 +1,57 @@
+DO NOT touch the current model (design) on CAT_FEEDER_SYS_01 Electrical One-Line, page. only modifies the text, color, addition/icons. the UI/UX page is already done. makes the changes linked to the script
+
+Technical Brief: SCADA Architecture Refactoring and Code Cleanup
+1. Overall Objective
+The objective is to transition the application from a prototype state with simulated data ("mockups") to a robust Backend/Frontend architecture. We must remove all extraneous demonstration scripts to implement real energy flow logic, driven by a "Teacher" interface (Backend) to a "Student" interface (Frontend).
+
+2. Cleanup and Standardization
+
+* Mass Removal: Remove all simulation scripts, static data files, and "mockups" used for initial presentations.
+
+* Initial State "Zero": By default, upon loading, the system should display a powered-off network.
+
+* Values ​​set to 0 (voltage, current, frequency).
+
+* Connection States: "Disconnected" or "Power Off".
+
+* Visual: Grayed-out or muted lines.
+
+3. Logic Refactoring (Logical Order)
+The energy management scripts must be reorganized in the /simulation page (or equivalent backend) according to the physical distribution order:
+
+* Power Plant (Source): The starting point. This is where energy is generated.
+
+* Injection/Coupling Station: The device that authorizes or prevents the sending of current to the grid.
+
+* Distribution Lines: The propagation to the local grid.
+
+4. Interface Specifications
+A. Teacher Side (Backend/Control)
+The teacher interface acts as the Delivery Station. It must be able to:
+
+* Represents the Power Plant (Icon: Factory).
+
+* Activate a Coupling Circuit Breaker (Icon: ToggleRight) to inject current into the grid.
+
+* Optional: A synchronization indicator (Frequency/Phase) before enabling coupling.
+
+B. Student Side (Frontend / Visualization)
+The student sees the Local Area Network (Street Grid) composed of 5 conductors: L1, L2, L3, N, and GND (already configured).
+
+Visual States:
+
+* Off: Gray lines, no animation.
+
+* On: * The lines change to the current color.
+
+* Activation of a flow animation: Directional arrows showing the direction of the current.
+
+* Use of the Zap icon (Lucide) to symbolize active energy.
+
+* The speed of the arrow animation should ideally be correlated to the power injected by the teacher.
+
+5. Technical Requirements (Stack & UI)
+
+* Icons: Strict use of the Lucide library.
+
+* Flow Logic: Activation of the backend (Teacher) must trigger real-time updates of the states on the frontend (Student). * Data: No more data should be hard-coded in the frontend. Everything must come from the backend logic.
