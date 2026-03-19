@@ -1024,10 +1024,10 @@ export function ElectricalOneLine({
           <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
             {/* Background power bus — z-index 0, renders behind the card */}
             <UtilityBusBackground utilityActive={state.supplyLive} />
-            {/* UTILITY card on top — z-index 1 */}
+            {/* UTILITY card on top — z-index 1; anchored at top so details expand downward */}
             <div
-              className="absolute inset-y-0 left-0 flex items-center"
-              style={{ width: CARD_W, zIndex: 1 }}
+              className="absolute left-0 flex items-start"
+              style={{ width: CARD_W, zIndex: 1, top: 65 }}
             >
               <NodeCard node={utilityNode} />
             </div>
