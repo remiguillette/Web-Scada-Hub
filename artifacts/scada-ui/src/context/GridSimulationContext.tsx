@@ -1,5 +1,16 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useGridSimulation, type GridSimulationConfig } from "@/hooks/use-grid-simulation";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  useGridSimulation,
+  type GridSimulationConfig,
+} from "@/hooks/use-grid-simulation";
 
 export interface GridFormValues {
   baseVoltage: number;
@@ -22,6 +33,8 @@ const SYNC_DELAY_MS = 2500;
 const HYDRO_MAX_UNITS = 10;
 const HYDRO_UNIT_CAPACITY_MW = 54.8;
 const WATER_TO_WIRE_EFFICIENCY = 0.9;
+const WATER_DENSITY_KG_PER_M3 = 1000;
+const GRAVITY_M_PER_S2 = 9.81;
 const DEFAULT_SIM_TIME_MINUTES = 8 * 60;
 const DEFAULT_INFLOW_RATE = 500;
 const DEFAULT_RESERVOIR_LEVEL = 100;
@@ -66,7 +79,9 @@ interface GridSimulationContextValue {
   applyConfig: () => void;
 }
 
-const GridSimulationContext = createContext<GridSimulationContextValue | null>(null);
+const GridSimulationContext = createContext<GridSimulationContextValue | null>(
+  null,
+);
 
 export function GridSimulationProvider({ children }: { children: ReactNode }) {
   const [gridEnabled, setGridEnabledState] = useState<boolean>(() => {
@@ -75,11 +90,15 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     const saved = window.localStorage.getItem(GRID_ENABLED_STORAGE_KEY);
     return saved === "true";
   });
-  const [gridState, setGridState] = useState<GridCouplingState>(gridEnabled ? "CONNECTED" : "DISCONNECTED");
+  const [gridState, setGridState] = useState<GridCouplingState>(
+    gridEnabled ? "CONNECTED" : "DISCONNECTED",
+  );
   const [form, setForm] = useState<GridFormValues>(DEFAULT_FORM);
   const [config, setConfig] = useState<GridSimulationConfig>(DEFAULT_CONFIG);
   const [history, setHistory] = useState<GridReading[]>([]);
-  const [simulationTimeMinutes, setSimulationTimeMinutes] = useState(DEFAULT_SIM_TIME_MINUTES);
+  const [simulationTimeMinutes, setSimulationTimeMinutes] = useState(
+    DEFAULT_SIM_TIME_MINUTES,
+  );
   const [inflowRate, setInflowRate] = useState(DEFAULT_INFLOW_RATE);
   const [reservoirLevel, setReservoirLevel] = useState(DEFAULT_RESERVOIR_LEVEL);
   const syncTimeoutRef = useRef<number | null>(null);
@@ -104,27 +123,31 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     persistGridEnabled(false);
   }, [clearSyncTimeout, persistGridEnabled]);
 
-  const requestGridConnection = useCallback((nextConnected: boolean) => {
-    if (!nextConnected) {
-      disconnectGrid();
-      return;
-    }
+  const requestGridConnection = useCallback(
+    (nextConnected: boolean) => {
+      if (!nextConnected) {
+        disconnectGrid();
+        return;
+      }
 
-    if (gridState === "CONNECTED" || gridState === "SYNCHRONIZING") {
-      return;
-    }
+      if (gridState === "CONNECTED" || gridState === "SYNCHRONIZING") {
+        return;
+      }
 
-    clearSyncTimeout();
-    setGridState("SYNCHRONIZING");
-    persistGridEnabled(false);
-    syncTimeoutRef.current = window.setTimeout(() => {
-      setGridState("CONNECTED");
-      persistGridEnabled(true);
-      syncTimeoutRef.current = null;
-    }, SYNC_DELAY_MS);
-  }, [clearSyncTimeout, disconnectGrid, gridState, persistGridEnabled]);
+      clearSyncTimeout();
+      setGridState("SYNCHRONIZING");
+      persistGridEnabled(false);
+      syncTimeoutRef.current = window.setTimeout(() => {
+        setGridState("CONNECTED");
+        persistGridEnabled(true);
+        syncTimeoutRef.current = null;
+      }, SYNC_DELAY_MS);
+    },
+    [clearSyncTimeout, disconnectGrid, gridState, persistGridEnabled],
+  );
 
-  const { voltage: rawVoltage, frequency: rawFrequency } = useGridSimulation(config);
+  const { voltage: rawVoltage, frequency: rawFrequency } =
+    useGridSimulation(config);
 
   const voltage = gridEnabled ? rawVoltage : 0;
   const frequency = gridEnabled ? rawFrequency : 0;
@@ -133,13 +156,34 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   const gridDemandMw = Number(
     Math.max(120, form.gridDemandMw * (0.65 + demandFactor * 0.32)).toFixed(1),
   );
-  const waterFlowActiveUnits = gridDemandMw > 0
-    ? Math.min(HYDRO_MAX_UNITS, Math.max(1, Math.ceil(gridDemandMw / HYDRO_UNIT_CAPACITY_MW)))
-    : 0;
+  const hydraulicHeadMeters = Number(
+    (48 + (reservoirLevel - 100) * 0.35).toFixed(1),
+  );
+  const rawWaterPowerMw = Number(
+    (
+      (WATER_DENSITY_KG_PER_M3 *
+        GRAVITY_M_PER_S2 *
+        inflowRate *
+        hydraulicHeadMeters *
+        WATER_TO_WIRE_EFFICIENCY) /
+      1_000_000
+    ).toFixed(1),
+  );
+  const hydraulicCapacityMw = Math.min(
+    HYDRO_MAX_UNITS * HYDRO_UNIT_CAPACITY_MW,
+    rawWaterPowerMw,
+  );
+  const dispatchedPowerMw = Math.min(gridDemandMw, hydraulicCapacityMw);
+  const waterFlowActiveUnits =
+    gridEnabled && dispatchedPowerMw > 0
+      ? Math.min(
+          HYDRO_MAX_UNITS,
+          Math.max(1, Math.ceil(dispatchedPowerMw / HYDRO_UNIT_CAPACITY_MW)),
+        )
+      : 0;
   const generatedPowerMw = gridEnabled
-    ? Number(Math.min(gridDemandMw, waterFlowActiveUnits * HYDRO_UNIT_CAPACITY_MW).toFixed(1))
+    ? Number(dispatchedPowerMw.toFixed(1))
     : 0;
-  const hydraulicHeadMeters = Number((48 + (reservoirLevel - 100) * 0.35).toFixed(1));
 
   const toggleGrid = useCallback(() => {
     requestGridConnection(gridState !== "CONNECTED");
@@ -172,7 +216,10 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   }, [clearSyncTimeout]);
 
   useEffect(() => {
-    if (voltage !== prevVoltageRef.current || frequency !== prevFrequencyRef.current) {
+    if (
+      voltage !== prevVoltageRef.current ||
+      frequency !== prevFrequencyRef.current
+    ) {
       prevVoltageRef.current = voltage;
       prevFrequencyRef.current = frequency;
       setHistory((prev) => {
@@ -189,7 +236,9 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
       setSimulationTimeMinutes((prev) => (prev + 1) % 1440);
       setInflowRate((prev) => {
         const variation = Math.random() * 10 - 5;
-        return Number(Math.max(400, Math.min(600, prev + variation)).toFixed(1));
+        return Number(
+          Math.max(400, Math.min(600, prev + variation)).toFixed(1),
+        );
       });
     }, 1000);
 
@@ -205,7 +254,29 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   }, [generatedPowerMw, inflowRate]);
 
   return (
-    <GridSimulationContext.Provider value={{ voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, simulationTimeMinutes, inflowRate, reservoirLevel, generatedPowerMw, hydraulicHeadMeters, waterFlowActiveUnits, waterToWireEfficiency: WATER_TO_WIRE_EFFICIENCY, toggleGrid, requestGridConnection, setForm, applyConfig }}>
+    <GridSimulationContext.Provider
+      value={{
+        voltage,
+        frequency,
+        gridState,
+        history,
+        form,
+        config,
+        gridEnabled,
+        gridDemandMw,
+        simulationTimeMinutes,
+        inflowRate,
+        reservoirLevel,
+        generatedPowerMw,
+        hydraulicHeadMeters,
+        waterFlowActiveUnits,
+        waterToWireEfficiency: WATER_TO_WIRE_EFFICIENCY,
+        toggleGrid,
+        requestGridConnection,
+        setForm,
+        applyConfig,
+      }}
+    >
       {children}
     </GridSimulationContext.Provider>
   );
@@ -213,6 +284,9 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
 
 export function useGridSimulationContext(): GridSimulationContextValue {
   const ctx = useContext(GridSimulationContext);
-  if (!ctx) throw new Error("useGridSimulationContext must be used inside GridSimulationProvider");
+  if (!ctx)
+    throw new Error(
+      "useGridSimulationContext must be used inside GridSimulationProvider",
+    );
   return ctx;
 }
