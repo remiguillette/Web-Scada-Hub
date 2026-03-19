@@ -27,16 +27,16 @@ import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 
 const STATE_STYLE: Record<SystemState, string> = {
-  RUN: "border-[#00f7a1]/60 text-[#00f7a1] shadow-[0_0_24px_rgba(0,247,161,0.16)]",
-  STANDBY: "border-[#ffb347]/60 text-[#ffb347] shadow-[0_0_24px_rgba(255,179,71,0.14)]",
+  RUN: "border-[#5aa784]/60 text-[#8bd6b6]",
+  STANDBY: "border-[#d89a5a]/60 text-[#eed6a2]",
   STOP: "border-[#334155] text-[#94a3b8]",
-  FAULT: "border-[#ff4d5a]/70 text-[#ff4d5a] shadow-[0_0_24px_rgba(255,77,90,0.18)]",
+  FAULT: "border-[#d5565a]/70 text-[#e8a8aa]",
 };
 
 const ALARM_STYLE: Record<Alarm["type"], string> = {
-  CRITICAL: "border-[#ff4d5a]/30 bg-[#2a0b12] text-[#ffd7dc]",
-  WARNING: "border-[#ffb347]/30 bg-[#231708] text-[#ffe4ba]",
-  INFO: "border-[#00dcff]/20 bg-[#071723] text-[#c4f5ff]",
+  CRITICAL: "border-[#d5565a]/30 bg-[#2a1012] text-[#f3c5c9]",
+  WARNING: "border-[#d89a5a]/30 bg-[#2b1a0f] text-[#f6deb1]",
+  INFO: "border-[#6cc2d5]/20 bg-[#0a2228] text-[#b8dbe3]",
 };
 
 function formatUptime(totalSeconds: number) {
@@ -102,8 +102,8 @@ export default function Dashboard() {
       <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 backdrop-blur px-6 py-4">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#1f8a61]/40 bg-[#161c18] shadow-[0_0_20px_rgba(0,247,161,0.12)]">
-              <Cat className="h-6 w-6 text-[#00f7a1]" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#4f8f6f]/40 bg-[#1b2320]">
+              <Cat className="h-6 w-6 text-[#82b8a1]" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3">

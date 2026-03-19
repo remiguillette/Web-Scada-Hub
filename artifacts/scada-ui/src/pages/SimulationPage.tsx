@@ -291,11 +291,11 @@ function ElecDataCard({
           <thead className="bg-white/5 text-[#7f93ac]">
             <tr>
               <th className="px-3 py-2 font-medium tracking-[0.1em]">
-                {t.parameter}
+                {t.utility.details.table.parameter}
               </th>
-              <th className="px-3 py-2 font-medium tracking-[0.1em]">{t.value}</th>
+              <th className="px-3 py-2 font-medium tracking-[0.1em]">{t.utility.details.table.unit}</th>
               <th className="hidden px-3 py-2 font-medium tracking-[0.1em] sm:table-cell">
-                {t.description}
+                {t.utility.details.table.description}
               </th>
             </tr>
           </thead>
@@ -833,7 +833,7 @@ export default function SimulationPage() {
     (s) => s.state === "READY" || s.state === "LOADED",
   ).length;
 
-  const utilityStatus = state.isPowered ? t.energized : t.unavailable;
+  const utilityStatus = state.isPowered ? t.utility.status.energized : t.utility.status.unavailable;
   const motorStatus = state.motorPowered
     ? t.running
     : state.isPowered
@@ -940,9 +940,9 @@ export default function SimulationPage() {
 
         <div className="grid gap-5 xl:grid-cols-2">
           <ElecDataCard
-            tag={SYSTEM.utility.tag}
-            title={t.utilityName}
-            subtitle={SYSTEM.utility.provider}
+            tag={t.utility.tag}
+            title={t.utility.title}
+            subtitle={SYSTEM.utility.provider || t.utility.provider}
             status={utilityStatus}
             energized={state.isPowered}
             rows={utilityRows}

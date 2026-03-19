@@ -205,6 +205,80 @@ export const translations = {
 
     systemDescription: "AUTO DISPENSER SCADA",
     controllerHealthStatus: "24VDC logic healthy / scan executing",
+    utility: {
+      tag: "UTILITY",
+      title: "ELECTRIC GRID",
+      provider: "Niagara Peninsula Energy (NPE)",
+      status: {
+        energized: "ENERGIZED",
+        unavailable: "UNAVAILABLE",
+      },
+      details: {
+        button: {
+          open: "GRID DETAILS",
+          close: "HIDE DETAILS",
+        },
+        table: {
+          parameter: "Parameter",
+          unit: "Abbreviation / Unit",
+          description: "Description",
+        },
+        frequency: {
+          label: "Frequency",
+          desc: "Grid stability indicator.",
+        },
+        serviceType: {
+          label: "Service Type",
+          desc: "Utility service configuration.",
+        },
+        voltageLN: {
+          label: "Line-Neutral Voltage",
+          desc: "Voltage between phase and neutral.",
+        },
+        voltageLL: {
+          label: "Line-Line Voltage",
+          desc: "Voltage between two phases.",
+        },
+        current: {
+          label: "Current",
+          desc: "Total current drawn by the installation.",
+        },
+        activePower: {
+          label: "Active Power",
+          desc: "Real power consumed by loads.",
+        },
+        apparentPower: {
+          label: "Apparent Power",
+          desc: "Total apparent power demand on the grid in volt-amperes.",
+        },
+        reactivePower: {
+          label: "Reactive Power",
+          desc: "Reactive component required for some loads.",
+        },
+        powerFactor: {
+          label: "Power Factor",
+          desc: "Ratio of active power to apparent power.",
+        },
+        serviceTypeShort: {
+          label: "Service Type",
+        },
+        voltageLNShort: {
+          label: "L-N Voltage",
+        },
+        voltageLLShort: {
+          label: "L-L Voltage",
+        },
+      },
+      value: {
+        serviceType: {
+          "600y347": "3-phase 4-wire, 600Y/347 V",
+          "120208": "3-phase 4-wire, 120/208Y V",
+          "120240split": "Single-phase 3-wire, 120/240 V",
+        },
+        notAvailable: "—",
+      },
+    },
+
     utilityName: "Energized Grid",
     motorName: "DISPENSER MTR",
     secondaryServiceCable: "SECONDARY SERVICE CABLE",
@@ -445,6 +519,80 @@ export const translations = {
 
     systemDescription: "SCADA DISTRIBUTEUR AUTO",
     controllerHealthStatus: "Logique 24VCC saine / scan en cours",
+    utility: {
+      tag: "RÉSEAU",
+      title: "RÉSEAU ÉLECTRIQUE",
+      provider: "Niagara Peninsula Energy (NPE)",
+      status: {
+        energized: "SOUS TENSION",
+        unavailable: "INDISPONIBLE",
+      },
+      details: {
+        button: {
+          open: "DÉTAILS RÉSEAU",
+          close: "MASQUER LES DÉTAILS",
+        },
+        table: {
+          parameter: "Paramètre",
+          unit: "Abrév. / Unité",
+          description: "Description",
+        },
+        frequency: {
+          label: "Fréquence",
+          desc: "Indicateur de stabilité du réseau.",
+        },
+        serviceType: {
+          label: "Type de raccordement",
+          desc: "Configuration du service d’alimentation du réseau.",
+        },
+        voltageLN: {
+          label: "Tension phase-neutre",
+          desc: "Tension mesurée entre une phase et le neutre.",
+        },
+        voltageLL: {
+          label: "Tension phase-phase",
+          desc: "Tension mesurée entre deux phases.",
+        },
+        current: {
+          label: "Courant",
+          desc: "Courant total appelé par l’installation.",
+        },
+        activePower: {
+          label: "Puissance active",
+          desc: "Puissance réellement consommée par les charges.",
+        },
+        apparentPower: {
+          label: "Puissance apparente",
+          desc: "Puissance totale demandée au réseau en voltampères.",
+        },
+        reactivePower: {
+          label: "Puissance réactive",
+          desc: "Composante réactive nécessaire au fonctionnement de certaines charges.",
+        },
+        powerFactor: {
+          label: "Facteur de puissance",
+          desc: "Rapport entre la puissance active et la puissance apparente.",
+        },
+        serviceTypeShort: {
+          label: "Type de service",
+        },
+        voltageLNShort: {
+          label: "Tension L-N",
+        },
+        voltageLLShort: {
+          label: "Tension L-L",
+        },
+      },
+      value: {
+        serviceType: {
+          "600y347": "Triphasé 4 conducteurs, 600Y/347 V",
+          "120208": "Triphasé 4 conducteurs, 120/208Y V",
+          "120240split": "Monophasé 3 conducteurs, 120/240 V",
+        },
+        notAvailable: "—",
+      },
+    },
+
     utilityName: "Réseau électrique",
     motorName: "MTR DISTRIBUTEUR",
     secondaryServiceCable: "CÂBLE SERVICE SECONDAIRE",

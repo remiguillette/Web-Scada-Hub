@@ -18,9 +18,9 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
   const { t } = useTranslation();
 
   const statusDot: Record<string, string> = {
-    ok:      "bg-[#00ff50] shadow-[0_0_8px_rgba(0,255,80,0.9)] led-pulse",
-    warning: "bg-[#ffb300] shadow-[0_0_8px_rgba(255,175,0,0.9)] led-pulse",
-    fault:   "bg-[#ff3232] shadow-[0_0_8px_rgba(255,50,50,0.9)] led-pulse",
+    ok:      "bg-[#65c077]",
+    warning: "bg-[#d89f5d]",
+    fault:   "bg-[#cf6f6f]",
     offline: "bg-[#3a4a5a]",
   };
 
@@ -40,11 +40,11 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
           "relative overflow-hidden"
         )}
       >
-        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#00f7a1]" />
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#5aa78f]" />
 
         <div className="flex items-center gap-2.5 pl-2">
-          {icon && <span className="text-[#00f7a1] opacity-80">{icon}</span>}
-          <h3 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00f7a1]">
+          {icon && <span className="text-[#82b9a8] opacity-80">{icon}</span>}
+          <h3 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#82b9a8]">
             {title}
           </h3>
         </div>

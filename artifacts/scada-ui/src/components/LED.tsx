@@ -16,10 +16,10 @@ export function LED({ on, color = "green", label, size = "md", className }: LEDP
   };
 
   const colorOn = {
-    green: "bg-[#00ff50] shadow-[0_0_8px_3px_rgba(0,255,80,0.75)]",
-    red:   "bg-[#ff3232] shadow-[0_0_8px_3px_rgba(255,50,50,0.75)]",
-    amber: "bg-[#ffb300] shadow-[0_0_8px_3px_rgba(255,175,0,0.75)]",
-    cyan:  "bg-[#00dcff] shadow-[0_0_8px_3px_rgba(0,220,255,0.75)]",
+    green: "bg-[#65c077]",
+    red:   "bg-[#d56a6a]",
+    amber: "bg-[#ddb157]",
+    cyan:  "bg-[#6dc2d5]",
   };
   const colorOff = {
     green: "bg-[#0d2515]",
@@ -34,7 +34,7 @@ export function LED({ on, color = "green", label, size = "md", className }: LEDP
         className={cn(
           "rounded-full transition-all duration-200 shrink-0",
           sizeClasses[size],
-          on ? [colorOn[color], "led-pulse"] : colorOff[color]
+          on ? colorOn[color] : colorOff[color]
         )}
       />
       {label && (

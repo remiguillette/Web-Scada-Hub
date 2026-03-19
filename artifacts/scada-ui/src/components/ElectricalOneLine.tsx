@@ -111,53 +111,53 @@ const SOURCE_COL_W = 142;
 const SCROLL_STEP = 120;
 
 const CONDUCTORS = [
-  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
-  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
-  { label: "L3", color: "#f59e0b", glow: "rgba(245,158,11,0.50)" },
-  { label: "N", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
-  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+  { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
+  { label: "L2", color: "#c96a6a", glow: "rgba(201,106,106,0.16)" },
+  { label: "L3", color: "#c48e3b", glow: "rgba(196,142,59,0.16)" },
+  { label: "N", color: "#8f8f8f", glow: "rgba(143,143,143,0.1)" },
+  { label: "GND", color: "#5b8f6b", glow: "rgba(91,143,107,0.16)" },
 ] as const;
 
 const STREET_BUS_CONDUCTORS = [
   {
     label: "L1",
     lines: ["L1", "347 V", "675 A"],
-    color: "#3b82f6",
-    glow: "rgba(59,130,246,0.55)",
+    color: "#5a82b5",
+    glow: "rgba(90,130,181,0.14)",
   },
   {
     label: "L2",
     lines: ["L2", "347 V", "675 A"],
-    color: "#ef4444",
-    glow: "rgba(239,68,68,0.50)",
+    color: "#c96a6a",
+    glow: "rgba(201,106,106,0.14)",
   },
   {
     label: "L3",
     lines: ["L3", "347 V", "675 A"],
-    color: "#f59e0b",
-    glow: "rgba(245,158,11,0.50)",
+    color: "#c48e3b",
+    glow: "rgba(196,142,59,0.14)",
   },
   {
     label: "N",
     lines: ["N", "0 V"],
-    color: "#d4d4d4",
-    glow: "rgba(210,210,210,0.35)",
+    color: "#8f8f8f",
+    glow: "rgba(143,143,143,0.08)",
   },
   {
     label: "GND",
     lines: ["GND", "0 V"],
-    color: "#22c55e",
-    glow: "rgba(34,197,94,0.45)",
+    color: "#5b8f6b",
+    glow: "rgba(91,143,107,0.14)",
   },
 ] as const;
 
 const UTILITY_BUS_GEOMETRY = {
   width: CARD_W + 220,
-  height: 220,
-  titleY: 20,
-  conductorLabelY: 52,
-  lineTop: 78,
-  lineBottom: 820,
+  height: 500,
+  titleY: 100,
+  conductorLabelY: 108,
+  lineTop: 280,
+  lineBottom: 560,
   hSpacing: 25,
   annotationWidth: 44,
 } as const;
@@ -167,35 +167,35 @@ const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 const getWireClasses = (powered: boolean) =>
   cn(
     powered
-      ? "bg-[#00f7a1] shadow-[0_0_12px_rgba(0,247,161,0.85)]"
+      ? "bg-[#2a8f6e]"
       : "bg-[#1e293b]",
   );
 
 const ACCENT_STYLES: Record<Accent, { active: string; inactive: string }> = {
   green: {
     active:
-      "border-[#00f7a1] text-[#00f7a1] bg-[#0e1a10] shadow-[0_0_14px_rgba(0,247,161,0.18)]",
-    inactive: "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+      "border-[#5aa784] text-[#8bd6b6] bg-[#132a1f]",
+    inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   cyan: {
     active:
-      "border-[#00dcff] text-[#b8f3ff] bg-[#0d1a1e] shadow-[0_0_14px_rgba(0,220,255,0.16)]",
-    inactive: "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+      "border-[#5bc2db] text-[#9fd8ea] bg-[#0c1f25]",
+    inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   red: {
     active:
-      "border-[#ff4d5a] text-[#ffd8dc] bg-[#22070d] shadow-[0_0_14px_rgba(255,77,90,0.2)]",
-    inactive: "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+      "border-[#d55e68] text-[#edb2b5] bg-[#1f0f11]",
+    inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   amber: {
     active:
-      "border-[#ffb347] text-[#ffe2af] bg-[#1e1206] shadow-[0_0_14px_rgba(255,179,71,0.18)]",
-    inactive: "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+      "border-[#d89a5a] text-[#eed6a2] bg-[#1d150b]",
+    inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   violet: {
     active:
-      "border-[#a78bfa] text-[#ede9fe] bg-[#130d22] shadow-[0_0_14px_rgba(167,139,250,0.18)]",
-    inactive: "border-[#333333] text-[#5a6a5a] bg-[#1a1a1a]",
+      "border-[#9b87c4] text-[#d3ccf8] bg-[#1b1522]",
+    inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
 };
 
@@ -277,7 +277,7 @@ function CompactCard({
             <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
               {detailsOpen ? "−" : "+"}
             </span>
-            <span>{t.gridDetailsButton}</span>
+            <span>{detailsOpen ? t.utility.details.button.close : t.utility.details.button.open}</span>
           </button>
 
           <div
@@ -294,11 +294,11 @@ function CompactCard({
                 <table className="w-full border-collapse text-left font-mono text-[8px]">
                   <thead className="bg-white/5 text-[#9fb3c8]">
                     <tr>
-                      <th className="px-2 py-1 font-medium">{t.parameter}</th>
+                      <th className="px-2 py-1 font-medium">{t.utility.details.table.parameter}</th>
                       <th className="px-2 py-1 font-medium">
-                        {t.abbreviationUnit}
+                        {t.utility.details.table.unit}
                       </th>
-                      <th className="px-2 py-1 font-medium">{t.description}</th>
+                      <th className="px-2 py-1 font-medium">{t.utility.details.table.description}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -447,7 +447,7 @@ function UtilityBusBackground({
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
   const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
-  const centerY = H / 2;
+  const centerY = UTILITY_BUS_GEOMETRY.lineTop - 20;
   const riserX = W - 2;
 
   return (
@@ -466,13 +466,14 @@ function UtilityBusBackground({
         return (
           <g key={`bus-lines-${conductor.label}`}>
             <line
-              x1={cx} y1={lineTop}
-              x2={cx} y2={lineBottom}
+              x1={cx}
+              y1={155}
+              x2={cx}
+              y2={lineBottom}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity={utilityActive ? 1 : 0.25}
-              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
             <line
@@ -482,7 +483,6 @@ function UtilityBusBackground({
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity={utilityActive ? 1 : 0.25}
-              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
             <line
@@ -492,7 +492,6 @@ function UtilityBusBackground({
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity={utilityActive ? 1 : 0.25}
-              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
             <circle
@@ -522,11 +521,11 @@ function UtilityBusAnnotations({
   const busCenterX = firstCX + totalHSpan / 2;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[1]">
+    <div className="pointer-events-none absolute inset-0 z-[10]">
       <div
         className="absolute -translate-x-1/2 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
         style={{
-          top: UTILITY_BUS_GEOMETRY.titleY - 16,
+          top: UTILITY_BUS_GEOMETRY.titleY - 12,
           left: busCenterX,
           color: utilityActive ? "#4ade80" : "#4b5563",
           textShadow: utilityActive ? "0 0 10px rgba(74,222,128,0.28)" : "none",
@@ -548,13 +547,13 @@ function UtilityBusAnnotations({
             key={`bus-annotation-${conductor.label}`}
             className="absolute flex flex-col items-center px-1 py-1 text-center font-mono"
             style={{
-              top: UTILITY_BUS_GEOMETRY.conductorLabelY - 10,
+              top: UTILITY_BUS_GEOMETRY.conductorLabelY + 6,
               left,
               width,
               gap: "1px",
               color: conductor.color,
               opacity: utilityActive ? 1 : 0.5,
-              textShadow: utilityActive ? `0 0 10px ${conductor.glow}` : "none",
+              textShadow: "none",
             }}
           >
             {conductor.lines.map((line, lineIndex) => {
@@ -642,39 +641,39 @@ function buildUtilityDetails(
 ): DetailRow[] {
   return [
     {
-      parameter: t.frequency,
+      parameter: t.utility.details.frequency.label,
       value: `${frequency.toFixed(2)} Hz`,
-      description: t.gridStabilityDesc,
+      description: t.utility.details.frequency.desc,
     },
     {
-      parameter: t.voltage,
+      parameter: t.utility.details.voltageLN.label,
       value: `${voltage.toFixed(1)} V`,
-      description: t.supplyVoltageDesc(SYSTEM.utility.nominalVoltage),
+      description: t.utility.details.voltageLN.desc,
     },
     {
-      parameter: t.current,
+      parameter: t.utility.details.current.label,
       value: `${current.toFixed(2)} A`,
-      description: t.totalLoadCurrentDesc,
+      description: t.utility.details.current.desc,
     },
     {
-      parameter: t.activePower,
+      parameter: t.utility.details.activePower.label,
       value: `${activePower.toFixed(1)} W`,
-      description: t.realPowerDesc,
+      description: t.utility.details.activePower.desc,
     },
     {
-      parameter: t.apparentPower,
+      parameter: t.utility.details.apparentPower.label,
       value: `${apparentPower.toFixed(1)} VA`,
-      description: t.totalVADesc,
+      description: t.utility.details.apparentPower.desc,
     },
     {
-      parameter: t.reactivePower,
+      parameter: t.utility.details.reactivePower.label,
       value: `${reactivePower.toFixed(1)} VAR`,
-      description: t.reactiveDesc,
+      description: t.utility.details.reactivePower.desc,
     },
     {
-      parameter: t.powerFactor,
+      parameter: t.utility.details.powerFactor.label,
       value: `${powerFactor.toFixed(3)} cos\u03C6`,
-      description: t.efficiencyDesc,
+      description: t.utility.details.powerFactor.desc,
     },
   ];
 }
@@ -1119,12 +1118,25 @@ export function ElectricalOneLine({
     >
       <div ref={diagramRef} className="min-w-max pt-1 pb-8 pl-6 pr-10">
         <div className="flex items-center gap-0">
-          <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 235 }}>
+          <div
+            className="relative shrink-0"
+            style={{
+              width: CARD_W + 220,
+              height: UTILITY_BUS_GEOMETRY.height,
+            }}
+          >
             <UtilityBusBackground utilityActive={state.supplyLive} />
-            <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} />
+            <UtilityBusAnnotations
+              utilityActive={state.supplyLive}
+              streetLabel={t.street}
+            />
             <div
               className="absolute left-0 flex items-start"
-              style={{ width: CARD_W, zIndex: 1, top: 82 }}
+              style={{
+                width: CARD_W,
+                zIndex: 1,
+                top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+              }}
             >
               <NodeCard node={utilityNode} />
             </div>
