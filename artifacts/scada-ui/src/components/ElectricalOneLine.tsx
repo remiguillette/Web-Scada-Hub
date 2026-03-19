@@ -415,8 +415,8 @@ function UtilityBusBackground({
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2; // centre of card → x ≈ 38
 
-  // Vertical bars span full container height so they stick above + below card
-  const lineTop = 0;
+  // Vertical bars start below the STREET + conductor labels
+  const lineTop = 30;
   const lineBottom = H;
 
   // Card sits vertically centred in the container
