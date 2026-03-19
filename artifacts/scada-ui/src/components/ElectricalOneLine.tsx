@@ -444,8 +444,8 @@ function UtilityServiceEntry({
 
       {CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * hSpacing;
-        // Horizontal tap-off point: spread slightly around centre
-        const tapY = centerY + (index - (count - 1) / 2) * 10;
+        // Horizontal run Y — evenly spread around centre, aligning with card exit
+        const tapY = centerY + (index - (count - 1) / 2) * 12;
 
         return (
           <g key={`street-${conductor.label}`}>
@@ -472,9 +472,9 @@ function UtilityServiceEntry({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Horizontal tap to riser */}
+            {/* Horizontal run — card edge (x=0) → T-junction → riser */}
             <line
-              x1={cx} y1={tapY}
+              x1={0} y1={tapY}
               x2={riserX} y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
@@ -483,13 +483,13 @@ function UtilityServiceEntry({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Junction dot on vertical */}
-            <circle cx={cx} cy={tapY} r="2.5"
+            {/* T-junction dot where horizontal meets vertical */}
+            <circle cx={cx} cy={tapY} r="3"
               fill={conductor.color}
-              opacity={utilityActive ? 0.9 : 0.2}
+              opacity={utilityActive ? 0.95 : 0.2}
             />
 
-            {/* Junction dot on riser */}
+            {/* Junction dot at riser */}
             <circle cx={riserX} cy={tapY} r="2.5"
               fill={conductor.color}
               opacity={utilityActive ? 0.9 : 0.25}
