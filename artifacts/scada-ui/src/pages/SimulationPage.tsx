@@ -835,6 +835,19 @@ export default function SimulationPage() {
   const availableGenCount = generatorStatuses.filter(
     (s) => s.state === "READY" || s.state === "LOADED",
   ).length;
+  const hydroUnitCount = 10;
+  const hydroUnitCapacityMw = 54.8;
+  const hydroActiveUnits = gridEnabled ? 6 : Math.max(availableGenCount, 6);
+  const hydroTargetMw = hydroActiveUnits * 50;
+  const hydroInjectedMw = gridEnabled ? hydroActiveUnits * 55 : 0;
+  const hydroGridState = gridEnabled ? t.baseloadMode : t.syncReady;
+  const hydroSteps = [
+    { label: t.unitOffline, description: 'Turbine stopped · 0 MW', active: false, complete: gridEnabled || hydroActiveUnits > 0 },
+    { label: t.startupWaterToTurbine, description: 'Speed ramps to rated frequency', active: !gridEnabled, complete: hydroActiveUnits > 0 },
+    { label: t.gridSynchronizationStep, description: 'Match voltage, phase, and 60 Hz before breaker close', active: !gridEnabled, complete: gridEnabled },
+    { label: t.loadRamp, description: `Dispatch setpoint ramps to ${hydroTargetMw} MW`, active: gridEnabled, complete: gridEnabled },
+    { label: t.baseloadStep, description: 'Steady hydro production with grid injection enabled', active: gridEnabled, complete: gridEnabled },
+  ];
 
   const utilityStatus = state.isPowered ? t.utility.status.energized : t.utility.status.unavailable;
   const motorStatus = state.motorPowered
@@ -943,7 +956,7 @@ export default function SimulationPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)_auto]">
             <div className="grid gap-3 sm:grid-cols-3">
               <div className={cn(
                 "rounded-xl border px-4 py-3 transition-all duration-500",
@@ -972,6 +985,34 @@ export default function SimulationPage() {
                   </span>
                 </div>
                 <div className="mt-1 font-mono text-[10px] text-[#4a5a6a]">{t.powerSourceDesc}</div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.plantOverview}</div>
+                  <div className="font-mono text-[11px] tracking-[0.12em] text-[#8aa0b6]">548 MW / 10 hydro units / {hydroUnitCapacityMw.toFixed(1)} MW per unit</div>
+                </div>
+                <StatusBadge ok={gridEnabled} okLabel={t.gridEnergized} faultLabel={t.syncReady} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.activeUnits}</div>
+                  <div className="mt-1 font-mono text-2xl font-semibold tracking-[0.06em] text-[#00f7a1]">{hydroActiveUnits} <span className="text-sm font-normal text-[#5a7a8a]">/ {hydroUnitCount}</span></div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.totalInjectedPower}</div>
+                  <div className="mt-1 font-mono text-2xl font-semibold tracking-[0.06em] text-[#00dcff]">{hydroInjectedMw.toFixed(0)} <span className="text-sm font-normal text-[#5a7a8a]">MW</span></div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.gridState}</div>
+                  <div className={cn("mt-1 font-mono text-sm tracking-[0.12em]", gridEnabled ? "text-[#00f7a1]" : "text-[#ffd166]")}>{hydroGridState}</div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.receivedPower}</div>
+                  <div className="mt-1 font-mono text-sm tracking-[0.12em] text-[#b8c6d9]">{gridEnabled ? hydroInjectedMw.toFixed(0) : '0'} MW @ {gridEnabled ? frequency.toFixed(2) : '60.00'} Hz</div>
+                </div>
               </div>
             </div>
 
@@ -1010,6 +1051,35 @@ export default function SimulationPage() {
                   }
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-[#00dcff]" />
+              <div className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-white">{t.hydroProcess}</div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-5">
+              {hydroSteps.map((step, index) => (
+                <div
+                  key={step.label}
+                  className={cn(
+                    "rounded-xl border px-4 py-3 transition-all duration-300",
+                    step.active
+                      ? "border-[#00f7a1]/30 bg-[#00f7a1]/8"
+                      : step.complete
+                        ? "border-[#00dcff]/20 bg-[#0c1520]"
+                        : "border-[#1c2c40] bg-[#0c1118]",
+                  )}
+                >
+                  <div className="font-mono text-[10px] tracking-[0.18em] text-[#5a7a8a]">0{index + 1}</div>
+                  <div className={cn(
+                    "mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.12em]",
+                    step.active ? "text-[#00f7a1]" : "text-white",
+                  )}>{step.label}</div>
+                  <div className="mt-2 font-mono text-[10px] leading-4 text-[#7f93ac]">{step.description}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
