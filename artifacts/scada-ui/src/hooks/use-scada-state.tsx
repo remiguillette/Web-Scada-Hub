@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 export type SystemState = "RUN" | "STANDBY" | "STOP" | "FAULT";
 export type AlarmType = "CRITICAL" | "WARNING" | "INFO";
@@ -18,12 +18,61 @@ export interface IoPoint {
   on: boolean;
 }
 
-const FEED_DURATION_MS = 4200;
-const AUTO_FEED_INTERVAL_MS = 70_000;
+export interface ScadaState {
+  disconnectClosed: boolean;
+  breakerTripped: boolean;
+  estopPressed: boolean;
+  hopperLevel: number;
+  bowlLevel: number;
+  bowlDetected: boolean;
+  feedActive: boolean;
+  feedCount: number;
+  uptime: number;
+  voltage: number;
+  current: number;
+  lastFeedTime: Date | null;
+  nextFeedingTime: Date;
+  alarms: Alarm[];
+  feederContactor: boolean;
+  solenoidContactor: boolean;
+  motorPowered: boolean;
+  gateOpen: boolean;
+  hopperLow: boolean;
+  hopperHigh: boolean;
+  hopperEmpty: boolean;
+  estopHealthy: boolean;
+  bowlDemand: boolean;
+  isFault: boolean;
+  systemState: SystemState;
+  systemMode: SystemMode;
+  isPowered: boolean;
+  digitalInputs: IoPoint[];
+  digitalOutputs: IoPoint[];
+}
 
-const makeId = () => Math.random().toString(36).slice(2, 10);
+export interface ScadaActions {
+  toggleDisconnect: () => void;
+  setDisconnectClosed: (closed: boolean) => void;
+  tripBreaker: () => void;
+  resetBreaker: () => void;
+  setBreakerTripped: (tripped: boolean) => void;
+  pressEstop: () => void;
+  resetEstop: () => void;
+  triggerFeed: () => void;
+  refillHopper: () => void;
+  clearBowl: () => void;
+  restoreBowl: () => void;
+  removeBowl: () => void;
+}
 
-export function useScadaState() {
+export interface ScadaStateContextValue {
+  state: ScadaState;
+  actions: ScadaActions;
+}
+
+const ScadaStateContext = createContext<ScadaStateContextValue | null>(null);
+
+function useScadaStateValue(): ScadaStateContextValue {
   const [disconnectClosed, setDisconnectClosed] = useState(false);
   const [breakerTripped, setBreakerTripped] = useState(false);
   const [estopPressed, setEstopPressed] = useState(false);
@@ -36,7 +85,7 @@ export function useScadaState() {
   const [voltage, setVoltage] = useState(0);
   const [current, setCurrent] = useState(0);
   const [lastFeedTime, setLastFeedTime] = useState<Date | null>(null);
-  const [nextFeedingTime, setNextFeedingTime] = useState(new Date(Date.now() + AUTO_FEED_INTERVAL_MS));
+  const [nextFeedingTime, setNextFeedingTime] = useState(new Date(Date.now() + 70_000));
   const [alarms, setAlarms] = useState<Alarm[]>([]);
 
   const cycleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,7 +122,7 @@ export function useScadaState() {
 
       return [
         {
-          id: makeId(),
+          id: Math.random().toString(36).slice(2, 10),
           timestamp: new Date(),
           message,
           active,
@@ -106,7 +155,7 @@ export function useScadaState() {
 
       return [
         {
-          id: makeId(),
+          id: Math.random().toString(36).slice(2, 10),
           timestamp: new Date(),
           message,
           active: true,
@@ -134,7 +183,7 @@ export function useScadaState() {
     setFeedActive(false);
     setFeedCount((prev) => prev + 1);
     setLastFeedTime(new Date());
-    setNextFeedingTime(new Date(Date.now() + AUTO_FEED_INTERVAL_MS));
+    setNextFeedingTime(new Date(Date.now() + 70_000));
     setHopperLevel((prev) => Math.max(0, Number((prev - (6 + Math.random() * 3)).toFixed(1))));
     setBowlLevel((prev) => Math.min(100, Number((prev + 22 + Math.random() * 8).toFixed(1))));
     pushEvent("FEED CYCLE COMPLETED", "INFO", false);
@@ -155,7 +204,7 @@ export function useScadaState() {
     pushEvent("FEED CYCLE STARTED", "INFO", false);
 
     if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
-    cycleTimeoutRef.current = setTimeout(finishFeedCycle, FEED_DURATION_MS);
+    cycleTimeoutRef.current = setTimeout(finishFeedCycle, 4200);
   }, [breakerTripped, bowlDetected, estopPressed, feedActive, finishFeedCycle, hopperEmpty, isPowered, pushEvent, setAlarmActive]);
 
   useEffect(() => {
@@ -234,21 +283,27 @@ export function useScadaState() {
     if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
   }, []);
 
-  const digitalInputs: IoPoint[] = useMemo(() => [
-    { id: "DI-01", label: "MDS-001 ON", on: disconnectClosed },
-    { id: "DI-02", label: "CB-001 OK", on: !breakerTripped },
-    { id: "DI-03", label: "HOPPER HIGH", on: hopperHigh },
-    { id: "DI-04", label: "HOPPER LOW", on: hopperLow },
-    { id: "DI-05", label: "BOWL DETECT", on: bowlDetected },
-    { id: "DI-06", label: "ESTOP NC", on: estopHealthy },
-  ], [bowlDetected, breakerTripped, disconnectClosed, estopHealthy, hopperHigh, hopperLow]);
+  const digitalInputs: IoPoint[] = useMemo(
+    () => [
+      { id: "DI-01", label: "MDS-001 ON", on: disconnectClosed },
+      { id: "DI-02", label: "CB-001 OK", on: !breakerTripped },
+      { id: "DI-03", label: "HOPPER HIGH", on: hopperHigh },
+      { id: "DI-04", label: "HOPPER LOW", on: hopperLow },
+      { id: "DI-05", label: "BOWL DETECT", on: bowlDetected },
+      { id: "DI-06", label: "ESTOP NC", on: estopHealthy },
+    ],
+    [bowlDetected, breakerTripped, disconnectClosed, estopHealthy, hopperHigh, hopperLow],
+  );
 
-  const digitalOutputs: IoPoint[] = useMemo(() => [
-    { id: "DO-01", label: "FEEDER CTR", on: feederContactor },
-    { id: "DO-02", label: "HOPPER SOL", on: solenoidContactor },
-    { id: "DO-03", label: "BEACON GRN", on: systemState === "RUN" || systemState === "STANDBY" },
-    { id: "DO-04", label: "BEACON RED", on: systemState === "FAULT" },
-  ], [feederContactor, solenoidContactor, systemState]);
+  const digitalOutputs: IoPoint[] = useMemo(
+    () => [
+      { id: "DO-01", label: "FEEDER CTR", on: feederContactor },
+      { id: "DO-02", label: "HOPPER SOL", on: solenoidContactor },
+      { id: "DO-03", label: "BEACON GRN", on: systemState === "RUN" || systemState === "STANDBY" },
+      { id: "DO-04", label: "BEACON RED", on: systemState === "FAULT" },
+    ],
+    [feederContactor, solenoidContactor, systemState],
+  );
 
   return {
     state: {
@@ -277,13 +332,17 @@ export function useScadaState() {
       alarms,
       isPowered,
       isFault,
+      estopHealthy,
+      bowlDemand,
       digitalInputs,
       digitalOutputs,
     },
     actions: {
       toggleDisconnect: () => setDisconnectClosed((prev) => !prev),
+      setDisconnectClosed,
       tripBreaker: () => setBreakerTripped(true),
       resetBreaker: () => setBreakerTripped(false),
+      setBreakerTripped,
       pressEstop: () => setEstopPressed(true),
       resetEstop: () => setEstopPressed(false),
       triggerFeed,
@@ -297,4 +356,17 @@ export function useScadaState() {
       removeBowl: () => setBowlDetected(false),
     },
   };
+}
+
+export function ScadaStateProvider({ children }: { children: ReactNode }) {
+  const value = useScadaStateValue();
+  return <ScadaStateContext.Provider value={value}>{children}</ScadaStateContext.Provider>;
+}
+
+export function useScadaState() {
+  const ctx = useContext(ScadaStateContext);
+  if (!ctx) {
+    throw new Error("useScadaState must be used inside ScadaStateProvider");
+  }
+  return ctx;
 }

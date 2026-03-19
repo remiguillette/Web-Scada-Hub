@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import {
   Activity,
@@ -641,7 +641,7 @@ function GeneratorCard({
 }
 
 export default function SimulationPage() {
-  const { voltage, frequency, history, form, config, gridEnabled, toggleGrid, setForm, applyConfig } =
+  const { voltage, frequency, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig } =
     useGridSimulationContext();
   const {
     statuses: generatorStatuses,
@@ -652,6 +652,19 @@ export default function SimulationPage() {
   const { powerFactor, activePower, reactivePower, apparentPower } =
     useElectricalMetrics(voltage, state.current, state.motorPowered);
   const { t, locale, toggleLocale } = useTranslation();
+
+  // Keep SCADA connection in sync with the simulation coupling breaker.
+  // When simulation grid is enabled, close the main disconnect and clear breaker trip.
+  // When simulation grid is disabled, open the main disconnect.
+  useEffect(() => {
+    actions.setDisconnectClosed(gridEnabled);
+    if (gridEnabled) {
+      actions.setBreakerTripped(false);
+    }
+  }, [gridEnabled, actions]);
+
+  // Avoid two-way loop and this page is the source-of-truth when user toggles coupling breaker.
+  // SCADA state is updated from gridEnabled, but gridEnabled is NOT force-written every render.
 
   const voltageMin = config.baseVoltage * (1 - config.voltageVariationPct);
   const voltageMax = config.baseVoltage * (1 + config.voltageVariationPct);
@@ -854,10 +867,8 @@ export default function SimulationPage() {
       <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 backdrop-blur px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/">
-              <a className="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-display text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]">
-                <ArrowLeft className="h-3.5 w-3.5" /> {t.dashboard}
-              </a>
+            <Link href="/" className="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-display text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]">
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.dashboard}
             </Link>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1f8a61]/40 bg-[#161c18]">
               <Factory className="h-5 w-5 text-[#00f7a1]" />

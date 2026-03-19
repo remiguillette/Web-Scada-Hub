@@ -8,6 +8,7 @@ import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
 import SimulationPage from "@/pages/SimulationPage";
 import { GridSimulationProvider } from "@/context/GridSimulationContext";
 import { GeneratorSimulationProvider } from "@/context/GeneratorSimulationContext";
+import { ScadaStateProvider } from "@/hooks/use-scada-state";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const queryClient = new QueryClient();
@@ -30,9 +31,11 @@ function App() {
         <LanguageProvider>
           <GridSimulationProvider>
             <GeneratorSimulationProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-              </WouterRouter>
+              <ScadaStateProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <Router />
+                </WouterRouter>
+              </ScadaStateProvider>
             </GeneratorSimulationProvider>
           </GridSimulationProvider>
         </LanguageProvider>

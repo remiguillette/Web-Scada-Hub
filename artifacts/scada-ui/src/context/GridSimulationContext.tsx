@@ -39,6 +39,7 @@ interface GridSimulationContextValue {
   config: GridSimulationConfig;
   gridEnabled: boolean;
   toggleGrid: () => void;
+  setGridEnabled: (value: boolean) => void;
   setForm: (updater: (prev: GridFormValues) => GridFormValues) => void;
   applyConfig: () => void;
 }
@@ -85,7 +86,7 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   }, [voltage, frequency]);
 
   return (
-    <GridSimulationContext.Provider value={{ voltage, frequency, history, form, config, gridEnabled, toggleGrid, setForm, applyConfig }}>
+    <GridSimulationContext.Provider value={{ voltage, frequency, history, form, config, gridEnabled, toggleGrid, setGridEnabled, setForm, applyConfig }}>
       {children}
     </GridSimulationContext.Provider>
   );
