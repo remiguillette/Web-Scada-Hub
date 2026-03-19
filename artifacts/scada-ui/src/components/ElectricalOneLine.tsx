@@ -392,24 +392,24 @@ function UtilityServiceEntry({
 }: {
   utilityActive: boolean;
 }) {
-  // SVG canvas: 240 × 120
-  const W = 240;
-  const H = 120;
+  // SVG canvas: 220 × 180
+  const W = 220;
+  const H = 180;
 
-  // X positions for the two vertical elements
-  const trunkX = 14;
-  const riserX = 226;
-
-  // Conductors evenly spaced, vertically centred
-  const spacing = 22;
+  // Conductors spaced horizontally, grouped on the left
+  const hSpacing = 18;
   const count = CONDUCTORS.length;
-  const totalSpan = (count - 1) * spacing;
-  const firstY = H / 2 - totalSpan / 2; // = 60 - 33 = 27
+  const totalHSpan = (count - 1) * hSpacing;
+  const firstCX = 52; // x of first conductor (L1)
 
-  // Vertical elements extend 14 px beyond the outermost conductors
-  const vTop = firstY - 14;
-  const vBottom = firstY + totalSpan + 14;
-  const midY = H / 2;
+  // Vertical lines — equal length above and below centre
+  const centerY = 100;
+  const lineHalf = 62; // 62 px above and below — equal top/bottom
+  const lineTop = centerY - lineHalf;   // 38
+  const lineBottom = centerY + lineHalf; // 162
+
+  // Riser pole on the right (connects to HWire that follows)
+  const riserX = 208;
 
   return (
     <svg
@@ -417,23 +417,25 @@ function UtilityServiceEntry({
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
-      aria-label="Utility service entrance"
+      aria-label="Utility street feed"
     >
-      {/* Utility trunk — dashed vertical */}
-      <line
-        x1={trunkX} y1={vTop}
-        x2={trunkX} y2={vBottom}
-        stroke={utilityActive ? '#4a6080' : '#1f2937'}
-        strokeWidth="2.5"
-        strokeDasharray="5 5"
-        strokeLinecap="round"
-        opacity={0.85}
-      />
+      {/* ── STREET title ── */}
+      <text
+        x={firstCX + totalHSpan / 2}
+        y={14}
+        fill={utilityActive ? '#94a3b8' : '#4b5563'}
+        fontSize="8"
+        letterSpacing="2"
+        textAnchor="middle"
+        style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
+      >
+        STREET
+      </text>
 
-      {/* Riser pole — solid vertical */}
+      {/* ── Riser pole — solid vertical on the right ── */}
       <line
-        x1={riserX} y1={vTop}
-        x2={riserX} y2={vBottom}
+        x1={riserX} y1={lineTop}
+        x2={riserX} y2={lineBottom}
         stroke={utilityActive ? '#c8d8e8' : '#64748b'}
         strokeWidth="4"
         strokeLinecap="round"
@@ -441,41 +443,54 @@ function UtilityServiceEntry({
       />
 
       {CONDUCTORS.map((conductor, index) => {
-        const y = firstY + index * spacing;
+        const cx = firstCX + index * hSpacing;
+        // Horizontal tap-off point: spread slightly around centre
+        const tapY = centerY + (index - (count - 1) / 2) * 10;
+
         return (
-          <g key={`svc-${conductor.label}`}>
-            {/* Phase label */}
+          <g key={`street-${conductor.label}`}>
+            {/* Conductor label just above the line top */}
             <text
-              x={trunkX - 4}
-              y={y + 3}
+              x={cx}
+              y={lineTop - 5}
               fill={conductor.color}
-              fontSize="8"
-              letterSpacing="1.2"
-              textAnchor="end"
+              fontSize="7"
+              textAnchor="middle"
               style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
             >
               {conductor.label}
             </text>
 
-            {/* Horizontal conductor — full span trunk → riser */}
+            {/* Vertical conductor line — equal top and bottom */}
             <line
-              x1={trunkX} y1={y}
-              x2={riserX} y2={y}
+              x1={cx} y1={lineTop}
+              x2={cx} y2={lineBottom}
               stroke={conductor.color}
-              strokeWidth="3.5"
+              strokeWidth="2.5"
               strokeLinecap="round"
-              opacity={utilityActive ? 1 : 0.28}
-              style={{ filter: `drop-shadow(0 0 7px ${conductor.glow})` }}
+              opacity={utilityActive ? 1 : 0.25}
+              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Junction dot at trunk */}
-            <circle cx={trunkX} cy={y} r="3"
+            {/* Horizontal tap to riser */}
+            <line
+              x1={cx} y1={tapY}
+              x2={riserX} y2={tapY}
+              stroke={conductor.color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={utilityActive ? 1 : 0.25}
+              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+            />
+
+            {/* Junction dot on vertical */}
+            <circle cx={cx} cy={tapY} r="2.5"
               fill={conductor.color}
-              opacity={utilityActive ? 0.85 : 0.2}
+              opacity={utilityActive ? 0.9 : 0.2}
             />
 
-            {/* Junction dot at riser */}
-            <circle cx={riserX} cy={y} r="3"
+            {/* Junction dot on riser */}
+            <circle cx={riserX} cy={tapY} r="2.5"
               fill={conductor.color}
               opacity={utilityActive ? 0.9 : 0.25}
             />
@@ -485,7 +500,7 @@ function UtilityServiceEntry({
 
       {/* Insulator circle at centre of riser */}
       <circle
-        cx={riserX} cy={midY} r="6"
+        cx={riserX} cy={centerY} r="6"
         fill={utilityActive ? '#e2e8f0' : '#4a5568'}
         opacity="0.95"
       />
