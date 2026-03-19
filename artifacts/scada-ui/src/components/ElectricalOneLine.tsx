@@ -439,7 +439,7 @@ function UtilityBusBackground({
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
 
-  const lineTop = 88;
+  const lineTop = 55;
   const lineBottom = 820;
 
   const centerY = H / 2;
