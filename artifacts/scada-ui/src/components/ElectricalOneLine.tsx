@@ -532,7 +532,10 @@ function UtilityBusAnnotations({
           textShadow: utilityActive ? "0 0 10px rgba(74,222,128,0.28)" : "none",
         }}
       >
-        {streetLabel}
+        <span>{streetLabel}</span>
+        <span className="ml-2 text-[10px] font-medium tracking-[0.1em] text-[#cbd5e1]">
+          (600Y / 347 V)
+        </span>
       </div>
 
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
