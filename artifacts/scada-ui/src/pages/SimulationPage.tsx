@@ -1039,7 +1039,8 @@ export default function SimulationPage() {
       label: t.baseFrequency,
       key: "baseFrequency" as const,
       step: "0.001",
-      min: "1",
+      min: "59.9",
+      max: "60.1",
     },
     {
       label: t.voltageTolerance2,
@@ -1052,6 +1053,7 @@ export default function SimulationPage() {
       key: "frequencyVariation" as const,
       step: "0.001",
       min: "0",
+      max: "0.1",
     },
     { label: t.gridDemand, key: "gridDemandMw" as const, step: "1", min: "0" },
   ];
@@ -1798,7 +1800,7 @@ export default function SimulationPage() {
           >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                {formFields.map(({ label, key, step, min }) => (
+                {formFields.map(({ label, key, step, min, max }) => (
                   <label key={key} className="space-y-2">
                     <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
                       {label}
@@ -1807,6 +1809,7 @@ export default function SimulationPage() {
                       type="number"
                       min={min}
                       step={step}
+                      max={max}
                       value={form[key]}
                       onChange={(e) =>
                         setForm((p) => ({

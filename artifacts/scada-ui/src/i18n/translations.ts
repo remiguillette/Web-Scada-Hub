@@ -637,7 +637,7 @@ export const translations = {
         },
         current: {
           label: "Courant total de service",
-          desc: "Courant agrégé fourni par le réseau au point de livraison.",
+          desc: "Courant total au point de livraison (service entrance).",
         },
         activePower: {
           label: "Puissance active",
@@ -649,11 +649,11 @@ export const translations = {
         },
         reactivePower: {
           label: "Puissance réactive",
-          desc: "Soutien réactif associé aux charges inductives et capacitives.",
+          desc: "Puissance réactive liée aux charges inductives et capacitives.",
         },
         powerFactor: {
           label: "Facteur de puissance",
-          desc: "Efficacité d’utilisation de la puissance côté réseau.",
+          desc: "Rapport entre puissance active et puissance apparente.",
         },
         phaseBalance: {
           label: "Déséquilibre de tension",
