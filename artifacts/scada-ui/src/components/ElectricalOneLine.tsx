@@ -433,13 +433,15 @@ function UtilityBusBackground({
 }) {
   const W = CARD_W + 220;
   const H = 220;
+  const titleY = 20;
+  const conductorLabelY = 52;
+  const lineTop = 78;
 
   const hSpacing = 25;
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
 
-  const lineTop = 25;
   const lineBottom = 820;
 
   const centerY = H / 2;
@@ -457,7 +459,7 @@ function UtilityBusBackground({
     >
       <text
         x={firstCX + totalHSpan / 2}
-        y={7}
+        y={titleY}
         fill={utilityActive ? "#4ade80" : "#4b5563"}
         fontSize="14"
         fontWeight="bold"
@@ -519,7 +521,7 @@ function UtilityBusBackground({
           <text
             key={`bus-label-${conductor.label}`}
             x={cx}
-            y={11}
+            y={conductorLabelY}
             fill={conductor.color}
             fontSize="6"
             textAnchor="middle"
