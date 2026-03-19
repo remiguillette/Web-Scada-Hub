@@ -387,42 +387,57 @@ function ConductorBundle({
   );
 }
 
-function UtilityServiceEntry({
+/**
+ * UtilityBusBackground
+ *
+ * Renders a full-width SVG (card area + service-entry area) that sits BEHIND
+ * the UTILITY NodeCard.  It draws:
+ *   • STREET label above the bus
+ *   • Four vertical conductor bars (L1, L2, N, GND) that extend above AND
+ *     below the card so they are visible on both sides
+ *   • Horizontal wires from each bar → riser pole
+ *   • Riser pole + insulator knob on the far right
+ *
+ * The NodeCard is overlaid on top of this SVG via z-index in the parent.
+ */
+function UtilityBusBackground({
   utilityActive,
 }: {
   utilityActive: boolean;
 }) {
-  // SVG canvas: 220 × 180
-  const W = 220;
-  const H = 180;
+  // Combined canvas: CARD_W (130px card) + 220 (service-entry) = 350 × 220 tall
+  const W = CARD_W + 220; // 350
+  const H = 220;
 
-  // Conductors spaced horizontally, grouped on the left
+  // Bus bar positions — centred within the card area (CARD_W = 130 px)
   const hSpacing = 18;
   const count = CONDUCTORS.length;
   const totalHSpan = (count - 1) * hSpacing;
-  const firstCX = 52; // x of first conductor (L1)
+  const firstCX = CARD_W / 2 - totalHSpan / 2; // centre of card → x ≈ 38
 
-  // Vertical lines — equal length above and below centre
-  const centerY = 100;
-  const lineHalf = 62; // 62 px above and below — equal top/bottom
-  const lineTop = centerY - lineHalf;   // 38
-  const lineBottom = centerY + lineHalf; // 162
+  // Vertical bars span full container height so they stick above + below card
+  const lineTop = 0;
+  const lineBottom = H;
 
-  // Riser pole on the right (connects to HWire that follows)
-  const riserX = 208;
+  // Card sits vertically centred in the container
+  const centerY = H / 2; // 110
+
+  // Riser pole — same relative position as before (12 px from right edge)
+  const riserX = W - 12; // 338
 
   return (
     <svg
-      className="shrink-0"
+      className="pointer-events-none absolute inset-0 shrink-0"
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
-      aria-label="Utility street feed"
+      aria-label="Utility street power bus"
+      style={{ zIndex: 0 }}
     >
-      {/* ── STREET title ── */}
+      {/* ── STREET label — above the bus bars ── */}
       <text
         x={firstCX + totalHSpan / 2}
-        y={14}
+        y={13}
         fill={utilityActive ? '#94a3b8' : '#4b5563'}
         fontSize="8"
         letterSpacing="2"
@@ -434,8 +449,8 @@ function UtilityServiceEntry({
 
       {/* ── Riser pole — solid vertical on the right ── */}
       <line
-        x1={riserX} y1={lineTop}
-        x2={riserX} y2={lineBottom}
+        x1={riserX} y1={lineTop + 30}
+        x2={riserX} y2={lineBottom - 30}
         stroke={utilityActive ? '#c8d8e8' : '#64748b'}
         strokeWidth="4"
         strokeLinecap="round"
@@ -444,15 +459,15 @@ function UtilityServiceEntry({
 
       {CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * hSpacing;
-        // Horizontal run Y — evenly spread around centre, aligning with card exit
+        // Horizontal wire Y — evenly fanned around vertical centre
         const tapY = centerY + (index - (count - 1) / 2) * 12;
 
         return (
-          <g key={`street-${conductor.label}`}>
-            {/* Conductor label just above the line top */}
+          <g key={`bus-${conductor.label}`}>
+            {/* Conductor label just below STREET, above card top */}
             <text
               x={cx}
-              y={lineTop - 5}
+              y={24}
               fill={conductor.color}
               fontSize="7"
               textAnchor="middle"
@@ -461,7 +476,7 @@ function UtilityServiceEntry({
               {conductor.label}
             </text>
 
-            {/* Vertical conductor line — equal top and bottom */}
+            {/* Vertical conductor bar — full container height (above + below card) */}
             <line
               x1={cx} y1={lineTop}
               x2={cx} y2={lineBottom}
@@ -472,9 +487,9 @@ function UtilityServiceEntry({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Horizontal run — card edge (x=0) → T-junction → riser */}
+            {/* Horizontal wire — bus bar → riser */}
             <line
-              x1={0} y1={tapY}
+              x1={cx} y1={tapY}
               x2={riserX} y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
@@ -483,7 +498,7 @@ function UtilityServiceEntry({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* T-junction dot where horizontal meets vertical */}
+            {/* T-junction dot at intersection (hidden under card, visible concept) */}
             <circle cx={cx} cy={tapY} r="3"
               fill={conductor.color}
               opacity={utilityActive ? 0.95 : 0.2}
@@ -498,7 +513,7 @@ function UtilityServiceEntry({
         );
       })}
 
-      {/* Insulator circle at centre of riser */}
+      {/* Insulator knob at centre of riser */}
       <circle
         cx={riserX} cy={centerY} r="6"
         fill={utilityActive ? '#e2e8f0' : '#4a5568'}
@@ -1002,11 +1017,18 @@ export function ElectricalOneLine({
     >
       <div ref={diagramRef} className="min-w-max">
         <div className="flex items-center gap-0">
-          <div className="flex shrink-0 flex-col items-start">
-            <NodeCard node={utilityNode} />
+          {/* ── Utility section: bus behind card ── */}
+          <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
+            {/* Background power bus — z-index 0, renders behind the card */}
+            <UtilityBusBackground utilityActive={state.supplyLive} />
+            {/* UTILITY card on top — z-index 1 */}
+            <div
+              className="absolute inset-y-0 left-0 flex items-center"
+              style={{ width: CARD_W, zIndex: 1 }}
+            >
+              <NodeCard node={utilityNode} />
+            </div>
           </div>
-
-          <UtilityServiceEntry utilityActive={state.supplyLive} />
 
           <HWire powered={state.supplyLive} className="w-5" />
 
