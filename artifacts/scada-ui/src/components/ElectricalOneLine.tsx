@@ -439,7 +439,7 @@ function UtilityBusBackground({
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
 
-  const lineTop = 30;
+  const lineTop = 50;
   const lineBottom = 490;
 
   const centerY = H / 2;
@@ -519,7 +519,7 @@ function UtilityBusBackground({
           <text
             key={`bus-label-${conductor.label}`}
             x={cx}
-            y={42}
+            y={16}
             fill={conductor.color}
             fontSize="6"
             textAnchor="middle"
