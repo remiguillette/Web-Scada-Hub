@@ -1077,7 +1077,7 @@ export function ElectricalOneLine({
         }
       }}
     >
-      <div ref={diagramRef} className="min-w-max pt-10 pb-8 pl-6 pr-10">
+      <div ref={diagramRef} className="min-w-max pt-1 pb-8 pl-6 pr-10">
         <div className="flex items-center gap-0">
           <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
             <UtilityBusBackground utilityActive={state.supplyLive} streetLabel={t.street} />
