@@ -117,6 +117,14 @@ const CONDUCTORS = [
   { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ] as const;
 
+const STREET_BUS_CONDUCTORS = [
+  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "L3", color: "#f59e0b", glow: "rgba(245,158,11,0.50)" },
+  { label: "N", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+] as const;
+
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 
 const getWireClasses = (powered: boolean) =>
@@ -401,7 +409,7 @@ function UtilityBusBackground({
   const H = 220;
 
   const hSpacing = 18;
-  const count = CONDUCTORS.length;
+  const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
 
@@ -434,7 +442,7 @@ function UtilityBusBackground({
         {streetLabel}
       </text>
 
-      {CONDUCTORS.map((conductor, index) => {
+      {STREET_BUS_CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * hSpacing;
         const tapY = centerY + (index - (count - 1) / 2) * 12;
 
