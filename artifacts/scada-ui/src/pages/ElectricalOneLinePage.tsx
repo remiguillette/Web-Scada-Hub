@@ -9,7 +9,7 @@ import { SYSTEM } from "@/config/system";
 
 export default function ElectricalOneLinePage() {
   const { state, actions } = useScadaState();
-  const { voltage, frequency, setGridEnabled } = useGridSimulationContext();
+  const { voltage, frequency, requestGridConnection } = useGridSimulationContext();
   const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
   const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
     voltage,
@@ -61,9 +61,9 @@ export default function ElectricalOneLinePage() {
             const nextDisconnect = !state.disconnectClosed;
             actions.toggleDisconnect();
             if (!nextDisconnect) {
-              setGridEnabled(false);
+              requestGridConnection(false);
             } else if (!state.breakerTripped) {
-              setGridEnabled(true);
+              requestGridConnection(true);
             }
           }}
           onToggleBreaker={() => {

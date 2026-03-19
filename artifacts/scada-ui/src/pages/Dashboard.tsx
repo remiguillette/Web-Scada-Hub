@@ -47,6 +47,10 @@ function formatUptime(totalSeconds: number) {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
+function formatVoltageDisplay(value: number) {
+  return value >= 1000 ? `${(value / 1000).toFixed(2)} kV` : `${value.toFixed(1)} V`;
+}
+
 function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: string; value: string; unit?: string; icon: React.ReactNode; accent?: "cyan" | "green" | "amber" | "red"; }) {
   const accents = {
     cyan: "border-[#2a3a3a] from-[#141a1a] to-[#1a2222] text-[#dff8ff]",
@@ -71,7 +75,7 @@ function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: strin
 
 export default function Dashboard() {
   const { state, actions } = useScadaState();
-  const { voltage: simulatedVoltage, frequency, setGridEnabled } = useGridSimulationContext();
+  const { voltage: simulatedVoltage, frequency, requestGridConnection } = useGridSimulationContext();
   const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
   const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
     simulatedVoltage,
@@ -183,9 +187,9 @@ export default function Dashboard() {
                 const nextDisconnect = !state.disconnectClosed;
                 actions.toggleDisconnect();
                 if (!nextDisconnect) {
-                  setGridEnabled(false);
+                  requestGridConnection(false);
                 } else if (!state.breakerTripped) {
-                  setGridEnabled(true);
+                  requestGridConnection(true);
                 }
               }}
               onToggleBreaker={() => {
@@ -267,7 +271,7 @@ export default function Dashboard() {
           <Panel title={t.realTimeProcess} icon={<Database className="h-4 w-4" />}
             openUrl={`${import.meta.env.BASE_URL}simulation`}>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <ValueCard title={t.supplyVoltage} value={simulatedVoltage.toFixed(2)} unit="V" icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
+              <ValueCard title={t.sourceVoltage} value={state.isPowered ? formatVoltageDisplay(simulatedVoltage) : "0.00 kV"} icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
               <ValueCard title={t.gridFrequency} value={frequency.toFixed(3)} unit="Hz" icon={<Gauge className="h-5 w-5" />} accent={state.isPowered ? "green" : "red"} />
               <ValueCard title={t.motorCurrent} value={state.current.toFixed(2)} unit="A" icon={<Activity className="h-5 w-5" />} accent={state.motorPowered ? "green" : "cyan"} />
               <ValueCard title={t.hopperLevel} value={state.hopperLevel.toFixed(1)} unit="%" icon={<Gauge className="h-5 w-5" />} accent={state.hopperLow ? "amber" : "green"} />

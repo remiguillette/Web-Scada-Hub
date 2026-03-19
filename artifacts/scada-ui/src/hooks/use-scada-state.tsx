@@ -212,7 +212,7 @@ function useScadaStateValue(): ScadaStateContextValue {
   useEffect(() => {
     const timer = setInterval(() => {
       setUptime((prev) => prev + 1);
-      setVoltage(isPowered ? Number((119.6 + (Math.random() - 0.5) * 1.4).toFixed(1)) : 0);
+      setVoltage(isPowered ? Number((13_800 + (Math.random() - 0.5) * 140).toFixed(1)) : 0);
       setCurrent(motorPowered ? Number((1.85 + Math.random() * 0.75).toFixed(2)) : 0);
       setBowlLevel((prev) => Math.max(0, Number((prev - 0.045).toFixed(1))));
       toggleBowlRef.current += 1;
