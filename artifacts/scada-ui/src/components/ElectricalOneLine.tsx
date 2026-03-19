@@ -600,6 +600,7 @@ function UtilityBusAnnotations({
   streetLabel: string;
   conductorMetrics: StreetBusMetric[];
 }) {
+  const feederLabel = "NPE-FDR-13.8-01";
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
@@ -620,6 +621,17 @@ function UtilityBusAnnotations({
         <span className="ml-2 text-[10px] font-medium tracking-[0.1em] text-[#cbd5e1]">
           (600Y / 347 V)
         </span>
+      </div>
+
+      <div
+        className="absolute -translate-x-1/2 text-center font-mono text-[11px] font-semibold tracking-[0.28em] text-[#cbd5e1]"
+        style={{
+          top: UTILITY_BUS_GEOMETRY.lineTop - 64,
+          left: busCenterX,
+          textShadow: utilityActive ? "0 0 10px rgba(148,163,184,0.2)" : "none",
+        }}
+      >
+        {feederLabel}
       </div>
 
       {conductorMetrics.map((conductor, index) => {
