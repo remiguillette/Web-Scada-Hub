@@ -392,25 +392,29 @@ function UtilityServiceEntry({
 }: {
   utilityActive: boolean;
 }) {
-  const centerX = 248;
-  const centerY = 84;
+  // Vertical utility trunk (left)
+  const trunkX = 100;
 
-  // vertical street / utility trunk
-  const streetX = 88;
+  // Vertical riser pole (right)
+  const riserX = 252;
 
-  // start y for each conductor on the street side
-  const streetY = 24;
-  const conductorSpacing = 22;
+  // Conductors — horizontal, evenly spaced, centered in the panel
+  const conductorCount = CONDUCTORS.length;
+  const conductorSpacing = 24;
+  const totalHeight = (conductorCount - 1) * conductorSpacing;
+  const midY = 84;
+  const firstY = midY - totalHeight / 2;
 
-  // horizontal segment end before convergence
-  const elbowX = 142;
+  // Trunk spans above first and below last conductor
+  const trunkTop = firstY - 18;
+  const trunkBottom = firstY + totalHeight + 18;
 
-  // labels
-  const labelX = 120;
+  // Riser pole spans same range
+  const poleTop = trunkTop;
+  const poleBottom = trunkBottom;
 
-  // riser pole centered exactly on the convergence point
-  const poleTop = centerY - 32;
-  const poleBottom = centerY + 32;
+  // Label column sits left of the trunk
+  const labelX = trunkX - 8;
 
   return (
     <div className="relative ml-6 mr-4 flex h-[168px] w-[340px] shrink-0 flex-col justify-start rounded-[24px] border border-white/8 bg-[#0a0f12]/80 px-4 py-3">
@@ -427,24 +431,37 @@ function UtilityServiceEntry({
         viewBox="0 0 340 168"
         aria-label="Utility service entrance"
       >
-        {/* Vertical utility trunk */}
+        {/* Vertical utility trunk (dashed) */}
         <line
-          x1={streetX}
-          y1={32}
-          x2={streetX}
-          y2={132}
-          stroke={utilityActive ? '#334155' : '#1f2937'}
-          strokeWidth="2"
-          strokeDasharray="4 6"
-          opacity={0.9}
+          x1={trunkX}
+          y1={trunkTop}
+          x2={trunkX}
+          y2={trunkBottom}
+          stroke={utilityActive ? '#4a6080' : '#1f2937'}
+          strokeWidth="2.5"
+          strokeDasharray="5 5"
+          strokeLinecap="round"
+          opacity={0.85}
+        />
+
+        {/* Vertical riser pole (solid) */}
+        <line
+          x1={riserX}
+          y1={poleTop}
+          x2={riserX}
+          y2={poleBottom}
+          stroke={utilityActive ? '#c8d8e8' : '#64748b'}
+          strokeWidth="4"
+          strokeLinecap="round"
+          opacity={utilityActive ? 0.92 : 0.45}
         />
 
         {CONDUCTORS.map((conductor, index) => {
-          const y = streetY + index * conductorSpacing;
+          const y = firstY + index * conductorSpacing;
 
           return (
             <g key={`service-${conductor.label}`}>
-              {/* phase label */}
+              {/* Phase label */}
               <text
                 x={labelX}
                 y={y + 3}
@@ -457,53 +474,46 @@ function UtilityServiceEntry({
                 {conductor.label}
               </text>
 
-              {/* horizontal branch from utility trunk = creates the T shape */}
+              {/* Horizontal conductor — trunk to riser pole (true T-shape) */}
               <line
-                x1={streetX}
+                x1={trunkX}
                 y1={y}
-                x2={elbowX}
+                x2={riserX}
                 y2={y}
                 stroke={conductor.color}
-                strokeWidth="4"
+                strokeWidth="3.5"
                 strokeLinecap="round"
                 opacity={utilityActive ? 1 : 0.28}
-                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+                style={{ filter: `drop-shadow(0 0 7px ${conductor.glow})` }}
               />
 
-              {/* angled convergence to riser point */}
-              <line
-                x1={elbowX}
-                y1={y}
-                x2={centerX}
-                y2={centerY}
-                stroke={conductor.color}
-                strokeWidth="4"
-                strokeLinecap="round"
-                opacity={utilityActive ? 1 : 0.28}
-                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+              {/* Junction dot on trunk */}
+              <circle
+                cx={trunkX}
+                cy={y}
+                r="3"
+                fill={conductor.color}
+                opacity={utilityActive ? 0.8 : 0.2}
+              />
+
+              {/* Junction dot on riser */}
+              <circle
+                cx={riserX}
+                cy={y}
+                r="3"
+                fill={conductor.color}
+                opacity={utilityActive ? 0.9 : 0.25}
               />
             </g>
           );
         })}
 
-        {/* riser pole centered on convergence point */}
-        <line
-          x1={centerX}
-          y1={poleTop}
-          x2={centerX}
-          y2={poleBottom}
-          stroke="#e2e8f0"
-          strokeWidth="4"
-          strokeLinecap="round"
-          opacity={utilityActive ? 0.95 : 0.45}
-        />
-
-        {/* convergence / insulator point */}
+        {/* Insulator at mid-point of riser */}
         <circle
-          cx={centerX}
-          cy={centerY}
-          r="5"
-          fill={utilityActive ? '#e2e8f0' : '#64748b'}
+          cx={riserX}
+          cy={midY}
+          r="6"
+          fill={utilityActive ? '#e2e8f0' : '#4a5568'}
           opacity="0.95"
         />
       </svg>
