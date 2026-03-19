@@ -692,6 +692,11 @@ export default function SimulationPage() {
     hydraulicHeadMeters,
     waterFlowActiveUnits,
     waterToWireEfficiency,
+    hydroDispatchMode,
+    rawWaterPowerMw,
+    hydraulicCapacityMw,
+    hydraulicReserveMw,
+    importedGridPowerMw,
     toggleGrid,
     setForm,
     applyConfig,
@@ -923,8 +928,9 @@ export default function SimulationPage() {
   const hydroInjectedMw = generatedPowerMw;
   const hydroPerUnitMw =
     hydroActiveUnits > 0 ? hydroInjectedMw / hydroActiveUnits : 0;
-  const unmetDemandMw = Math.max(0, gridDemandMw - hydroInjectedMw);
   const curtailedHydraulicMw = Math.max(0, hydroTargetMw - hydroInjectedMw);
+  const demandGapMw = importedGridPowerMw;
+  const hydraulicCeilingMw = Math.min(rawWaterPowerMw, hydraulicCapacityMw);
   const hydroGridState =
     gridState === "CONNECTED"
       ? t.gridConnected
@@ -1313,11 +1319,13 @@ export default function SimulationPage() {
                       : "Awaiting dispatch"}
                   </div>
                   <div className="mt-1 font-mono text-[10px] tracking-[0.12em] text-[#6f8ca1]">
-                    {unmetDemandMw > 0
-                      ? `${unmetDemandMw.toFixed(1)} MW demand gap`
-                      : curtailedHydraulicMw > 0
-                        ? `${curtailedHydraulicMw.toFixed(1)} MW governor reserve`
-                        : "Dispatch matched to water power"}
+                    {demandGapMw > 0
+                      ? `${demandGapMw.toFixed(1)} MW imported from the bulk grid`
+                      : hydraulicReserveMw > 0
+                        ? `${hydraulicReserveMw.toFixed(1)} MW hydraulic reserve available`
+                        : curtailedHydraulicMw > 0
+                          ? `${curtailedHydraulicMw.toFixed(1)} MW governor reserve`
+                          : "Dispatch matched to water power"}
                   </div>
                 </div>
               </div>
@@ -1526,6 +1534,133 @@ export default function SimulationPage() {
                     <div className="mt-1 font-mono text-[10px] leading-4 text-[#d1b77b]">
                       {t.teacherDeliveryNodeDesc}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
+            <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    OPERATIONS COUPLING NOTES
+                  </div>
+                  <div className="font-mono text-[11px] tracking-[0.12em] text-[#8aa0b6]">
+                    Control-room interpretation of the live hydraulic,
+                    production, and grid states.
+                  </div>
+                </div>
+                <StatusBadge
+                  ok={hydroDispatchMode === "PHYSICS"}
+                  okLabel="PHYSICS MODE"
+                  faultLabel="GRID FOLLOW MODE"
+                />
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Dispatch mode
+                  </div>
+                  <div className="mt-1 font-mono text-lg font-semibold text-white">
+                    {hydroDispatchMode}
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    Water availability sets the plant ceiling first, then the
+                    grid absorbs whatever the station can export.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Grid support balance
+                  </div>
+                  <div className="mt-1 font-mono text-lg font-semibold text-[#00dcff]">
+                    {importedGridPowerMw.toFixed(1)} MW import
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    Remaining demand is supplied by the external network
+                    whenever station output stays below system load.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Hydraulic power ceiling
+                  </div>
+                  <div className="mt-1 font-mono text-lg font-semibold text-[#ffd166]">
+                    {hydraulicCeilingMw.toFixed(1)} MW
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    Computed from ρ·g·Q·H·η and clipped to the 10-unit plant
+                    maximum of{" "}
+                    {(hydroUnitCount * hydroUnitCapacityMw).toFixed(0)} MW.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Unit loading margin
+                  </div>
+                  <div className="mt-1 font-mono text-lg font-semibold text-[#00f7a1]">
+                    {hydroPerUnitMw.toFixed(1)} /{" "}
+                    {hydroUnitCapacityMw.toFixed(1)} MW
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    Active units remain below rated unit output while the
+                    remaining hydraulic head stays in reserve for higher river
+                    flow.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-[#ffd166]" />
+                <div className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                  Stability interpretation
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Frequency behavior
+                  </div>
+                  <div className="mt-1 font-mono text-sm text-white">
+                    {frequency.toFixed(3)} Hz live · Δ {freqDeviation} Hz from
+                    nominal
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    The micro-oscillation band demonstrates a stiff
+                    interconnected grid rather than an isolated islanded
+                    generator.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Demand coverage
+                  </div>
+                  <div className="mt-1 font-mono text-sm text-white">
+                    {hydroInjectedMw.toFixed(1)} MW covering{" "}
+                    {demandCoveragePct.toFixed(0)}% of {gridDemandMw.toFixed(1)}{" "}
+                    MW demand
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    This station behaves as a partial dispatch contributor
+                    inside a larger utility area, not as the sole supply source.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
+                  <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
+                    Governor headroom
+                  </div>
+                  <div className="mt-1 font-mono text-sm text-white">
+                    {hydraulicReserveMw.toFixed(1)} MW available before the
+                    hydraulic ceiling is reached
+                  </div>
+                  <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
+                    This reserve is the available operating margin for a future
+                    grid-follow or frequency-droop controller.
                   </div>
                 </div>
               </div>
