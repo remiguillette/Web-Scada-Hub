@@ -111,18 +111,18 @@ const SOURCE_COL_W = 142;
 const SCROLL_STEP = 120;
 
 const CONDUCTORS = [
-  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
-  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
-  { label: "N", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
-  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+  { label: "L1 / Phase A 347 V ~675 A", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2 / Phase B 347 V ~675 A", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "n 0 V", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND 0V", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ] as const;
 
 const STREET_BUS_CONDUCTORS = [
-  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
-  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
-  { label: "L3", color: "#f59e0b", glow: "rgba(245,158,11,0.50)" },
-  { label: "N", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
-  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+  { label: "L1 / Phase A 347 V ~675 A", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2 / Phase B 347 V ~675 A", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "L3 / Phase C 347 V ~675 A", color: "#f59e0b", glow: "rgba(245,158,11,0.50)" },
+  { label: "n 0 V", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND 0V", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ] as const;
 
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
@@ -379,7 +379,7 @@ function ConductorBundle({
           className="flex items-center gap-2"
         >
           <span
-            className="w-8 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
+            className="w-44 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
             style={{ color: conductor.color }}
           >
             {conductor.label}
