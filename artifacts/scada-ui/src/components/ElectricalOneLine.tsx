@@ -151,6 +151,17 @@ const STREET_BUS_CONDUCTORS = [
   },
 ] as const;
 
+const UTILITY_BUS_GEOMETRY = {
+  width: CARD_W + 220,
+  height: 220,
+  titleY: 20,
+  conductorLabelY: 52,
+  lineTop: 78,
+  lineBottom: 820,
+  hSpacing: 25,
+  annotationWidth: 44,
+} as const;
+
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 
 const getWireClasses = (powered: boolean) =>
@@ -426,26 +437,17 @@ function ConductorBundle({
 
 function UtilityBusBackground({
   utilityActive,
-  streetLabel,
 }: {
   utilityActive: boolean;
-  streetLabel: string;
 }) {
-  const W = CARD_W + 220;
-  const H = 220;
-  const titleY = 20;
-  const conductorLabelY = 52;
-  const lineTop = 78;
-
-  const hSpacing = 25;
+  const W = UTILITY_BUS_GEOMETRY.width;
+  const H = UTILITY_BUS_GEOMETRY.height;
+  const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
   const count = STREET_BUS_CONDUCTORS.length;
-  const totalHSpan = (count - 1) * hSpacing;
+  const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
-
-  const lineBottom = 820;
-
+  const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
   const centerY = H / 2;
-
   const riserX = W - 2;
 
   return (
@@ -457,21 +459,8 @@ function UtilityBusBackground({
       aria-label="Utility street power bus"
       style={{ zIndex: 0, overflow: "visible" }}
     >
-      <text
-        x={firstCX + totalHSpan / 2}
-        y={titleY}
-        fill={utilityActive ? "#4ade80" : "#4b5563"}
-        fontSize="14"
-        fontWeight="bold"
-        letterSpacing="4"
-        textAnchor="middle"
-        style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
-      >
-        {streetLabel}
-      </text>
-
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
-        const cx = firstCX + index * hSpacing;
+        const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
         const tapY = centerY + (index - (count - 1) / 2) * 12;
 
         return (
@@ -506,40 +495,79 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            <circle cx={cx} cy={tapY} r="3"
+            <circle
+              cx={cx}
+              cy={tapY}
+              r="3"
               fill={conductor.color}
               opacity={utilityActive ? 0.95 : 0.2}
             />
           </g>
         );
       })}
+    </svg>
+  );
+}
+
+function UtilityBusAnnotations({
+  utilityActive,
+  streetLabel,
+}: {
+  utilityActive: boolean;
+  streetLabel: string;
+}) {
+  const count = STREET_BUS_CONDUCTORS.length;
+  const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
+  const firstCX = CARD_W / 2 - totalHSpan / 2;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[1]">
+      <div
+        className="absolute left-1/2 -translate-x-1/2 rounded-md border px-4 py-1 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
+        style={{
+          top: UTILITY_BUS_GEOMETRY.titleY - 16,
+          color: utilityActive ? "#4ade80" : "#4b5563",
+          borderColor: utilityActive ? "rgba(74,222,128,0.35)" : "rgba(75,85,99,0.4)",
+          backgroundColor: utilityActive ? "rgba(5,18,12,0.78)" : "rgba(17,24,39,0.72)",
+          boxShadow: utilityActive ? "0 0 14px rgba(74,222,128,0.18)" : "none",
+        }}
+      >
+        {streetLabel}
+      </div>
 
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
-        const cx = firstCX + index * hSpacing;
+        const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
+        const width = UTILITY_BUS_GEOMETRY.annotationWidth;
+        const left = cx - width / 2;
 
         return (
-          <text
-            key={`bus-label-${conductor.label}`}
-            x={cx}
-            y={conductorLabelY}
-            fill={conductor.color}
-            fontSize="6"
-            textAnchor="middle"
-            style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
+          <div
+            key={`bus-annotation-${conductor.label}`}
+            className="absolute flex flex-col items-center rounded-md border px-1 py-1 text-center font-mono"
+            style={{
+              top: UTILITY_BUS_GEOMETRY.conductorLabelY - 10,
+              left,
+              width,
+              gap: "1px",
+              color: conductor.color,
+              borderColor: utilityActive ? `${conductor.color}55` : "rgba(75,85,99,0.4)",
+              backgroundColor: utilityActive ? "rgba(3,7,18,0.78)" : "rgba(15,23,42,0.68)",
+              boxShadow: utilityActive ? `0 0 12px ${conductor.glow}` : "none",
+              opacity: utilityActive ? 1 : 0.5,
+            }}
           >
             {conductor.lines.map((line, lineIndex) => (
-              <tspan
+              <span
                 key={`${conductor.label}-${line}-${lineIndex}`}
-                x={cx}
-                dy={lineIndex === 0 ? 0 : 6}
+                className={lineIndex === 0 ? "text-[7px] font-semibold tracking-[0.14em]" : "text-[6px] tracking-[0.08em]"}
               >
                 {line}
-              </tspan>
+              </span>
             ))}
-          </text>
+          </div>
         );
       })}
-    </svg>
+    </div>
   );
 }
 
@@ -1082,7 +1110,8 @@ export function ElectricalOneLine({
       <div ref={diagramRef} className="min-w-max pt-1 pb-8 pl-6 pr-10">
         <div className="flex items-center gap-0">
           <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 235 }}>
-            <UtilityBusBackground utilityActive={state.supplyLive} streetLabel={t.street} />
+            <UtilityBusBackground utilityActive={state.supplyLive} />
+            <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} />
             <div
               className="absolute left-0 flex items-start"
               style={{ width: CARD_W, zIndex: 1, top: 82 }}
