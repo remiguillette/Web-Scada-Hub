@@ -225,43 +225,58 @@ export const translations = {
           description: "Description",
         },
         frequency: {
-          label: "Frequency",
-          desc: "Grid stability indicator.",
+          label: "Grid Frequency",
+          desc: "Distribution network frequency and overall stability indicator.",
         },
         serviceType: {
           label: "Service Type",
-          desc: "Utility service configuration.",
+          desc: "Utility delivery service at the site entrance.",
+        },
+        utilityType: {
+          label: "Utility Type",
+          desc: "Classification of the serving utility entity.",
         },
         voltageLN: {
-          label: "Line-Neutral Voltage",
-          desc: "Voltage between phase and neutral.",
+          label: "Line-to-Neutral Voltage",
+          desc: "Phase-to-neutral service voltage for the 600Y/347 V network.",
         },
         voltageLL: {
-          label: "Line-Line Voltage",
-          desc: "Voltage between two phases.",
+          label: "Line-to-Line Voltage",
+          desc: "Measured voltage between phases L1-L2, L2-L3, and L3-L1.",
         },
         current: {
-          label: "Current",
-          desc: "Total current drawn by the installation.",
+          label: "Total Service Current",
+          desc: "Aggregated current supplied by the grid at the delivery point.",
         },
         activePower: {
           label: "Active Power",
-          desc: "Real power consumed by loads.",
+          desc: "Real power delivered through the service entrance.",
         },
         apparentPower: {
           label: "Apparent Power",
-          desc: "Total apparent power demand on the grid in volt-amperes.",
+          desc: "Total supplied power including the reactive component.",
         },
         reactivePower: {
           label: "Reactive Power",
-          desc: "Reactive component required for some loads.",
+          desc: "Reactive support associated with inductive and capacitive loads.",
         },
         powerFactor: {
           label: "Power Factor",
-          desc: "Ratio of active power to apparent power.",
+          desc: "Utility-side power utilization efficiency at the service entrance.",
+        },
+        phaseBalance: {
+          label: "Voltage Imbalance",
+          desc: "Three-phase voltage balance indicator across the service entrance.",
+        },
+        source: {
+          label: "Source",
+          desc: "Upstream feeder and transformer supplying the service.",
         },
         serviceTypeShort: {
           label: "Service Type",
+        },
+        utilityTypeShort: {
+          label: "Type",
         },
         voltageLNShort: {
           label: "L-N Voltage",
@@ -269,18 +284,27 @@ export const translations = {
         voltageLLShort: {
           label: "L-L Voltage",
         },
+        currentShort: {
+          label: "Service Current",
+        },
+        phaseBalanceShort: {
+          label: "Balance",
+        },
+        sourceShort: {
+          label: "Source",
+        },
       },
       value: {
         serviceType: {
-          "600y347": "3-phase generator step-up / intertie",
-          "120208": "Medium-voltage plant service",
-          "120240split": "Auxiliary low-voltage service",
+          "600y347": "600Y/347 V — 3Φ 4-wire grounded",
+          "120208": "120/208 V — 3Φ 4-wire",
+          "120240split": "120/240 V split-phase",
         },
         notAvailable: "—",
       },
     },
 
-    utilityName: "Hydro Grid Intertie",
+    utilityName: "Utility Service Entrance",
     motorName: "DISPENSER MTR",
     secondaryServiceCable: "SECONDARY SERVICE CABLE",
 
@@ -592,43 +616,58 @@ export const translations = {
           description: "Description",
         },
         frequency: {
-          label: "Fréquence",
-          desc: "Indicateur de stabilité du réseau.",
+          label: "Fréquence réseau",
+          desc: "Fréquence du réseau de distribution et indicateur de stabilité globale.",
         },
         serviceType: {
-          label: "Type de raccordement",
-          desc: "Configuration du service d’alimentation du réseau.",
+          label: "Type de service",
+          desc: "Raccordement du réseau au point de livraison du site.",
+        },
+        utilityType: {
+          label: "Type d’utilité",
+          desc: "Catégorie de l’entité qui fournit le service électrique.",
         },
         voltageLN: {
-          label: "Tension phase-neutre",
-          desc: "Tension mesurée entre une phase et le neutre.",
+          label: "Tension ligne-neutre",
+          desc: "Tension phase-neutre du service 600Y/347 V.",
         },
         voltageLL: {
-          label: "Tension phase-phase",
-          desc: "Tension mesurée entre deux phases.",
+          label: "Tension ligne-ligne",
+          desc: "Tension mesurée entre L1-L2, L2-L3 et L3-L1.",
         },
         current: {
-          label: "Courant",
-          desc: "Courant total appelé par l’installation.",
+          label: "Courant total de service",
+          desc: "Courant agrégé fourni par le réseau au point de livraison.",
         },
         activePower: {
           label: "Puissance active",
-          desc: "Puissance réellement consommée par les charges.",
+          desc: "Puissance réelle livrée par l’entrée de service.",
         },
         apparentPower: {
           label: "Puissance apparente",
-          desc: "Puissance totale demandée au réseau en voltampères.",
+          desc: "Puissance totale fournie incluant la composante réactive.",
         },
         reactivePower: {
           label: "Puissance réactive",
-          desc: "Composante réactive nécessaire au fonctionnement de certaines charges.",
+          desc: "Soutien réactif associé aux charges inductives et capacitives.",
         },
         powerFactor: {
           label: "Facteur de puissance",
-          desc: "Rapport entre la puissance active et la puissance apparente.",
+          desc: "Efficacité d’utilisation de la puissance côté réseau.",
+        },
+        phaseBalance: {
+          label: "Déséquilibre de tension",
+          desc: "Indicateur d’équilibrage triphasé à l’entrée de service.",
+        },
+        source: {
+          label: "Source",
+          desc: "Départ amont et transformateur alimentant le service.",
         },
         serviceTypeShort: {
           label: "Type de service",
+        },
+        utilityTypeShort: {
+          label: "Type",
         },
         voltageLNShort: {
           label: "Tension L-N",
@@ -636,18 +675,27 @@ export const translations = {
         voltageLLShort: {
           label: "Tension L-L",
         },
+        currentShort: {
+          label: "Courant service",
+        },
+        phaseBalanceShort: {
+          label: "Équilibre",
+        },
+        sourceShort: {
+          label: "Source",
+        },
       },
       value: {
         serviceType: {
-          "600y347": "Triphasé, transformateur élévateur / interconnexion",
-          "120208": "Service auxiliaire moyenne tension",
-          "120240split": "Service auxiliaire basse tension",
+          "600y347": "600Y/347 V — 3Φ 4 fils mis à la terre",
+          "120208": "120/208 V — 3Φ 4 fils",
+          "120240split": "120/240 V monophasé à prise médiane",
         },
         notAvailable: "—",
       },
     },
 
-    utilityName: "Interconnexion réseau hydro",
+    utilityName: "Entrée de service réseau",
     motorName: "MTR DISTRIBUTEUR",
     secondaryServiceCable: "CÂBLE SERVICE SECONDAIRE",
 

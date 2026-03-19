@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { buildUtilitySnapshot } from "@/lib/utility-service";
 import { SYSTEM } from "@/config/system";
 import { useTranslation } from "@/context/LanguageContext";
 import type { Translations } from "@/i18n/translations";
@@ -723,41 +724,76 @@ function buildUtilityDetails(
   reactivePower: number,
   powerFactor: number,
 ): DetailRow[] {
+  const snapshot = buildUtilitySnapshot({
+    energized: voltage > 0,
+    frequency,
+    current,
+    activePower,
+    apparentPower,
+    reactivePower,
+    powerFactor,
+  });
+
   return [
+    {
+      parameter: t.utility.details.serviceType.label,
+      value: snapshot.serviceType,
+      description: t.utility.details.serviceType.desc,
+    },
+    {
+      parameter: t.utility.details.utilityType.label,
+      value: snapshot.utilityType,
+      description: t.utility.details.utilityType.desc,
+    },
     {
       parameter: t.utility.details.frequency.label,
       value: `${frequency.toFixed(2)} Hz`,
       description: t.utility.details.frequency.desc,
     },
     {
+      parameter: t.utility.details.voltageLL.label,
+      value: `${snapshot.lineToLineVoltage.toFixed(1)} V`,
+      description: t.utility.details.voltageLL.desc,
+    },
+    {
       parameter: t.utility.details.voltageLN.label,
-      value: `${voltage.toFixed(1)} V`,
+      value: `${snapshot.lineToNeutralVoltage.toFixed(1)} V`,
       description: t.utility.details.voltageLN.desc,
     },
     {
       parameter: t.utility.details.current.label,
-      value: `${current.toFixed(2)} A`,
+      value: `${snapshot.totalServiceCurrent.toFixed(1)} A`,
       description: t.utility.details.current.desc,
     },
     {
       parameter: t.utility.details.activePower.label,
-      value: `${activePower.toFixed(1)} W`,
+      value: `${snapshot.activePowerKw.toFixed(1)} kW`,
       description: t.utility.details.activePower.desc,
     },
     {
       parameter: t.utility.details.apparentPower.label,
-      value: `${apparentPower.toFixed(1)} VA`,
+      value: `${snapshot.apparentPowerKva.toFixed(1)} kVA`,
       description: t.utility.details.apparentPower.desc,
     },
     {
       parameter: t.utility.details.reactivePower.label,
-      value: `${reactivePower.toFixed(1)} VAR`,
+      value: `${snapshot.reactivePowerKvar.toFixed(1)} kVAR`,
       description: t.utility.details.reactivePower.desc,
     },
     {
       parameter: t.utility.details.powerFactor.label,
-      value: `${powerFactor.toFixed(3)} cos\u03C6`,
+      value: `${snapshot.powerFactor.toFixed(3)} ${snapshot.powerFactorState}`,
       description: t.utility.details.powerFactor.desc,
+    },
+    {
+      parameter: t.utility.details.phaseBalance.label,
+      value: `${snapshot.voltageImbalancePct.toFixed(1)}%`,
+      description: t.utility.details.phaseBalance.desc,
+    },
+    {
+      parameter: t.utility.details.source.label,
+      value: snapshot.source,
+      description: t.utility.details.source.desc,
     },
   ];
 }
