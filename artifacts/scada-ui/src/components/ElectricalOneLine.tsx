@@ -394,21 +394,30 @@ function UtilityServiceEntry({
 }) {
   const centerX = 248;
   const centerY = 84;
+
+  // vertical street / utility trunk
   const streetX = 88;
+
+  // start y for each conductor on the street side
   const streetY = 24;
-  const conductorStartX = 132;
-  const labelX = 120;
   const conductorSpacing = 22;
-  const poleTop = centerY - 26;
-  const poleBottom = centerY + 26;
+
+  // horizontal segment end before convergence
+  const elbowX = 142;
+
+  // labels
+  const labelX = 120;
+
+  // riser pole centered exactly on the convergence point
+  const poleTop = centerY - 32;
+  const poleBottom = centerY + 32;
 
   return (
     <div className="relative ml-6 mr-4 flex h-[168px] w-[340px] shrink-0 flex-col justify-start rounded-[24px] border border-white/8 bg-[#0a0f12]/80 px-4 py-3">
-      <div
-        className="absolute left-6 top-2 font-mono text-[9px] tracking-[0.34em] text-[#6b7a6b]"
-      >
+      <div className="absolute left-6 top-2 font-mono text-[9px] tracking-[0.34em] text-[#6b7a6b]">
         STREET
       </div>
+
       <div className="absolute left-6 top-7 rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-1 font-mono text-[8px] tracking-[0.2em] text-[#8ecae6]">
         UTILITY
       </div>
@@ -418,20 +427,24 @@ function UtilityServiceEntry({
         viewBox="0 0 340 168"
         aria-label="Utility service entrance"
       >
+        {/* Vertical utility trunk */}
         <line
           x1={streetX}
-          y1={40}
+          y1={32}
           x2={streetX}
-          y2={128}
-          stroke="#334155"
+          y2={132}
+          stroke={utilityActive ? '#334155' : '#1f2937'}
           strokeWidth="2"
           strokeDasharray="4 6"
+          opacity={0.9}
         />
 
         {CONDUCTORS.map((conductor, index) => {
           const y = streetY + index * conductorSpacing;
+
           return (
             <g key={`service-${conductor.label}`}>
+              {/* phase label */}
               <text
                 x={labelX}
                 y={y + 3}
@@ -443,21 +456,37 @@ function UtilityServiceEntry({
               >
                 {conductor.label}
               </text>
+
+              {/* horizontal branch from utility trunk = creates the T shape */}
               <line
-                x1={conductorStartX}
+                x1={streetX}
+                y1={y}
+                x2={elbowX}
+                y2={y}
+                stroke={conductor.color}
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={utilityActive ? 1 : 0.28}
+                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+              />
+
+              {/* angled convergence to riser point */}
+              <line
+                x1={elbowX}
                 y1={y}
                 x2={centerX}
                 y2={centerY}
                 stroke={conductor.color}
                 strokeWidth="4"
                 strokeLinecap="round"
-                opacity={utilityActive ? 1 : 0.35}
+                opacity={utilityActive ? 1 : 0.28}
                 style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
               />
             </g>
           );
         })}
 
+        {/* riser pole centered on convergence point */}
         <line
           x1={centerX}
           y1={poleTop}
@@ -469,12 +498,13 @@ function UtilityServiceEntry({
           opacity={utilityActive ? 0.95 : 0.45}
         />
 
+        {/* convergence / insulator point */}
         <circle
           cx={centerX}
           cy={centerY}
           r="5"
           fill={utilityActive ? '#e2e8f0' : '#64748b'}
-          opacity="0.9"
+          opacity="0.95"
         />
       </svg>
 
