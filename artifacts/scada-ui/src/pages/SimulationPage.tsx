@@ -1586,7 +1586,7 @@ export default function SimulationPage() {
                 </div>
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
-                    Hydraulic power ceiling
+                    Maximum possible at current flow
                   </div>
                   <div className="mt-1 font-mono text-lg font-semibold text-[#ffd166]">
                     {hydraulicCeilingMw.toFixed(1)} MW
@@ -1652,15 +1652,16 @@ export default function SimulationPage() {
                 </div>
                 <div className="rounded-xl border border-[#1c2c40] bg-[#0c1520] px-4 py-3">
                   <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
-                    Governor headroom
+                    Maximum possible at current flow
                   </div>
                   <div className="mt-1 font-mono text-sm text-white">
                     {hydraulicReserveMw.toFixed(1)} MW available before the
                     hydraulic ceiling is reached
                   </div>
                   <div className="mt-1 font-mono text-[10px] leading-4 text-[#6f8ca1]">
-                    This reserve is the available operating margin for a future
-                    grid-follow or frequency-droop controller.
+                    Maximum possible at current flow. This reserve is the
+                    available operating margin for a future grid-follow or
+                    frequency-droop controller.
                   </div>
                 </div>
               </div>
