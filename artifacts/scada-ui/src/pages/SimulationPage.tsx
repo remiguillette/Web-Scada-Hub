@@ -28,6 +28,7 @@ import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 import type { Translations } from "@/i18n/translations";
+import { buildUtilitySnapshot } from "@/lib/utility-service";
 
 function buildSparklinePath(
   values: number[],
@@ -812,61 +813,92 @@ export default function SimulationPage() {
     ],
   );
 
-  const utilityRows = useMemo(
-    () => [
-      {
-        parameter: t.gridFrequency,
-        value: `${frequency.toFixed(2)} Hz`,
-        description: t.gridStabilityDesc,
-      },
-      {
-        parameter: t.plantFrequency,
-        value: `${plantFrequency.toFixed(2)} Hz`,
-        description:
-          "Average generator frequency before and during grid injection",
-      },
-      {
-        parameter: t.voltage,
-        value: `${formatVoltageDisplay(voltage)}`,
-        description: t.supplyAtMccShort(SYSTEM.utility.nominalVoltage),
-      },
-      {
-        parameter: t.current,
-        value: `${state.current.toFixed(2)} A`,
-        description: t.totalLoadCurrentShort,
-      },
-      {
-        parameter: t.activePower,
-        value: `${activePower.toFixed(1)} W`,
-        description: t.realPowerConsumed,
-      },
-      {
-        parameter: t.apparentPower,
-        value: `${apparentPower.toFixed(1)} VA`,
-        description: t.totalVAShort,
-      },
-      {
-        parameter: t.reactivePower,
-        value: `${reactivePower.toFixed(1)} VAR`,
-        description: t.reactiveInductive,
-      },
-      {
-        parameter: t.powerFactor,
-        value: `${state.motorPowered ? powerFactor.toFixed(3) : "1.000"} cos\u03C6`,
-        description: t.motorPfNominalShort(SYSTEM.motor.powerFactor),
-      },
-    ],
+  const utilitySnapshot = useMemo(
+    () =>
+      buildUtilitySnapshot({
+        energized: state.isPowered,
+        frequency,
+        current: state.current,
+        activePower,
+        apparentPower,
+        reactivePower,
+        powerFactor,
+      }),
     [
-      t,
+      state.isPowered,
       frequency,
-      voltage,
       state.current,
-      state.motorPowered,
       activePower,
       apparentPower,
       reactivePower,
       powerFactor,
     ],
+  );
+
+  const utilityRows = useMemo(
+    () => [
+      {
+        parameter: t.utility.details.serviceType.label,
+        value: utilitySnapshot.serviceType,
+        description: t.utility.details.serviceType.desc,
+      },
+      {
+        parameter: t.utility.details.utilityType.label,
+        value: utilitySnapshot.utilityType,
+        description: t.utility.details.utilityType.desc,
+      },
+      {
+        parameter: t.utility.details.frequency.label,
+        value: `${frequency.toFixed(2)} Hz`,
+        description: t.utility.details.frequency.desc,
+      },
+      {
+        parameter: t.utility.details.voltageLL.label,
+        value: `${utilitySnapshot.lineToLineVoltage.toFixed(1)} V`,
+        description: t.utility.details.voltageLL.desc,
+      },
+      {
+        parameter: t.utility.details.voltageLN.label,
+        value: `${utilitySnapshot.lineToNeutralVoltage.toFixed(1)} V`,
+        description: t.utility.details.voltageLN.desc,
+      },
+      {
+        parameter: t.utility.details.current.label,
+        value: `${utilitySnapshot.totalServiceCurrent.toFixed(1)} A`,
+        description: t.utility.details.current.desc,
+      },
+      {
+        parameter: t.utility.details.activePower.label,
+        value: `${utilitySnapshot.activePowerKw.toFixed(1)} kW`,
+        description: t.utility.details.activePower.desc,
+      },
+      {
+        parameter: t.utility.details.apparentPower.label,
+        value: `${utilitySnapshot.apparentPowerKva.toFixed(1)} kVA`,
+        description: t.utility.details.apparentPower.desc,
+      },
+      {
+        parameter: t.utility.details.reactivePower.label,
+        value: `${utilitySnapshot.reactivePowerKvar.toFixed(1)} kVAR`,
+        description: t.utility.details.reactivePower.desc,
+      },
+      {
+        parameter: t.utility.details.powerFactor.label,
+        value: `${utilitySnapshot.powerFactor.toFixed(3)} ${utilitySnapshot.powerFactorState}`,
+        description: t.utility.details.powerFactor.desc,
+      },
+      {
+        parameter: t.utility.details.phaseBalance.label,
+        value: `${utilitySnapshot.voltageImbalancePct.toFixed(1)}%`,
+        description: t.utility.details.phaseBalance.desc,
+      },
+      {
+        parameter: t.utility.details.source.label,
+        value: utilitySnapshot.source,
+        description: t.utility.details.source.desc,
+      },
+    ],
+    [t, frequency, utilitySnapshot],
   );
 
   const motorRows = useMemo(

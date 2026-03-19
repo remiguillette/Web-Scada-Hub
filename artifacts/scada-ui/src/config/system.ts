@@ -8,7 +8,7 @@ export const SYSTEM = {
 
   utility: {
     tag: "UTILITY",
-    name: "Hydro Grid Intertie",
+    name: "Utility Service Entrance",
     provider: "Niagara Peninsula Energy (NPE)",
     nominalVoltage: 13800,
     nominalFrequency: 60,
