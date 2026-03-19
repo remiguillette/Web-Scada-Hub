@@ -387,40 +387,99 @@ function ConductorBundle({
   );
 }
 
-function VerticalConductorBundle({
-  title,
-  height,
+function UtilityServiceEntry({
+  utilityActive,
 }: {
-  title: string;
-  height: number;
+  utilityActive: boolean;
 }) {
+  const centerX = 248;
+  const centerY = 84;
+  const streetX = 88;
+  const streetY = 24;
+  const conductorStartX = 132;
+  const labelX = 120;
+  const conductorSpacing = 22;
+  const poleTop = centerY - 26;
+  const poleBottom = centerY + 26;
+
   return (
-    <div className="flex shrink-0 flex-col items-center gap-3">
-      <div className="font-mono text-[9px] tracking-[0.32em] text-[#6b7a6b]">
-        {title}
+    <div className="relative ml-6 mr-4 flex h-[168px] w-[340px] shrink-0 flex-col justify-start rounded-[24px] border border-white/8 bg-[#0a0f12]/80 px-4 py-3">
+      <div
+        className="absolute left-6 top-2 font-mono text-[9px] tracking-[0.34em] text-[#6b7a6b]"
+      >
+        STREET
       </div>
-      <div className="flex items-start gap-3 rounded-xl border border-white/8 bg-[#0a0f12]/70 px-3 py-2">
-        {CONDUCTORS.map((conductor) => (
-          <div
-            key={`${title}-${conductor.label}-vertical`}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className="font-mono text-[7.5px] tracking-[0.14em]"
-              style={{ color: conductor.color }}
-            >
-              {conductor.label}
-            </span>
-            <div
-              className="w-[5px] rounded-full"
-              style={{
-                height,
-                backgroundColor: conductor.color,
-                boxShadow: `0 0 7px ${conductor.glow}`,
-              }}
-            />
-          </div>
-        ))}
+      <div className="absolute left-6 top-7 rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-1 font-mono text-[8px] tracking-[0.2em] text-[#8ecae6]">
+        UTILITY
+      </div>
+
+      <svg
+        className="absolute inset-0 h-full w-full overflow-visible"
+        viewBox="0 0 340 168"
+        aria-label="Utility service entrance"
+      >
+        <line
+          x1={streetX}
+          y1={40}
+          x2={streetX}
+          y2={128}
+          stroke="#334155"
+          strokeWidth="2"
+          strokeDasharray="4 6"
+        />
+
+        {CONDUCTORS.map((conductor, index) => {
+          const y = streetY + index * conductorSpacing;
+          return (
+            <g key={`service-${conductor.label}`}>
+              <text
+                x={labelX}
+                y={y + 3}
+                fill={conductor.color}
+                fontSize="8"
+                letterSpacing="1.4"
+                textAnchor="end"
+                style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
+              >
+                {conductor.label}
+              </text>
+              <line
+                x1={conductorStartX}
+                y1={y}
+                x2={centerX}
+                y2={centerY}
+                stroke={conductor.color}
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={utilityActive ? 1 : 0.35}
+                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+              />
+            </g>
+          );
+        })}
+
+        <line
+          x1={centerX}
+          y1={poleTop}
+          x2={centerX}
+          y2={poleBottom}
+          stroke="#e2e8f0"
+          strokeWidth="4"
+          strokeLinecap="round"
+          opacity={utilityActive ? 0.95 : 0.45}
+        />
+
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r="5"
+          fill={utilityActive ? '#e2e8f0' : '#64748b'}
+          opacity="0.9"
+        />
+      </svg>
+
+      <div className="pointer-events-none absolute bottom-3 left-6 font-mono text-[8px] tracking-[0.18em] text-[#64748b]">
+        SERVICE DROP TO RISER
       </div>
     </div>
   );
@@ -924,19 +983,9 @@ export function ElectricalOneLine({
             <NodeCard node={utilityNode} />
           </div>
 
-          <div className="flex w-7 shrink-0 items-center">
-            <VWire powered={state.supplyLive} style={{ height: 46 }} />
-          </div>
+          <UtilityServiceEntry utilityActive={state.supplyLive} />
 
-          <HWire powered={state.supplyLive} className="w-6" />
-
-          <ConductorBundle
-            title="CONDUCTORS"
-            width={300}
-            simLabel="SIM: L1-N = 120V | L2-N = 120V | L1-L2 = 240V"
-          />
-
-          <HWire powered={state.supplyLive} className="w-6" />
+          <HWire powered={state.supplyLive} className="w-5" />
 
           <NodeCard
             node={{
@@ -1139,32 +1188,7 @@ export function ElectricalOneLine({
         </div>
 
         <div className="flex items-start gap-0">
-          <div className="flex shrink-0 items-start">
-            <NodeCard
-              node={{
-                kind: "equipment",
-                tag: "NPE-001",
-                title: "NPE",
-                status: state.supplyLive ? "STREET SERVICE" : "DE-ENERGIZED",
-                active: state.supplyLive,
-                accent: "cyan",
-                icon: (
-                  <StatusIcon
-                    icon="power"
-                    active={state.supplyLive}
-                    activeColor="text-[#00dcff]"
-                  />
-                ),
-              }}
-            />
-          </div>
-
-          <div className="flex shrink-0 items-start justify-center px-4">
-            <VerticalConductorBundle
-              title="STREET"
-              height={campusDividerHeight}
-            />
-          </div>
+          <div className="w-[486px] shrink-0" />
 
           <VerticalDivider height={campusDividerHeight} label="CAMPUS" />
 
