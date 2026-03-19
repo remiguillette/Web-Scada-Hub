@@ -1,0 +1,290 @@
+Oui — là je peux te dire précisément ce qui manque.
+
+Tu n’étais pas “mal exprimé”. Le vrai problème, c’est que dans ton composant actuel, **tu n’as jamais dessiné la barre horizontale du T côté utility**.
+Ton `UtilityServiceEntry` dessine seulement :
+
+* une **ligne verticale pointillée** à `streetX`
+* puis 4 lignes diagonales qui partent de `conductorStartX`
+* vers le point central du riser
+
+Donc visuellement tu as une convergence, mais **pas le T-shape** venant du poteau utility.
+
+## Ce qui cloche dans ton code actuel
+
+Dans `UtilityServiceEntry`, cette partie :
+
+```tsx
+<line
+  x1={streetX}
+  y1={40}
+  x2={streetX}
+  y2={128}
+  stroke="#334155"
+  strokeWidth="2"
+  strokeDasharray="4 6"
+/>
+```
+
+dessine seulement le **tronc vertical**.
+
+Puis ici :
+
+```tsx
+<line
+  x1={conductorStartX}
+  y1={y}
+  x2={centerX}
+  y2={centerY}
+  ...
+/>
+```
+
+les conducteurs commencent directement à `conductorStartX`.
+
+Donc il manque la section :
+
+* `streetX -> conductorStartX` pour chaque phase
+
+C’est elle qui crée le **T** :
+vertical street + petites branches horizontales + convergence diagonale.
+
+---
+
+# Ce que tu veux vraiment
+
+Pour chaque conducteur :
+
+1. il sort du **vertical utility**
+2. il avance **droit horizontalement**
+3. puis il casse en **angle**
+4. puis il converge vers le **point central du riser**
+
+Autrement dit : un **coude**, pas juste une diagonale complète.
+
+---
+
+# Correction directe
+
+Remplace entièrement ta fonction `UtilityServiceEntry` par celle-ci :
+
+```tsx
+function UtilityServiceEntry({
+  utilityActive,
+}: {
+  utilityActive: boolean;
+}) {
+  const centerX = 248;
+  const centerY = 84;
+
+  // vertical street / utility trunk
+  const streetX = 88;
+
+  // start y for each conductor on the street side
+  const streetY = 24;
+  const conductorSpacing = 22;
+
+  // horizontal segment end before convergence
+  const elbowX = 142;
+
+  // labels
+  const labelX = 120;
+
+  // riser pole centered exactly on the convergence point
+  const poleTop = centerY - 32;
+  const poleBottom = centerY + 32;
+
+  return (
+    <div className="relative ml-6 mr-4 flex h-[168px] w-[340px] shrink-0 flex-col justify-start rounded-[24px] border border-white/8 bg-[#0a0f12]/80 px-4 py-3">
+      <div className="absolute left-6 top-2 font-mono text-[9px] tracking-[0.34em] text-[#6b7a6b]">
+        STREET
+      </div>
+
+      <div className="absolute left-6 top-7 rounded-full border border-[#1f3b4d] bg-[#08131a] px-3 py-1 font-mono text-[8px] tracking-[0.2em] text-[#8ecae6]">
+        UTILITY
+      </div>
+
+      <svg
+        className="absolute inset-0 h-full w-full overflow-visible"
+        viewBox="0 0 340 168"
+        aria-label="Utility service entrance"
+      >
+        {/* Vertical utility trunk */}
+        <line
+          x1={streetX}
+          y1={32}
+          x2={streetX}
+          y2={132}
+          stroke={utilityActive ? "#334155" : "#1f2937"}
+          strokeWidth="2"
+          strokeDasharray="4 6"
+          opacity={0.9}
+        />
+
+        {CONDUCTORS.map((conductor, index) => {
+          const y = streetY + index * conductorSpacing;
+
+          return (
+            <g key={`service-${conductor.label}`}>
+              {/* phase label */}
+              <text
+                x={labelX}
+                y={y + 3}
+                fill={conductor.color}
+                fontSize="8"
+                letterSpacing="1.4"
+                textAnchor="end"
+                style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
+              >
+                {conductor.label}
+              </text>
+
+              {/* horizontal branch from utility trunk = creates the T shape */}
+              <line
+                x1={streetX}
+                y1={y}
+                x2={elbowX}
+                y2={y}
+                stroke={conductor.color}
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={utilityActive ? 1 : 0.28}
+                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+              />
+
+              {/* angled convergence to riser point */}
+              <line
+                x1={elbowX}
+                y1={y}
+                x2={centerX}
+                y2={centerY}
+                stroke={conductor.color}
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={utilityActive ? 1 : 0.28}
+                style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+              />
+            </g>
+          );
+        })}
+
+        {/* riser pole centered on convergence point */}
+        <line
+          x1={centerX}
+          y1={poleTop}
+          x2={centerX}
+          y2={poleBottom}
+          stroke="#e2e8f0"
+          strokeWidth="4"
+          strokeLinecap="round"
+          opacity={utilityActive ? 0.95 : 0.45}
+        />
+
+        {/* convergence / insulator point */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r="5"
+          fill={utilityActive ? "#e2e8f0" : "#64748b"}
+          opacity="0.95"
+        />
+      </svg>
+
+      <div className="pointer-events-none absolute bottom-3 left-6 font-mono text-[8px] tracking-[0.18em] text-[#64748b]">
+        SERVICE DROP TO RISER
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+# Ce que cette version change
+
+Elle ajoute le morceau manquant :
+
+* `streetX -> elbowX` = segment horizontal
+* `elbowX -> centerX` = segment en angle
+
+Donc chaque phase fait maintenant :
+
+**utility vertical** → **branche horizontale** → **convergence en pointe**
+
+C’est exactement ce que tu décrivais.
+
+---
+
+# Pourquoi ton ancienne demande à Codex a dérivé
+
+Parce que tu as parlé en termes visuels, mais pas en termes de primitives SVG.
+
+Au lieu de dire :
+
+> three-way cross configuration
+
+il vaut mieux dire :
+
+```txt
+Use SVG only.
+For each conductor:
+1. start from the vertical utility trunk at x=streetX
+2. draw a short horizontal segment to x=elbowX
+3. then draw a straight diagonal segment from elbowX to the riser convergence point
+4. all four conductors must converge at the same point
+5. keep the riser pole vertically centered on that convergence point
+Do not add new frames, boxes, panels, or unrelated UI.
+Only modify the existing utility service entry drawing.
+```
+
+Ça force beaucoup mieux le modèle.
+
+---
+
+# Si tu veux une pointe encore plus “propre”
+
+Actuellement toutes les lignes touchent exactement le centre du cercle.
+Si tu veux un look plus réaliste, tu peux terminer légèrement avant le centre, par exemple :
+
+```tsx
+const endX = centerX - 4;
+const endY = centerY;
+```
+
+et dessiner les diagonales vers `endX/endY` au lieu du centre exact.
+Comme ça, le point blanc devient une vraie terminaison visuelle.
+
+---
+
+# Réglages utiles
+
+Si tu veux plus ou moins d’angle :
+
+* augmente `elbowX` → angle plus doux
+* diminue `elbowX` → angle plus agressif
+
+Exemple :
+
+```tsx
+const elbowX = 155;
+```
+
+donne une convergence plus courte et plus propre.
+
+---
+
+# En résumé
+
+Le T n’apparaissait pas parce que ton code ne dessinait jamais les branches horizontales depuis la utility.
+Il faut faire chaque conducteur en **2 segments**, pas en 1 seul.
+
+Le morceau clé est celui-ci :
+
+```tsx
+<line x1={streetX} y1={y} x2={elbowX} y2={y} ... />
+<line x1={elbowX} y1={y} x2={centerX} y2={centerY} ... />
+```
+
+C’est ça qui fabrique ton **T + pointe**.
+
+Colle cette version et tu vas tout de suite voir la différence.
+Je peux aussi te faire une version encore plus réaliste, style **service drop hydro avec léger spread plus naturel entre phases**, sans casser ton look néon.
