@@ -111,40 +111,41 @@ const SOURCE_COL_W = 142;
 const SCROLL_STEP = 120;
 
 const CONDUCTORS = [
-  { label: "L1 / Phase A 347 V ~675 A", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
-  { label: "L2 / Phase B 347 V ~675 A", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
-  { label: "n 0 V", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
-  { label: "GND 0V", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
+  { label: "L1", color: "#3b82f6", glow: "rgba(59,130,246,0.55)" },
+  { label: "L2", color: "#ef4444", glow: "rgba(239,68,68,0.50)" },
+  { label: "L3", color: "#f59e0b", glow: "rgba(245,158,11,0.50)" },
+  { label: "N", color: "#d4d4d4", glow: "rgba(210,210,210,0.35)" },
+  { label: "GND", color: "#22c55e", glow: "rgba(34,197,94,0.45)" },
 ] as const;
 
 const STREET_BUS_CONDUCTORS = [
   {
-    label: "L1 / Phase A 347 V ~675 A",
-    shortLabel: ["L1 / Phase A", "347 V ~675 A"],
+    label: "L1",
+    lines: ["L1", "347 V", "~675 A"],
     color: "#3b82f6",
     glow: "rgba(59,130,246,0.55)",
   },
   {
-    label: "L2 / Phase B 347 V ~675 A",
-    shortLabel: ["L2 / Phase B", "347 V ~675 A"],
+    label: "L2",
+    lines: ["L2", "347 V", "~675 A"],
     color: "#ef4444",
     glow: "rgba(239,68,68,0.50)",
   },
   {
-    label: "L3 / Phase C 347 V ~675 A",
-    shortLabel: ["L3 / Phase C", "347 V ~675 A"],
+    label: "L3",
+    lines: ["L3", "347 V", "~675 A"],
     color: "#f59e0b",
     glow: "rgba(245,158,11,0.50)",
   },
   {
-    label: "n 0 V",
-    shortLabel: ["N", "0 V"],
+    label: "N",
+    lines: ["N", "0 V"],
     color: "#d4d4d4",
     glow: "rgba(210,210,210,0.35)",
   },
   {
-    label: "GND 0V",
-    shortLabel: ["GND", "0 V"],
+    label: "GND",
+    lines: ["GND", "0 V"],
     color: "#22c55e",
     glow: "rgba(34,197,94,0.45)",
   },
@@ -456,13 +457,13 @@ function UtilityBusBackground({
     >
       <text
         x={firstCX + totalHSpan / 2}
-        y={10}
-        fill={utilityActive ? '#4ade80' : '#4b5563'}
-        fontSize="9"
+        y={18}
+        fill={utilityActive ? "#4ade80" : "#4b5563"}
+        fontSize="10"
         fontWeight="bold"
-        letterSpacing="3"
+        letterSpacing="4"
         textAnchor="middle"
-        style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
+        style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
       >
         {streetLabel}
       </text>
@@ -475,17 +476,17 @@ function UtilityBusBackground({
           <g key={`bus-${conductor.label}`}>
             <text
               x={cx}
-              y={18}
+              y={42}
               fill={conductor.color}
-              fontSize="5"
+              fontSize="6"
               textAnchor="middle"
-              style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
+              style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
             >
-              {conductor.shortLabel.map((line, lineIndex) => (
+              {conductor.lines.map((line, lineIndex) => (
                 <tspan
-                  key={`${conductor.label}-${line}`}
+                  key={`${conductor.label}-${line}-${lineIndex}`}
                   x={cx}
-                  dy={lineIndex === 0 ? 0 : 6}
+                  dy={lineIndex === 0 ? 0 : 8}
                 >
                   {line}
                 </tspan>
