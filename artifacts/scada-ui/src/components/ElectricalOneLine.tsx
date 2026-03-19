@@ -480,9 +480,20 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Angled wire — bus bar → converges to riser pole centre */}
+            {/* Straight horizontal wire — bus bar → bend point */}
             <line
               x1={cx} y1={tapY}
+              x2={riserX - 20} y2={tapY}
+              stroke={conductor.color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={utilityActive ? 1 : 0.25}
+              style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
+            />
+
+            {/* Short angled tip — bend point → riser pole centre */}
+            <line
+              x1={riserX - 20} y1={tapY}
               x2={riserX} y2={centerY}
               stroke={conductor.color}
               strokeWidth="2.5"
