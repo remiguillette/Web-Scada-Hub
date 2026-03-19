@@ -605,7 +605,7 @@ function UtilityBusAnnotations({
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
   const busCenterX = firstCX + totalHSpan / 2;
-  const feederLabelShift = 170; // move only the feeder label to the right
+  const feederLabelShift = 145; // move only the feeder label to the right
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[10]">
