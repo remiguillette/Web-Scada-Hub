@@ -24,28 +24,20 @@ const AUTO_FEED_INTERVAL_MS = 70_000;
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
 export function useScadaState() {
-  const [disconnectClosed, setDisconnectClosed] = useState(true);
+  const [disconnectClosed, setDisconnectClosed] = useState(false);
   const [breakerTripped, setBreakerTripped] = useState(false);
   const [estopPressed, setEstopPressed] = useState(false);
   const [hopperLevel, setHopperLevel] = useState(78);
   const [bowlLevel, setBowlLevel] = useState(24);
   const [bowlDetected, setBowlDetected] = useState(true);
   const [feedActive, setFeedActive] = useState(false);
-  const [feedCount, setFeedCount] = useState(4);
-  const [uptime, setUptime] = useState(124 * 3600 + 31 * 60 + 18);
-  const [voltage, setVoltage] = useState(119.8);
+  const [feedCount, setFeedCount] = useState(0);
+  const [uptime, setUptime] = useState(0);
+  const [voltage, setVoltage] = useState(0);
   const [current, setCurrent] = useState(0);
-  const [lastFeedTime, setLastFeedTime] = useState<Date | null>(new Date(Date.now() - 52 * 60 * 1000));
+  const [lastFeedTime, setLastFeedTime] = useState<Date | null>(null);
   const [nextFeedingTime, setNextFeedingTime] = useState(new Date(Date.now() + AUTO_FEED_INTERVAL_MS));
-  const [alarms, setAlarms] = useState<Alarm[]>([
-    {
-      id: makeId(),
-      timestamp: new Date(Date.now() - 7 * 60 * 1000),
-      message: "SYSTEM READY - AUTO MODE ARMED",
-      active: false,
-      type: "INFO",
-    },
-  ]);
+  const [alarms, setAlarms] = useState<Alarm[]>([]);
 
   const cycleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleBowlRef = useRef(0);

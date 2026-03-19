@@ -305,6 +305,21 @@ export const translations = {
     mainDisconnect: "MAIN DISCONNECT",
     circuitBreaker: "CIRCUIT BREAKER",
     mainPanelGen: "MAIN PANEL GEN",
+
+    powerSource: "POWER SOURCE",
+    powerPlant: "POWER PLANT",
+    couplingBreaker: "COUPLING BREAKER",
+    couplingStatus: "COUPLING STATUS",
+    gridInjection: "GRID INJECTION",
+    injectPower: "INJECT POWER",
+    isolateGrid: "ISOLATE GRID",
+    connected: "CONNECTED",
+    disconnected: "DISCONNECTED",
+    powerSourceDesc: "Authorizes or prevents current injection into the distribution grid.",
+    syncIndicator: "SYNC INDICATOR",
+    sourceVoltage: "SOURCE VOLTAGE",
+    sourceFrequency: "SOURCE FREQUENCY",
+    teacherInterface: "TEACHER INTERFACE — DELIVERY STATION",
   },
 
   fr: {
@@ -619,6 +634,21 @@ export const translations = {
     mainDisconnect: "SECT. PRINCIPAL",
     circuitBreaker: "DISJONCTEUR",
     mainPanelGen: "TABLEAU PRINC. GEN",
+
+    powerSource: "SOURCE D'ÉNERGIE",
+    powerPlant: "CENTRALE ÉLECTRIQUE",
+    couplingBreaker: "DISJONCTEUR DE COUPLAGE",
+    couplingStatus: "ÉTAT COUPLAGE",
+    gridInjection: "INJECTION RÉSEAU",
+    injectPower: "INJECTER PUISSANCE",
+    isolateGrid: "ISOLER RÉSEAU",
+    connected: "CONNECTÉ",
+    disconnected: "DÉCONNECTÉ",
+    powerSourceDesc: "Autorise ou empêche l'injection de courant dans le réseau de distribution.",
+    syncIndicator: "INDICATEUR SYNC.",
+    sourceVoltage: "TENSION SOURCE",
+    sourceFrequency: "FRÉQUENCE SOURCE",
+    teacherInterface: "INTERFACE ENSEIGNANT — STATION DE LIVRAISON",
   },
 } as const;
 
