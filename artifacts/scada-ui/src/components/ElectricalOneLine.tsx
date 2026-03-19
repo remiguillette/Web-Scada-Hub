@@ -164,10 +164,10 @@ const UTILITY_BUS_GEOMETRY = {
 
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 
-const getWireClasses = (powered: boolean) =>
+const getWireClasses = (powered: boolean, axis: "h" | "v" = "h") =>
   cn(
     powered
-      ? "bg-[#2a8f6e]"
+      ? axis === "h" ? "wire-powered-h" : "wire-powered-v"
       : "bg-[#1e293b]",
   );
 
@@ -205,7 +205,7 @@ function HWire({ powered, className, style }: WireProps) {
       className={cn(
         "h-1.5",
         BASE_WIRE_CLASSES,
-        getWireClasses(powered),
+        getWireClasses(powered, "h"),
         className,
       )}
       style={style}
@@ -219,7 +219,7 @@ function VWire({ powered, className, style }: WireProps) {
       className={cn(
         "w-1.5",
         BASE_WIRE_CLASSES,
-        getWireClasses(powered),
+        getWireClasses(powered, "v"),
         className,
       )}
       style={style}
@@ -392,15 +392,17 @@ function ConductorBundle({
   title,
   width,
   simLabel,
+  powered = true,
 }: {
   title: string;
   width: number;
   simLabel?: string;
+  powered?: boolean;
 }) {
   return (
     <div className="mx-4 flex shrink-0 flex-col gap-[5px]">
       <div className="mb-1 flex items-center gap-2">
-        <span className="font-mono text-[9px] tracking-[0.28em] text-[#6b7a6b]">
+        <span className={cn("font-mono text-[9px] tracking-[0.28em]", powered ? "text-[#6b7a6b]" : "text-[#3a3a3a]")}>
           {title}
         </span>
         {simLabel ? (
@@ -410,25 +412,39 @@ function ConductorBundle({
         ) : null}
       </div>
 
-      {CONDUCTORS.map((conductor) => (
+      {CONDUCTORS.map((conductor, index) => (
         <div
           key={`${title}-${conductor.label}`}
           className="flex items-center gap-2"
         >
           <span
             className="w-44 shrink-0 text-right font-mono text-[7.5px] tracking-[0.14em]"
-            style={{ color: conductor.color }}
+            style={{ color: powered ? conductor.color : "#2a2a2a" }}
           >
             {conductor.label}
           </span>
           <div
-            className="h-[5px] rounded-full"
-            style={{
-              width,
-              backgroundColor: conductor.color,
-              boxShadow: `0 0 7px ${conductor.glow}`,
-            }}
-          />
+            className="relative h-[5px] overflow-hidden rounded-full"
+            style={{ width }}
+          >
+            <div
+              className="absolute inset-0 rounded-full transition-all duration-500"
+              style={{
+                backgroundColor: powered ? conductor.color : "#1e293b",
+              }}
+            />
+            {powered && (
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: `linear-gradient(90deg, transparent 0%, ${conductor.color} 40%, #ffffff44 50%, ${conductor.color} 60%, transparent 100%)`,
+                  backgroundSize: "300% 100%",
+                  animation: `wire-flow-h 1.4s linear infinite`,
+                  animationDelay: `${index * 0.15}s`,
+                }}
+              />
+            )}
+          </div>
         </div>
       ))}
     </div>
@@ -462,9 +478,11 @@ function UtilityBusBackground({
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
         const tapY = centerY + (index - (count - 1) / 2) * 12;
+        const animDelay = `${index * 0.12}s`;
 
         return (
           <g key={`bus-lines-${conductor.label}`}>
+            {/* Base static line */}
             <line
               x1={cx}
               y1={155}
@@ -473,26 +491,76 @@ function UtilityBusBackground({
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
-              opacity={utilityActive ? 1 : 0.25}
+              opacity={utilityActive ? 0.7 : 0.2}
             />
+            {/* Animated flow overlay on vertical bus bar */}
+            {utilityActive && (
+              <line
+                x1={cx}
+                y1={155}
+                x2={cx}
+                y2={lineBottom}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity={0.9}
+                strokeDasharray="10 8"
+                style={{
+                  animation: `dash-flow 0.9s linear infinite`,
+                  animationDelay: animDelay,
+                }}
+              />
+            )}
 
+            {/* Horizontal tap line */}
             <line
               x1={cx} y1={tapY}
               x2={riserX - 20} y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
-              opacity={utilityActive ? 1 : 0.25}
+              opacity={utilityActive ? 0.7 : 0.2}
             />
+            {utilityActive && (
+              <line
+                x1={cx} y1={tapY}
+                x2={riserX - 20} y2={tapY}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity={0.9}
+                strokeDasharray="10 8"
+                style={{
+                  animation: `dash-flow 0.7s linear infinite`,
+                  animationDelay: animDelay,
+                }}
+              />
+            )}
 
+            {/* Diagonal line */}
             <line
               x1={riserX - 20} y1={tapY}
               x2={riserX} y2={centerY}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
-              opacity={utilityActive ? 1 : 0.25}
+              opacity={utilityActive ? 0.7 : 0.2}
             />
+            {utilityActive && (
+              <line
+                x1={riserX - 20} y1={tapY}
+                x2={riserX} y2={centerY}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity={0.9}
+                strokeDasharray="10 8"
+                style={{
+                  animation: `dash-flow 0.8s linear infinite`,
+                  animationDelay: animDelay,
+                }}
+              />
+            )}
 
             <circle
               cx={cx}
@@ -1203,7 +1271,7 @@ export function ElectricalOneLine({
             }}
           />
 
-          <ConductorBundle title={t.secondaryServiceCable} width={220} />
+          <ConductorBundle title={t.secondaryServiceCable} width={220} powered={state.supplyLive} />
 
           <HWire powered={state.meterLive} className="w-4" />
 

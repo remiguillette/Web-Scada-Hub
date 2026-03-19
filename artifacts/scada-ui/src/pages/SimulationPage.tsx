@@ -641,7 +641,7 @@ function GeneratorCard({
 }
 
 export default function SimulationPage() {
-  const { voltage, frequency, history, form, config, setForm, applyConfig } =
+  const { voltage, frequency, history, form, config, gridEnabled, toggleGrid, setForm, applyConfig } =
     useGridSimulationContext();
   const {
     statuses: generatorStatuses,
@@ -911,32 +911,32 @@ export default function SimulationPage() {
       <main className="mx-auto max-w-[1600px] space-y-5 p-5">
 
         <div className={cn(
-          "rounded-2xl border p-5",
-          state.disconnectClosed
-            ? "border-[#00f7a1]/30 bg-gradient-to-br from-[#0a1a10] to-[#0d1a14]"
+          "rounded-2xl border p-5 transition-all duration-500",
+          gridEnabled
+            ? "border-[#00f7a1]/40 bg-gradient-to-br from-[#071410] to-[#0d1f16]"
             : "border-[#2a2a2a] bg-[#101010]"
         )}>
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-5 flex items-center gap-3">
             <div className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-xl border",
-              state.disconnectClosed
-                ? "border-[#00f7a1]/40 bg-[#00f7a1]/10"
+              "flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-500",
+              gridEnabled
+                ? "border-[#00f7a1]/40 bg-[#00f7a1]/10 power-online-pulse"
                 : "border-[#2a2a2a] bg-[#1a1a1a]"
             )}>
-              <Factory className={cn("h-5 w-5", state.disconnectClosed ? "text-[#00f7a1]" : "text-[#4a5a6a]")} />
+              <Factory className={cn("h-5 w-5 transition-colors duration-300", gridEnabled ? "text-[#00f7a1]" : "text-[#4a5a6a]")} />
             </div>
             <div>
               <div className="font-display text-xs uppercase tracking-[0.2em] text-[#5a7a8a]">{t.teacherInterface}</div>
               <div className="font-display text-sm font-semibold uppercase tracking-[0.14em] text-white">{t.powerSource} — {t.powerPlant}</div>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-3">
               <span className={cn(
-                "flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] tracking-[0.16em]",
-                state.disconnectClosed
+                "flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] tracking-[0.16em] transition-all duration-300",
+                gridEnabled
                   ? "border-[#00f7a1]/30 bg-[#00f7a1]/10 text-[#00f7a1]"
                   : "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]"
               )}>
-                {state.disconnectClosed
+                {gridEnabled
                   ? <><CheckCircle2 className="h-3 w-3" /> {t.connected}</>
                   : <><AlertTriangle className="h-3 w-3" /> {t.disconnected}</>
                 }
@@ -946,55 +946,70 @@ export default function SimulationPage() {
 
           <div className="grid gap-4 md:grid-cols-[1fr_auto]">
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div className={cn(
+                "rounded-xl border px-4 py-3 transition-all duration-500",
+                gridEnabled ? "border-[#00dcff]/20 bg-[#09111d]" : "border-[#1c2c40] bg-[#09111d]"
+              )}>
                 <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.sourceVoltage}</div>
-                <div className={cn("mt-1 font-mono text-2xl font-semibold tracking-[0.06em]", state.disconnectClosed ? "text-[#00dcff]" : "text-[#334155]")}>
-                  {voltage.toFixed(1)} <span className="text-sm font-normal text-[#5a7a8a]">V</span>
+                <div className={cn("mt-1 font-mono text-2xl font-semibold tracking-[0.06em] transition-colors duration-500", gridEnabled ? "text-[#00dcff]" : "text-[#334155]")}>
+                  {gridEnabled ? voltage.toFixed(1) : "0.0"} <span className="text-sm font-normal text-[#5a7a8a]">V</span>
                 </div>
               </div>
-              <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+              <div className={cn(
+                "rounded-xl border px-4 py-3 transition-all duration-500",
+                gridEnabled ? "border-[#00f7a1]/20 bg-[#09111d]" : "border-[#1c2c40] bg-[#09111d]"
+              )}>
                 <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.sourceFrequency}</div>
-                <div className={cn("mt-1 font-mono text-2xl font-semibold tracking-[0.06em]", state.disconnectClosed ? "text-[#00f7a1]" : "text-[#334155]")}>
-                  {frequency.toFixed(2)} <span className="text-sm font-normal text-[#5a7a8a]">Hz</span>
+                <div className={cn("mt-1 font-mono text-2xl font-semibold tracking-[0.06em] transition-colors duration-500", gridEnabled ? "text-[#00f7a1]" : "text-[#334155]")}>
+                  {gridEnabled ? frequency.toFixed(2) : "0.00"} <span className="text-sm font-normal text-[#5a7a8a]">Hz</span>
                 </div>
               </div>
               <div className="rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
                 <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.syncIndicator}</div>
                 <div className="mt-1 flex items-center gap-2">
-                  <LED on={state.disconnectClosed} color={state.disconnectClosed ? "green" : "cyan"} size="md" />
-                  <span className={cn("font-mono text-sm tracking-[0.1em]", state.disconnectClosed ? "text-[#00f7a1]" : "text-[#475569]")}>
-                    {state.disconnectClosed ? t.gridInjection : t.couplingStatus}
+                  <LED on={gridEnabled} color={gridEnabled ? "green" : "cyan"} size="md" />
+                  <span className={cn("font-mono text-sm tracking-[0.1em] transition-colors duration-300", gridEnabled ? "text-[#00f7a1]" : "text-[#475569]")}>
+                    {gridEnabled ? t.gridInjection : t.couplingStatus}
                   </span>
                 </div>
                 <div className="mt-1 font-mono text-[10px] text-[#4a5a6a]">{t.powerSourceDesc}</div>
               </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#1c2c40] bg-[#09111d] px-6 py-4">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-[#1c2c40] bg-[#09111d] px-8 py-5">
               <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">{t.couplingBreaker}</div>
+
+              {/* Big master power toggle */}
               <button
                 type="button"
-                onClick={actions.toggleDisconnect}
+                onClick={toggleGrid}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border px-5 py-2.5 font-display text-sm tracking-[0.14em] transition-all duration-200",
-                  state.disconnectClosed
-                    ? "border-[#ff4d5a]/40 bg-[#ff4d5a]/10 text-[#ff4d5a] hover:bg-[#ff4d5a]/20"
-                    : "border-[#00f7a1]/40 bg-[#00f7a1]/10 text-[#00f7a1] hover:bg-[#00f7a1]/20"
+                  "relative flex h-16 w-16 items-center justify-center rounded-full border-2 transition-all duration-300",
+                  gridEnabled
+                    ? "border-[#ff4d5a]/60 bg-[#ff4d5a]/15 text-[#ff4d5a] hover:bg-[#ff4d5a]/25 shadow-[0_0_20px_rgba(255,77,90,0.15)]"
+                    : "border-[#00f7a1]/50 bg-[#00f7a1]/10 text-[#00f7a1] hover:bg-[#00f7a1]/20 shadow-[0_0_20px_rgba(0,247,161,0.1)]"
                 )}
+                aria-label={gridEnabled ? "Power off" : "Power on"}
               >
-                {state.disconnectClosed
-                  ? <><ToggleRight className="h-4 w-4" /> {t.isolateGrid}</>
-                  : <><ToggleLeft className="h-4 w-4" /> {t.injectPower}</>
-                }
+                <Power className="h-7 w-7" />
               </button>
-              <div className={cn(
-                "flex items-center gap-1.5 font-mono text-[10px] tracking-[0.12em]",
-                state.disconnectClosed ? "text-[#00f7a1]" : "text-[#475569]"
-              )}>
-                {state.disconnectClosed
-                  ? <><Zap className="h-3 w-3" /> {t.connected}</>
-                  : <><Power className="h-3 w-3" /> {t.disconnected}</>
-                }
+
+              <div className="text-center">
+                <div className={cn(
+                  "font-display text-xs font-semibold tracking-[0.18em] uppercase transition-colors duration-300",
+                  gridEnabled ? "text-[#ff4d5a]" : "text-[#00f7a1]"
+                )}>
+                  {gridEnabled ? t.isolateGrid : t.injectPower}
+                </div>
+                <div className={cn(
+                  "mt-0.5 flex items-center justify-center gap-1.5 font-mono text-[10px] tracking-[0.12em]",
+                  gridEnabled ? "text-[#00f7a1]" : "text-[#475569]"
+                )}>
+                  {gridEnabled
+                    ? <><Zap className="h-3 w-3" /> {t.connected}</>
+                    : <><Power className="h-3 w-3" /> {t.disconnected}</>
+                  }
+                </div>
               </div>
             </div>
           </div>

@@ -37,6 +37,8 @@ interface GridSimulationContextValue {
   history: GridReading[];
   form: GridFormValues;
   config: GridSimulationConfig;
+  gridEnabled: boolean;
+  toggleGrid: () => void;
   setForm: (updater: (prev: GridFormValues) => GridFormValues) => void;
   applyConfig: () => void;
 }
@@ -47,8 +49,16 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   const [form, setForm] = useState<GridFormValues>(DEFAULT_FORM);
   const [config, setConfig] = useState<GridSimulationConfig>(DEFAULT_CONFIG);
   const [history, setHistory] = useState<GridReading[]>([]);
+  const [gridEnabled, setGridEnabled] = useState(false);
 
-  const { voltage, frequency } = useGridSimulation(config);
+  const { voltage: rawVoltage, frequency: rawFrequency } = useGridSimulation(config);
+
+  const voltage = gridEnabled ? rawVoltage : 0;
+  const frequency = gridEnabled ? rawFrequency : 0;
+
+  const toggleGrid = useCallback(() => {
+    setGridEnabled((prev) => !prev);
+  }, []);
 
   const applyConfig = useCallback(() => {
     setConfig({
@@ -75,7 +85,7 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   }, [voltage, frequency]);
 
   return (
-    <GridSimulationContext.Provider value={{ voltage, frequency, history, form, config, setForm, applyConfig }}>
+    <GridSimulationContext.Provider value={{ voltage, frequency, history, form, config, gridEnabled, toggleGrid, setForm, applyConfig }}>
       {children}
     </GridSimulationContext.Provider>
   );

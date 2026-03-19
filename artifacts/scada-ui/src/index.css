@@ -129,4 +129,66 @@
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+
+  /* ─── POWER FLOW ANIMATIONS ─────────────────────────── */
+
+  /* Horizontal wire flow: moving shimmer from left to right */
+  @keyframes wire-flow-h {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Vertical wire flow: moving shimmer from top to bottom */
+  @keyframes wire-flow-v {
+    0%   { background-position: center -200%; }
+    100% { background-position: center 200%; }
+  }
+
+  /* SVG dash flow: animate stroke-dashoffset for moving dashes */
+  @keyframes dash-flow {
+    from { stroke-dashoffset: 40; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  /* Power plant status pulse */
+  @keyframes power-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 247, 161, 0); }
+    50%       { box-shadow: 0 0 0 8px rgba(0, 247, 161, 0.08); }
+  }
+  .power-online-pulse {
+    animation: power-pulse 2s ease-in-out infinite;
+  }
+
+  /* Conductor bar glow flow */
+  .wire-powered-h {
+    background: linear-gradient(
+      90deg,
+      #2a8f6e 0%,
+      #3db88c 40%,
+      #5fdcac 50%,
+      #3db88c 60%,
+      #2a8f6e 100%
+    );
+    background-size: 300% 100%;
+    animation: wire-flow-h 1.6s linear infinite;
+  }
+
+  .wire-powered-v {
+    background: linear-gradient(
+      180deg,
+      #2a8f6e 0%,
+      #3db88c 40%,
+      #5fdcac 50%,
+      #3db88c 60%,
+      #2a8f6e 100%
+    );
+    background-size: 100% 300%;
+    animation: wire-flow-v 1.6s linear infinite;
+  }
+
+  /* SVG animated flow line */
+  .svg-flow-line {
+    stroke-dasharray: 8 6;
+    animation: dash-flow 0.7s linear infinite;
+  }
 }
