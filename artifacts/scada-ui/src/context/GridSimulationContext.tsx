@@ -19,6 +19,12 @@ export type GridCouplingState = "DISCONNECTED" | "SYNCHRONIZING" | "CONNECTED";
 
 const HISTORY_MAX = 60;
 const SYNC_DELAY_MS = 2500;
+const HYDRO_MAX_UNITS = 10;
+const HYDRO_UNIT_CAPACITY_MW = 54.8;
+const WATER_TO_WIRE_EFFICIENCY = 0.9;
+const DEFAULT_SIM_TIME_MINUTES = 8 * 60;
+const DEFAULT_INFLOW_RATE = 500;
+const DEFAULT_RESERVOIR_LEVEL = 100;
 
 const DEFAULT_FORM: GridFormValues = {
   baseVoltage: 13800,
@@ -47,6 +53,13 @@ interface GridSimulationContextValue {
   config: GridSimulationConfig;
   gridEnabled: boolean;
   gridDemandMw: number;
+  simulationTimeMinutes: number;
+  inflowRate: number;
+  reservoirLevel: number;
+  generatedPowerMw: number;
+  hydraulicHeadMeters: number;
+  waterFlowActiveUnits: number;
+  waterToWireEfficiency: number;
   toggleGrid: () => void;
   requestGridConnection: (nextConnected: boolean) => void;
   setForm: (updater: (prev: GridFormValues) => GridFormValues) => void;
@@ -66,6 +79,9 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   const [form, setForm] = useState<GridFormValues>(DEFAULT_FORM);
   const [config, setConfig] = useState<GridSimulationConfig>(DEFAULT_CONFIG);
   const [history, setHistory] = useState<GridReading[]>([]);
+  const [simulationTimeMinutes, setSimulationTimeMinutes] = useState(DEFAULT_SIM_TIME_MINUTES);
+  const [inflowRate, setInflowRate] = useState(DEFAULT_INFLOW_RATE);
+  const [reservoirLevel, setReservoirLevel] = useState(DEFAULT_RESERVOIR_LEVEL);
   const syncTimeoutRef = useRef<number | null>(null);
 
   const persistGridEnabled = useCallback((value: boolean) => {
@@ -112,7 +128,18 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
 
   const voltage = gridEnabled ? rawVoltage : 0;
   const frequency = gridEnabled ? rawFrequency : 0;
-  const gridDemandMw = form.gridDemandMw;
+  const demandFactor =
+    Math.sin((simulationTimeMinutes / 1440) * Math.PI * 2 - Math.PI / 2) + 1.2;
+  const gridDemandMw = Number(
+    Math.max(120, form.gridDemandMw * (0.65 + demandFactor * 0.32)).toFixed(1),
+  );
+  const waterFlowActiveUnits = gridDemandMw > 0
+    ? Math.min(HYDRO_MAX_UNITS, Math.max(1, Math.ceil(gridDemandMw / HYDRO_UNIT_CAPACITY_MW)))
+    : 0;
+  const generatedPowerMw = gridEnabled
+    ? Number(Math.min(gridDemandMw, waterFlowActiveUnits * HYDRO_UNIT_CAPACITY_MW).toFixed(1))
+    : 0;
+  const hydraulicHeadMeters = Number((48 + (reservoirLevel - 100) * 0.35).toFixed(1));
 
   const toggleGrid = useCallback(() => {
     requestGridConnection(gridState !== "CONNECTED");
@@ -157,8 +184,28 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => clearSyncTimeout(), [clearSyncTimeout]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setSimulationTimeMinutes((prev) => (prev + 1) % 1440);
+      setInflowRate((prev) => {
+        const variation = Math.random() * 10 - 5;
+        return Number(Math.max(400, Math.min(600, prev + variation)).toFixed(1));
+      });
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    setReservoirLevel((prev) => {
+      const outflow = generatedPowerMw * 1.1;
+      const nextLevel = prev + (inflowRate - outflow) * 0.001;
+      return Number(Math.max(92, Math.min(108, nextLevel)).toFixed(2));
+    });
+  }, [generatedPowerMw, inflowRate]);
+
   return (
-    <GridSimulationContext.Provider value={{ voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, toggleGrid, requestGridConnection, setForm, applyConfig }}>
+    <GridSimulationContext.Provider value={{ voltage, frequency, gridState, history, form, config, gridEnabled, gridDemandMw, simulationTimeMinutes, inflowRate, reservoirLevel, generatedPowerMw, hydraulicHeadMeters, waterFlowActiveUnits, waterToWireEfficiency: WATER_TO_WIRE_EFFICIENCY, toggleGrid, requestGridConnection, setForm, applyConfig }}>
       {children}
     </GridSimulationContext.Provider>
   );
