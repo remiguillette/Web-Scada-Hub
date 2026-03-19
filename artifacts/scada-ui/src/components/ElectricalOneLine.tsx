@@ -450,20 +450,11 @@ function UtilityBusBackground({
         STREET
       </text>
 
-      {/* ── Riser pole — solid vertical on the right ── */}
-      <line
-        x1={riserX} y1={lineTop + 30}
-        x2={riserX} y2={lineBottom - 30}
-        stroke={utilityActive ? '#c8d8e8' : '#64748b'}
-        strokeWidth="4"
-        strokeLinecap="round"
-        opacity={utilityActive ? 0.92 : 0.45}
-      />
-
       {CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * hSpacing;
         // Horizontal wire Y — evenly fanned around vertical centre
         const tapY = centerY + (index - (count - 1) / 2) * 12;
+        const halfW = 2.5;
 
         return (
           <g key={`bus-${conductor.label}`}>
@@ -490,38 +481,22 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Horizontal wire — bus bar → riser */}
-            <line
-              x1={cx} y1={tapY}
-              x2={riserX} y2={tapY}
-              stroke={conductor.color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
+            {/* Horizontal wire tapered to a point at riser pole */}
+            <polygon
+              points={`${cx},${tapY - halfW} ${cx},${tapY + halfW} ${riserX},${tapY}`}
+              fill={conductor.color}
               opacity={utilityActive ? 1 : 0.25}
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* T-junction dot at intersection (hidden under card, visible concept) */}
+            {/* T-junction dot at bus bar intersection */}
             <circle cx={cx} cy={tapY} r="3"
               fill={conductor.color}
               opacity={utilityActive ? 0.95 : 0.2}
             />
-
-            {/* Junction dot at riser */}
-            <circle cx={riserX} cy={tapY} r="2.5"
-              fill={conductor.color}
-              opacity={utilityActive ? 0.9 : 0.25}
-            />
           </g>
         );
       })}
-
-      {/* Insulator knob at centre of riser */}
-      <circle
-        cx={riserX} cy={centerY} r="6"
-        fill={utilityActive ? '#e2e8f0' : '#4a5568'}
-        opacity="0.95"
-      />
     </svg>
   );
 }
