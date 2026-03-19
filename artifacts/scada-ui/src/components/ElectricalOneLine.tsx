@@ -1079,11 +1079,11 @@ export function ElectricalOneLine({
     >
       <div ref={diagramRef} className="min-w-max pt-1 pb-8 pl-6 pr-10">
         <div className="flex items-center gap-0">
-          <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
+          <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 235 }}>
             <UtilityBusBackground utilityActive={state.supplyLive} streetLabel={t.street} />
             <div
               className="absolute left-0 flex items-start"
-              style={{ width: CARD_W, zIndex: 1, top: 65 }}
+              style={{ width: CARD_W, zIndex: 1, top: 82 }}
             >
               <NodeCard node={utilityNode} />
             </div>
