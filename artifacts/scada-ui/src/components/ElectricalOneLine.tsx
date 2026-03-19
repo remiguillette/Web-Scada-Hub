@@ -519,17 +519,17 @@ function UtilityBusAnnotations({
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
+  const busCenterX = firstCX + totalHSpan / 2;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]">
       <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-md border px-4 py-1 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
+        className="absolute -translate-x-1/2 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
         style={{
           top: UTILITY_BUS_GEOMETRY.titleY - 16,
+          left: busCenterX,
           color: utilityActive ? "#4ade80" : "#4b5563",
-          borderColor: utilityActive ? "rgba(74,222,128,0.35)" : "rgba(75,85,99,0.4)",
-          backgroundColor: utilityActive ? "rgba(5,18,12,0.78)" : "rgba(17,24,39,0.72)",
-          boxShadow: utilityActive ? "0 0 14px rgba(74,222,128,0.18)" : "none",
+          textShadow: utilityActive ? "0 0 10px rgba(74,222,128,0.28)" : "none",
         }}
       >
         {streetLabel}
@@ -543,17 +543,15 @@ function UtilityBusAnnotations({
         return (
           <div
             key={`bus-annotation-${conductor.label}`}
-            className="absolute flex flex-col items-center rounded-md border px-1 py-1 text-center font-mono"
+            className="absolute flex flex-col items-center px-1 py-1 text-center font-mono"
             style={{
               top: UTILITY_BUS_GEOMETRY.conductorLabelY - 10,
               left,
               width,
               gap: "1px",
               color: conductor.color,
-              borderColor: utilityActive ? `${conductor.color}55` : "rgba(75,85,99,0.4)",
-              backgroundColor: utilityActive ? "rgba(3,7,18,0.78)" : "rgba(15,23,42,0.68)",
-              boxShadow: utilityActive ? `0 0 12px ${conductor.glow}` : "none",
               opacity: utilityActive ? 1 : 0.5,
+              textShadow: utilityActive ? `0 0 10px ${conductor.glow}` : "none",
             }}
           >
             {conductor.lines.map((line, lineIndex) => (
