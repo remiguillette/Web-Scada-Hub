@@ -424,8 +424,8 @@ function UtilityBusBackground({
   // Card sits vertically centred in the container
   const centerY = H / 2; // 110
 
-  // Riser pole — same relative position as before (12 px from right edge)
-  const riserX = W - 12; // 338
+  // Riser pole — flush with right edge of SVG
+  const riserX = W - 2; // 348
 
   return (
     <svg
@@ -1021,7 +1021,7 @@ export function ElectricalOneLine({
             </div>
           </div>
 
-          <HWire powered={state.supplyLive} className="w-5" />
+          <HWire powered={state.supplyLive} className="w-2" />
 
           <NodeCard
             node={{
