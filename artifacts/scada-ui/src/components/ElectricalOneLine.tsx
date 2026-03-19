@@ -434,13 +434,14 @@ function UtilityBusBackground({
       aria-label="Utility street power bus"
       style={{ zIndex: 0 }}
     >
-      {/* ── STREET label — above the bus bars ── */}
+      {/* ── STREET label — top of the utility section ── */}
       <text
         x={firstCX + totalHSpan / 2}
-        y={13}
-        fill={utilityActive ? '#94a3b8' : '#4b5563'}
-        fontSize="8"
-        letterSpacing="2"
+        y={10}
+        fill={utilityActive ? '#4ade80' : '#4b5563'}
+        fontSize="9"
+        fontWeight="bold"
+        letterSpacing="3"
         textAnchor="middle"
         style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
       >
@@ -464,10 +465,10 @@ function UtilityBusBackground({
 
         return (
           <g key={`bus-${conductor.label}`}>
-            {/* Conductor label just below STREET, above card top */}
+            {/* Conductor label below STREET, above card top */}
             <text
               x={cx}
-              y={24}
+              y={22}
               fill={conductor.color}
               fontSize="7"
               textAnchor="middle"
