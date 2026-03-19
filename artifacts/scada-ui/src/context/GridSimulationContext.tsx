@@ -23,6 +23,8 @@ const DEFAULT_FORM: GridFormValues = {
   frequencyVariation: 0.05,
 };
 
+const GRID_ENABLED_STORAGE_KEY = "scada.grid.enabled";
+
 const DEFAULT_CONFIG: GridSimulationConfig = {
   baseVoltage: 120,
   voltageVariationPct: 0.02,
@@ -47,10 +49,22 @@ interface GridSimulationContextValue {
 const GridSimulationContext = createContext<GridSimulationContextValue | null>(null);
 
 export function GridSimulationProvider({ children }: { children: ReactNode }) {
+  const [gridEnabled, setGridEnabledState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+
+    const saved = window.localStorage.getItem(GRID_ENABLED_STORAGE_KEY);
+    return saved === "true";
+  });
   const [form, setForm] = useState<GridFormValues>(DEFAULT_FORM);
   const [config, setConfig] = useState<GridSimulationConfig>(DEFAULT_CONFIG);
   const [history, setHistory] = useState<GridReading[]>([]);
-  const [gridEnabled, setGridEnabled] = useState(false);
+
+  const setGridEnabled = useCallback((value: boolean) => {
+    setGridEnabledState(value);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(GRID_ENABLED_STORAGE_KEY, String(value));
+    }
+  }, []);
 
   const { voltage: rawVoltage, frequency: rawFrequency } = useGridSimulation(config);
 
@@ -58,8 +72,8 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
   const frequency = gridEnabled ? rawFrequency : 0;
 
   const toggleGrid = useCallback(() => {
-    setGridEnabled((prev) => !prev);
-  }, []);
+    setGridEnabled(!gridEnabled);
+  }, [gridEnabled, setGridEnabled]);
 
   const applyConfig = useCallback(() => {
     setConfig({
@@ -73,6 +87,16 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
 
   const prevVoltageRef = useRef(voltage);
   const prevFrequencyRef = useRef(frequency);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== GRID_ENABLED_STORAGE_KEY) return;
+      setGridEnabledState(event.newValue === "true");
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   useEffect(() => {
     if (voltage !== prevVoltageRef.current || frequency !== prevFrequencyRef.current) {
