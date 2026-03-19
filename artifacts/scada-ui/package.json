@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "description": "CAT_FEEDER_SYS_01 SCADA Dashboard — industrial cat food dispenser simulation. Supports EN/FR via custom React context i18n (no external library). Toggle available in every page header via the Languages icon.",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "vite build --config vite.config.ts",

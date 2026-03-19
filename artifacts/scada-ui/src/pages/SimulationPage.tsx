@@ -4,6 +4,7 @@ import {
   Activity,
   ArrowLeft,
   Gauge,
+  Languages,
   Zap,
   Radio,
   TrendingUp,
@@ -22,8 +23,10 @@ import {
 } from "@/context/GeneratorSimulationContext";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
+import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
+import type { Translations } from "@/i18n/translations";
 
 function buildSparklinePath(
   values: number[],
@@ -134,6 +137,7 @@ function MetricCard({
   color,
   sparkValues,
   sparkColor,
+  t,
 }: {
   label: string;
   value: string;
@@ -146,6 +150,7 @@ function MetricCard({
   color: "cyan" | "green";
   sparkValues: number[];
   sparkColor: string;
+  t: Translations;
 }) {
   const colorMap = {
     cyan: {
@@ -178,7 +183,7 @@ function MetricCard({
             {label}
           </span>
         </div>
-        <StatusBadge ok={inBand} okLabel="IN BAND" faultLabel="OUT OF BAND" />
+        <StatusBadge ok={inBand} okLabel={t.inBand} faultLabel={t.outOfBand} />
       </div>
       <div className="flex items-end gap-2">
         <span className="font-mono text-5xl font-semibold tracking-[0.06em]">
@@ -192,7 +197,7 @@ function MetricCard({
       <div className="grid grid-cols-3 gap-2 rounded-xl border border-[#1c2c40] bg-[#09111d] p-3">
         <div>
           <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
-            Nominal
+            {t.nominal}
           </div>
           <div className="font-mono text-sm text-[#b8c6d9]">
             {nominal} {unit}
@@ -200,7 +205,7 @@ function MetricCard({
         </div>
         <div>
           <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
-            Deviation
+            {t.deviation}
           </div>
           <div
             className={cn(
@@ -213,7 +218,7 @@ function MetricCard({
         </div>
         <div>
           <div className="font-display text-[10px] uppercase tracking-[0.18em] text-[#5a7a8a]">
-            Band (±)
+            {t.band}
           </div>
           <div className="font-mono text-sm text-[#b8c6d9]">
             {toleranceBand} {unit}
@@ -231,6 +236,7 @@ function ElecDataCard({
   status,
   energized,
   rows,
+  t,
 }: {
   tag: string;
   title: string;
@@ -238,6 +244,7 @@ function ElecDataCard({
   status: string;
   energized: boolean;
   rows: { parameter: string; value: string; description: string }[];
+  t: Translations;
 }) {
   return (
     <div
@@ -284,11 +291,11 @@ function ElecDataCard({
           <thead className="bg-white/5 text-[#7f93ac]">
             <tr>
               <th className="px-3 py-2 font-medium tracking-[0.1em]">
-                Parameter
+                {t.parameter}
               </th>
-              <th className="px-3 py-2 font-medium tracking-[0.1em]">Value</th>
+              <th className="px-3 py-2 font-medium tracking-[0.1em]">{t.value}</th>
               <th className="hidden px-3 py-2 font-medium tracking-[0.1em] sm:table-cell">
-                Description
+                {t.description}
               </th>
             </tr>
           </thead>
@@ -319,72 +326,73 @@ function ElecDataCard({
   );
 }
 
-const GEN_STATE_CONFIG: Record<
-  GenState,
-  {
-    border: string;
-    bg: string;
-    badgeText: string;
-    badgeStyle: string;
-    ledColor: "green" | "amber" | "red" | "cyan";
-    ledOn: boolean;
-  }
-> = {
-  OFFLINE: {
-    border: "border-[#2a2a2a]",
-    bg: "bg-[#0f0f0f]",
-    badgeText: "OFFLINE",
-    badgeStyle: "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]",
-    ledColor: "cyan",
-    ledOn: false,
-  },
-  STARTING: {
-    border: "border-[#ffb347]/30",
-    bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
-    badgeText: "STARTING",
-    badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
-    ledColor: "amber",
-    ledOn: true,
-  },
-  STABILIZING: {
-    border: "border-[#00dcff]/30",
-    bg: "bg-gradient-to-br from-[#08161d] to-[#0a1119]",
-    badgeText: "STABILIZING",
-    badgeStyle: "border-[#00dcff]/40 bg-[#00dcff]/10 text-[#00dcff]",
-    ledColor: "cyan",
-    ledOn: true,
-  },
-  READY: {
-    border: "border-[#00f7a1]/30",
-    bg: "bg-gradient-to-br from-[#0e1a10] to-[#0a140c]",
-    badgeText: "AVAILABLE",
-    badgeStyle: "border-[#00f7a1]/40 bg-[#00f7a1]/10 text-[#00f7a1]",
-    ledColor: "green",
-    ledOn: true,
-  },
-  LOADED: {
-    border: "border-[#ffd166]/35",
-    bg: "bg-gradient-to-br from-[#1e1808] to-[#161006]",
-    badgeText: "ON BUS",
-    badgeStyle: "border-[#ffd166]/40 bg-[#ffd166]/10 text-[#ffd166]",
-    ledColor: "amber",
-    ledOn: true,
-  },
-  STOPPING: {
-    border: "border-[#ffb347]/30",
-    bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
-    badgeText: "STOPPING",
-    badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
-    ledColor: "amber",
-    ledOn: true,
-  },
+type GenStateConfig = {
+  border: string;
+  bg: string;
+  badgeText: string;
+  badgeStyle: string;
+  ledColor: "green" | "amber" | "red" | "cyan";
+  ledOn: boolean;
 };
 
+function getGenStateConfig(t: Translations): Record<GenState, GenStateConfig> {
+  return {
+    OFFLINE: {
+      border: "border-[#2a2a2a]",
+      bg: "bg-[#0f0f0f]",
+      badgeText: t.genStateOffline,
+      badgeStyle: "border-[#334155]/60 bg-[#1a1a1a] text-[#475569]",
+      ledColor: "cyan",
+      ledOn: false,
+    },
+    STARTING: {
+      border: "border-[#ffb347]/30",
+      bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
+      badgeText: t.genStateStarting,
+      badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
+      ledColor: "amber",
+      ledOn: true,
+    },
+    STABILIZING: {
+      border: "border-[#00dcff]/30",
+      bg: "bg-gradient-to-br from-[#08161d] to-[#0a1119]",
+      badgeText: t.genStateStabilizing,
+      badgeStyle: "border-[#00dcff]/40 bg-[#00dcff]/10 text-[#00dcff]",
+      ledColor: "cyan",
+      ledOn: true,
+    },
+    READY: {
+      border: "border-[#00f7a1]/30",
+      bg: "bg-gradient-to-br from-[#0e1a10] to-[#0a140c]",
+      badgeText: t.genStateAvailable,
+      badgeStyle: "border-[#00f7a1]/40 bg-[#00f7a1]/10 text-[#00f7a1]",
+      ledColor: "green",
+      ledOn: true,
+    },
+    LOADED: {
+      border: "border-[#ffd166]/35",
+      bg: "bg-gradient-to-br from-[#1e1808] to-[#161006]",
+      badgeText: t.genStateOnBus,
+      badgeStyle: "border-[#ffd166]/40 bg-[#ffd166]/10 text-[#ffd166]",
+      ledColor: "amber",
+      ledOn: true,
+    },
+    STOPPING: {
+      border: "border-[#ffb347]/30",
+      bg: "bg-gradient-to-br from-[#1e1206] to-[#141008]",
+      badgeText: t.genStateStopping,
+      badgeStyle: "border-[#ffb347]/40 bg-[#ffb347]/10 text-[#ffb347]",
+      ledColor: "amber",
+      ledOn: true,
+    },
+  };
+}
+
 const RAMP_PHASES = [
-  { label: "CRANKING", threshold: 0.2 },
-  { label: "BUILDING VOLTAGE", threshold: 0.55 },
-  { label: "REACHING RATED SPEED", threshold: 0.88 },
-  { label: "READY FOR ATS TRANSFER", threshold: 1.0 },
+  { key: "phaseCranking" as const, label: "CRANKING", threshold: 0.2 },
+  { key: "phaseBuildingVoltage" as const, label: "BUILDING VOLTAGE", threshold: 0.55 },
+  { key: "phaseReachingRatedSpeed" as const, label: "REACHING RATED SPEED", threshold: 0.88 },
+  { key: "phaseReadyForAts" as const, label: "READY FOR ATS TRANSFER", threshold: 1.0 },
 ];
 
 function GeneratorCard({
@@ -392,13 +400,16 @@ function GeneratorCard({
   status,
   onStart,
   onStop,
+  t,
 }: {
   genIdx: number;
   status: GeneratorLiveStatus;
   onStart: () => void;
   onStop: () => void;
+  t: Translations;
 }) {
   const gen = SYSTEM.generators[genIdx];
+  const GEN_STATE_CONFIG = getGenStateConfig(t);
   const cfg = GEN_STATE_CONFIG[status.state];
   const isTransitioning =
     status.state === "STARTING" ||
@@ -410,50 +421,52 @@ function GeneratorCard({
   const isOffline = status.state === "OFFLINE";
   const isStopping = status.state === "STOPPING";
 
-  const rows = [
+  const isFr = t.fuel === "CARBURANT";
+  const paramLabel = {
+    frequency: isFr ? "Fréquence" : "Frequency",
+    voltage: isFr ? "Tension" : "Voltage",
+    current: isFr ? "Courant" : "Current",
+    activePower: isFr ? "Puissance active" : "Active Power",
+    reactivePower: isFr ? "Puissance réactive" : "Reactive Power",
+    fuelLevel: isFr ? "Niveau carburant" : "Fuel Level",
+  };
+
+  const translatedRows = [
     {
-      parameter: "Frequency",
+      parameter: paramLabel.frequency,
       value:
         status.state !== "OFFLINE"
           ? `${status.frequency.toFixed(2)} Hz`
           : `${gen.nominalFrequency.toFixed(2)} Hz (nominal)`,
-      description: isAvailable
-        ? "Live output frequency."
-        : "Nominal standby output frequency.",
+      description: isAvailable ? t.genLiveFreqDesc : t.genNominalFreqDesc,
     },
     {
-      parameter: "Voltage",
+      parameter: paramLabel.voltage,
       value:
         status.state !== "OFFLINE"
           ? `${status.voltage.toFixed(1)} V`
           : `${gen.nominalVoltage} V (nominal)`,
-      description: isAvailable
-        ? "Live terminal voltage."
-        : "Nominal standby terminal voltage.",
+      description: isAvailable ? t.genLiveVoltageDesc : t.genNominalVoltageDesc,
     },
     {
-      parameter: "Current",
+      parameter: paramLabel.current,
       value: `${status.current.toFixed(2)} A`,
-      description: isAvailable
-        ? "Live output current."
-        : "Offline — zero current.",
+      description: isAvailable ? t.genLiveCurrentDesc : t.genOfflineCurrentDesc,
     },
     {
-      parameter: "Active Power",
+      parameter: paramLabel.activePower,
       value: `${status.activePower.toFixed(1)} W`,
-      description: isAvailable
-        ? "Emergency-source power available to the ATS path."
-        : "Zero while offline.",
+      description: isAvailable ? t.genEmergencyPowerDesc : t.genZeroWhileOffline,
     },
     {
-      parameter: "Reactive Power",
+      parameter: paramLabel.reactivePower,
       value: `${status.reactivePower.toFixed(1)} VAR`,
-      description: "Reactive support available.",
+      description: t.genReactiveDesc,
     },
     {
-      parameter: "Fuel Level",
+      parameter: paramLabel.fuelLevel,
       value: `${gen.fuelLevel}%`,
-      description: "Runtime capacity available.",
+      description: t.genFuelDesc,
     },
   ];
 
@@ -481,13 +494,16 @@ function GeneratorCard({
                 cfg.badgeStyle,
               )}
             >
-              {status.phaseLabel}
+              {(() => {
+                const rampPhase = RAMP_PHASES.find((p) => p.label === status.phaseLabel);
+                return rampPhase ? t[rampPhase.key] : cfg.badgeText;
+              })()}
             </div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="font-mono text-[10px] tracking-[0.18em] text-[#5a7a8a]">
-            FUEL {gen.fuelLevel}%
+            {t.fuel} {gen.fuelLevel}%
           </div>
           {isOffline && (
             <button
@@ -495,7 +511,7 @@ function GeneratorCard({
               onClick={onStart}
               className="flex items-center gap-1.5 rounded-xl border border-[#00f7a1]/40 bg-[#00f7a1]/10 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#00f7a1] transition hover:bg-[#00f7a1]/20"
             >
-              <Power className="h-3 w-3" /> START
+              <Power className="h-3 w-3" /> {t.start}
             </button>
           )}
           {isAvailable && (
@@ -504,12 +520,12 @@ function GeneratorCard({
               onClick={onStop}
               className="flex items-center gap-1.5 rounded-xl border border-[#ff4d5a]/40 bg-[#ff4d5a]/10 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#ff4d5a] transition hover:bg-[#ff4d5a]/20"
             >
-              <Power className="h-3 w-3" /> STOP
+              <Power className="h-3 w-3" /> {t.stop}
             </button>
           )}
           {isTransitioning && (
             <span className="rounded-xl border border-[#ffb347]/30 bg-[#ffb347]/8 px-3 py-1.5 font-display text-xs tracking-[0.14em] text-[#ffb347]/60">
-              {isStopping ? "STOPPING..." : "STARTING..."}
+              {isStopping ? t.stoppingEllipsis : t.startingEllipsis}
             </span>
           )}
         </div>
@@ -525,9 +541,7 @@ function GeneratorCard({
                 const reached = isStopping
                   ? 1 - status.progress <= phase.threshold
                   : status.progress >= prevThreshold;
-                const active = isStopping
-                  ? status.phaseLabel === phase.label
-                  : status.phaseLabel === phase.label;
+                const active = status.phaseLabel === phase.label;
                 return (
                   <span
                     key={phase.label}
@@ -540,7 +554,7 @@ function GeneratorCard({
                           : "text-[#2a3a3a]",
                     )}
                   >
-                    {phase.label}
+                    {t[phase.key]}
                   </span>
                 );
               })}
@@ -578,18 +592,18 @@ function GeneratorCard({
           <thead className="bg-white/5 text-[#7f93ac]">
             <tr>
               <th className="px-3 py-1.5 font-medium tracking-[0.1em]">
-                Parameter
+                {t.parameter}
               </th>
               <th className="px-3 py-1.5 font-medium tracking-[0.1em]">
-                Value
+                {t.value}
               </th>
               <th className="hidden px-3 py-1.5 font-medium tracking-[0.1em] lg:table-cell">
-                Description
+                {t.description}
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {translatedRows.map((row) => (
               <tr
                 key={row.parameter}
                 className="border-t border-white/6 align-top hover:bg-white/3"
@@ -620,13 +634,13 @@ function GeneratorCard({
         <div className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/20 bg-[#00f7a1]/5 px-3 py-2">
           <Zap className="h-3.5 w-3.5 shrink-0 text-[#00f7a1]" />
           <span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">
-            Live values are reflected in the Electrical One-Line diagram
+            {t.liveValuesReflected}
           </span>
           <a
             href={`${import.meta.env.BASE_URL}electrical-one-line`}
             className="ml-auto shrink-0 font-display text-[10px] tracking-[0.14em] text-[#00f7a1] underline underline-offset-2 transition hover:text-white"
           >
-            VIEW DIAGRAM →
+            {t.viewDiagram}
           </a>
         </div>
       )}
@@ -645,14 +659,13 @@ export default function SimulationPage() {
   const { state } = useScadaState();
   const { powerFactor, activePower, reactivePower, apparentPower } =
     useElectricalMetrics(voltage, state.current, state.motorPowered);
+  const { t, locale, toggleLocale } = useTranslation();
 
   const voltageMin = config.baseVoltage * (1 - config.voltageVariationPct);
   const voltageMax = config.baseVoltage * (1 + config.voltageVariationPct);
   const voltageInBand = voltage >= voltageMin && voltage <= voltageMax;
   const voltageDeviation = (voltage - config.baseVoltage).toFixed(2);
-  const voltageBand = (config.baseVoltage * config.voltageVariationPct).toFixed(
-    2,
-  );
+  const voltageBand = (config.baseVoltage * config.voltageVariationPct).toFixed(2);
 
   const freqMin = config.baseFrequency - config.frequencyVariation;
   const freqMax = config.baseFrequency + config.frequencyVariation;
@@ -672,45 +685,46 @@ export default function SimulationPage() {
 
   const gridDetails = useMemo(
     () => [
-      { label: "Nominal Voltage", value: `${config.baseVoltage.toFixed(1)} V` },
-      { label: "Live Voltage", value: `${voltage.toFixed(2)} V` },
-      { label: "Min Allowed", value: `${voltageMin.toFixed(2)} V` },
-      { label: "Max Allowed", value: `${voltageMax.toFixed(2)} V` },
+      { label: t.nominalVoltage, value: `${config.baseVoltage.toFixed(1)} V` },
+      { label: t.liveVoltage, value: `${voltage.toFixed(2)} V` },
+      { label: t.minAllowed, value: `${voltageMin.toFixed(2)} V` },
+      { label: t.maxAllowed, value: `${voltageMax.toFixed(2)} V` },
       {
-        label: "Voltage Deviation",
+        label: t.voltageDeviation,
         value: `${Number(voltageDeviation) >= 0 ? "+" : ""}${voltageDeviation} V`,
       },
       {
-        label: "Voltage Tolerance",
+        label: t.voltageTolerance,
         value: `±${(config.voltageVariationPct * 100).toFixed(1)} %`,
       },
       {
-        label: "Nominal Frequency",
+        label: t.nominalFrequency,
         value: `${config.baseFrequency.toFixed(2)} Hz`,
       },
-      { label: "Live Frequency", value: `${frequency.toFixed(3)} Hz` },
-      { label: "Freq Min", value: `${freqMin.toFixed(3)} Hz` },
-      { label: "Freq Max", value: `${freqMax.toFixed(3)} Hz` },
+      { label: t.liveFrequency, value: `${frequency.toFixed(3)} Hz` },
+      { label: t.freqMin, value: `${freqMin.toFixed(3)} Hz` },
+      { label: t.freqMax, value: `${freqMax.toFixed(3)} Hz` },
       {
-        label: "Freq Deviation",
+        label: t.freqDeviation,
         value: `${Number(freqDeviation) >= 0 ? "+" : ""}${freqDeviation} Hz`,
       },
       {
-        label: "Freq Band (±)",
+        label: t.freqBand,
         value: `${config.frequencyVariation.toFixed(3)} Hz`,
       },
       {
-        label: "Sample Interval",
+        label: t.sampleInterval,
         value: `${config.updateIntervalMs ?? 1000} ms`,
       },
-      { label: "History Samples", value: `${history.length}` },
+      { label: t.historySamples, value: `${history.length}` },
       {
-        label: "Voltage Status",
-        value: voltageInBand ? "IN BAND" : "OUT OF BAND",
+        label: t.voltageStatus,
+        value: voltageInBand ? t.inBand : t.outOfBand,
       },
-      { label: "Freq Status", value: freqInBand ? "IN BAND" : "OUT OF BAND" },
+      { label: t.freqStatus, value: freqInBand ? t.inBand : t.outOfBand },
     ],
     [
+      t,
       config,
       voltage,
       frequency,
@@ -731,40 +745,41 @@ export default function SimulationPage() {
       {
         parameter: "Frequency",
         value: `${frequency.toFixed(2)} Hz`,
-        description: "Grid stability indicator.",
+        description: t.gridStabilityDesc,
       },
       {
         parameter: "Voltage",
         value: `${voltage.toFixed(1)} V`,
-        description: `Supply at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).`,
+        description: t.supplyAtMccShort(SYSTEM.utility.nominalVoltage),
       },
       {
         parameter: "Current",
         value: `${state.current.toFixed(2)} A`,
-        description: "Total load current drawn from supply.",
+        description: t.totalLoadCurrentShort,
       },
       {
         parameter: "Active Power",
         value: `${activePower.toFixed(1)} W`,
-        description: "Real power consumed by load.",
+        description: t.realPowerConsumed,
       },
       {
         parameter: "Apparent Power",
         value: `${apparentPower.toFixed(1)} VA`,
-        description: "Total VA demand on the supply.",
+        description: t.totalVAShort,
       },
       {
         parameter: "Reactive Power",
         value: `${reactivePower.toFixed(1)} VAR`,
-        description: "Reactive component — inductive motor load.",
+        description: t.reactiveInductive,
       },
       {
         parameter: "Power Factor",
         value: `${state.motorPowered ? powerFactor.toFixed(3) : "1.000"} cos\u03C6`,
-        description: `Motor nominal PF: ${SYSTEM.motor.powerFactor}.`,
+        description: t.motorPfNominalShort(SYSTEM.motor.powerFactor),
       },
     ],
     [
+      t,
       frequency,
       voltage,
       state.current,
@@ -781,37 +796,38 @@ export default function SimulationPage() {
       {
         parameter: "Frequency",
         value: `${frequency.toFixed(2)} Hz`,
-        description: `Supply frequency (nominal ${SYSTEM.motor.nominalFrequency} Hz).`,
+        description: t.motorFreqDesc(SYSTEM.motor.nominalFrequency),
       },
       {
         parameter: "Voltage",
         value: `${state.motorPowered ? voltage.toFixed(1) : "0.0"} V`,
-        description: `Motor terminal voltage (nominal ${SYSTEM.motor.nominalVoltage} V).`,
+        description: t.motorVoltageDesc(SYSTEM.motor.nominalVoltage),
       },
       {
         parameter: "Current",
         value: `${state.current.toFixed(2)} A`,
         description: state.motorPowered
-          ? "Running load current."
-          : "Motor stopped — zero current.",
+          ? t.motorCurrentRunning
+          : t.motorCurrentStopped,
       },
       {
         parameter: "Active Power",
         value: `${activePower.toFixed(1)} W`,
-        description: "Mechanical shaft power output.",
+        description: t.motorShaftPower,
       },
       {
         parameter: "Reactive Power",
         value: `${reactivePower.toFixed(1)} VAR`,
-        description: "Magnetising reactive demand.",
+        description: t.motorMagnitisingReactive,
       },
       {
         parameter: "Power Factor",
         value: `${state.motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
-        description: `Nominal ${SYSTEM.motor.powerFactor} at full load.`,
+        description: t.motorPfDesc(SYSTEM.motor.powerFactor),
       },
     ],
     [
+      t,
       frequency,
       voltage,
       state.motorPowered,
@@ -823,6 +839,23 @@ export default function SimulationPage() {
   );
 
   const anyGenActive = generatorStatuses.some((s) => s.state !== "OFFLINE");
+  const availableGenCount = generatorStatuses.filter(
+    (s) => s.state === "READY" || s.state === "LOADED",
+  ).length;
+
+  const utilityStatus = state.isPowered ? t.energized : t.unavailable;
+  const motorStatus = state.motorPowered
+    ? t.running
+    : state.isPowered
+      ? t.standby
+      : t.genStateOffline;
+
+  const formFields = [
+    { label: t.baseVoltage, key: "baseVoltage" as const, step: "0.1", min: "1" },
+    { label: t.baseFrequency, key: "baseFrequency" as const, step: "0.001", min: "1" },
+    { label: t.voltageTolerance2, key: "voltageTolerancePct" as const, step: "0.1", min: "0" },
+    { label: t.frequencyBand, key: "frequencyVariation" as const, step: "0.001", min: "0" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
@@ -831,7 +864,7 @@ export default function SimulationPage() {
           <div className="flex items-center gap-4">
             <Link href="/">
               <a className="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-display text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]">
-                <ArrowLeft className="h-3.5 w-3.5" /> DASHBOARD
+                <ArrowLeft className="h-3.5 w-3.5" /> {t.dashboard}
               </a>
             </Link>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1f8a61]/40 bg-[#161c18]">
@@ -839,10 +872,10 @@ export default function SimulationPage() {
             </div>
             <div>
               <h1 className="font-display text-xl font-semibold tracking-[0.18em] text-white">
-                GRID SIMULATION
+                {t.gridSimulation}
               </h1>
               <div className="mt-0.5 font-mono text-xs tracking-[0.16em] text-[#8a9a8a]">
-                {SYSTEM.id} / POWER QUALITY ANALYZER
+                {SYSTEM.id} / {t.powerQualityAnalyzer}
               </div>
             </div>
           </div>
@@ -853,14 +886,14 @@ export default function SimulationPage() {
                 color={voltageInBand && freqInBand ? "green" : "red"}
               />
               <span className="font-mono text-xs tracking-[0.16em] text-[#9fb0c7]">
-                {voltageInBand && freqInBand ? "GRID NOMINAL" : "GRID ANOMALY"}
+                {voltageInBand && freqInBand ? t.gridNominal : t.gridAnomaly}
               </span>
             </div>
             {anyGenActive && (
               <div className="flex items-center gap-2 rounded-xl border border-[#ffb347]/30 bg-[#ffb347]/8 px-4 py-2">
                 <LED on color="amber" />
                 <span className="font-mono text-xs tracking-[0.16em] text-[#ffb347]">
-                  GENERATOR ACTIVE
+                  {t.generatorActive}
                 </span>
               </div>
             )}
@@ -868,8 +901,17 @@ export default function SimulationPage() {
               href={`${import.meta.env.BASE_URL}electrical-one-line`}
               className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
             >
-              <Zap className="h-3.5 w-3.5" /> ELECTRICAL ONE-LINE
+              <Zap className="h-3.5 w-3.5" /> {t.electricalOneLineLink}
             </a>
+            <button
+              type="button"
+              onClick={toggleLocale}
+              aria-label={locale === "en" ? "Passer au français" : "Switch to English"}
+              className="flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
+            >
+              <Languages className="h-4 w-4" />
+              <span>{locale === "en" ? "FR" : "EN"}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -877,7 +919,7 @@ export default function SimulationPage() {
       <main className="mx-auto max-w-[1600px] space-y-5 p-5">
         <div className="grid gap-5 xl:grid-cols-2">
           <MetricCard
-            label="Supply Voltage"
+            label={t.supplyVoltage}
             value={voltage.toFixed(2)}
             unit="V"
             nominal={config.baseVoltage.toFixed(1)}
@@ -888,9 +930,10 @@ export default function SimulationPage() {
             color="cyan"
             sparkValues={voltageHistory}
             sparkColor="#00dcff"
+            t={t}
           />
           <MetricCard
-            label="Grid Frequency"
+            label={t.gridFrequency}
             value={frequency.toFixed(3)}
             unit="Hz"
             nominal={config.baseFrequency.toFixed(2)}
@@ -901,67 +944,39 @@ export default function SimulationPage() {
             color="green"
             sparkValues={freqHistory}
             sparkColor="#00f7a1"
+            t={t}
           />
         </div>
 
         <div className="grid gap-5 xl:grid-cols-2">
           <ElecDataCard
             tag={SYSTEM.utility.tag}
-            title={SYSTEM.utility.name}
+            title={t.utilityName}
             subtitle={SYSTEM.utility.provider}
-            status={state.isPowered ? "ENERGIZED" : "UNAVAILABLE"}
+            status={utilityStatus}
             energized={state.isPowered}
             rows={utilityRows}
+            t={t}
           />
           <ElecDataCard
             tag={SYSTEM.motor.tag}
-            title={SYSTEM.motor.name}
+            title={t.motorName}
             subtitle={`${SYSTEM.id} / ${SYSTEM.mcc}`}
-            status={
-              state.motorPowered
-                ? "RUNNING"
-                : state.isPowered
-                  ? "STANDBY"
-                  : "OFFLINE"
-            }
+            status={motorStatus}
             energized={state.motorPowered}
             rows={motorRows}
+            t={t}
           />
         </div>
 
         <div className="grid gap-5 xl:grid-cols-[1fr_1.5fr]">
           <Panel
-            title="Simulation Configuration"
+            title={t.simulationConfig}
             icon={<Gauge className="h-4 w-4" />}
           >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                {[
-                  {
-                    label: "Base Voltage (V)",
-                    key: "baseVoltage" as const,
-                    step: "0.1",
-                    min: "1",
-                  },
-                  {
-                    label: "Base Frequency (Hz)",
-                    key: "baseFrequency" as const,
-                    step: "0.001",
-                    min: "1",
-                  },
-                  {
-                    label: "Voltage Tolerance (%)",
-                    key: "voltageTolerancePct" as const,
-                    step: "0.1",
-                    min: "0",
-                  },
-                  {
-                    label: "Frequency Band (±Hz)",
-                    key: "frequencyVariation" as const,
-                    step: "0.001",
-                    min: "0",
-                  },
-                ].map(({ label, key, step, min }) => (
+                {formFields.map(({ label, key, step, min }) => (
                   <label key={key} className="space-y-2">
                     <span className="block font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">
                       {label}
@@ -984,19 +999,19 @@ export default function SimulationPage() {
               </div>
               <div className="flex flex-col gap-3 border-t border-[#142030] pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="font-mono text-xs leading-5 tracking-[0.06em] text-[#6a8a9f]">
-                  Random-walk bounded drift model. Changes apply on next tick.
+                  {t.randomWalkDesc}
                 </p>
                 <button
                   type="submit"
                   className="shrink-0 rounded-xl border border-[#00dcff]/45 bg-[#062032] px-5 py-2 font-display text-sm tracking-[0.14em] text-[#c4f5ff] transition hover:bg-[#0b2c45]"
                 >
-                  APPLY SIMULATION
+                  {t.applySimulation}
                 </button>
               </div>
             </form>
           </Panel>
 
-          <Panel title="Grid Details" icon={<TrendingUp className="h-4 w-4" />}>
+          <Panel title={t.gridDetails} icon={<TrendingUp className="h-4 w-4" />}>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {gridDetails.map(({ label, value }) => (
                 <div
@@ -1009,11 +1024,11 @@ export default function SimulationPage() {
                   <div
                     className={cn(
                       "mt-0.5 font-mono text-sm tracking-[0.1em]",
-                      label.includes("Status")
-                        ? value.includes("IN BAND")
+                      label === t.voltageStatus || label === t.freqStatus
+                        ? value === t.inBand
                           ? "text-[#00f7a1]"
                           : "text-[#ff4d5a]"
-                        : label.includes("Deviation")
+                        : label === t.voltageDeviation || label === t.freqDeviation
                           ? value.startsWith("+")
                             ? "text-[#00dcff]"
                             : "text-[#ffb347]"
@@ -1029,7 +1044,7 @@ export default function SimulationPage() {
         </div>
 
         <Panel
-          title={`Generator Units — ${SYSTEM.id}`}
+          title={`${t.generatorUnits} — ${SYSTEM.id}`}
           icon={<Cpu className="h-4 w-4" />}
           openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
         >
@@ -1038,15 +1053,15 @@ export default function SimulationPage() {
               <LED on={anyGenActive} color={anyGenActive ? "amber" : "cyan"} />
               <span className="font-display text-xs uppercase tracking-[0.16em] text-[#7f93ac]">
                 {anyGenActive
-                  ? `${generatorStatuses.filter((s) => s.state === "READY" || s.state === "LOADED").length} generator(s) available — emergency source ready`
-                  : "Utility active — all generators standby"}
+                  ? t.generatorsAvailable(availableGenCount)
+                  : t.utilityActiveStandby}
               </span>
             </div>
             <a
               href={`${import.meta.env.BASE_URL}electrical-one-line`}
               className="ml-auto flex items-center gap-1.5 font-display text-xs tracking-[0.14em] text-[#00dcff] transition hover:text-white"
             >
-              <Zap className="h-3.5 w-3.5" /> View in One-Line →
+              <Zap className="h-3.5 w-3.5" /> {t.viewInOneLine}
             </a>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -1057,6 +1072,7 @@ export default function SimulationPage() {
                 status={generatorStatuses[idx]}
                 onStart={() => start(idx)}
                 onStop={() => stop(idx)}
+                t={t}
               />
             ))}
           </div>

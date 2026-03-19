@@ -33,6 +33,11 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   - GridSimulationContext (`src/context/GridSimulationContext.tsx`) is a shared data gateway: one `useGridSimulation` instance provides voltage/frequency to Dashboard, Electrical One-Line, and Simulation pages simultaneously
 - Routes: `/` (Dashboard), `/electrical-one-line`, `/simulation`
 - Dependencies: lucide-react, framer-motion, date-fns, clsx, tailwind-merge
+- **Internationalisation (EN/FR)**: custom React context — no external library
+  - `src/i18n/translations.ts` — typed `const` object with `en` and `fr` string maps; exports `Translations` type
+  - `src/context/LanguageContext.tsx` — `LanguageProvider`, `useTranslation()` hook; `locale` state + `toggleLocale()`; wraps whole app in `App.tsx`
+  - Toggle button: `Languages` icon (lucide-react) + small EN/FR label in every page header (Dashboard, Simulation, Electrical One-Line)
+  - All UI strings — labels, statuses, descriptions, table headers, alarm types, generator phases, simulation config — are translated via `t.*` keys
 
 ## Structure
 

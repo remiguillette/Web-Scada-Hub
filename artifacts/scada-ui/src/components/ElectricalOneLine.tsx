@@ -10,6 +10,8 @@ import {
 import { Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SYSTEM } from "@/config/system";
+import { useTranslation } from "@/context/LanguageContext";
+import type { Translations } from "@/i18n/translations";
 import type { GeneratorLiveStatus } from "@/context/GeneratorSimulationContext";
 
 interface ElectricalOneLineProps {
@@ -192,6 +194,7 @@ function CompactCard({
   width = CARD_W,
   details,
 }: CompactCardProps) {
+  const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const hasDetails = Boolean(details?.length);
   const content = (
@@ -229,7 +232,7 @@ function CompactCard({
             <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
               {detailsOpen ? "−" : "+"}
             </span>
-            <span>GRID DETAILS</span>
+            <span>{t.gridDetailsButton}</span>
           </button>
 
           <div
@@ -246,11 +249,11 @@ function CompactCard({
                 <table className="w-full border-collapse text-left font-mono text-[8px]">
                   <thead className="bg-white/5 text-[#9fb3c8]">
                     <tr>
-                      <th className="px-2 py-1 font-medium">Parameter</th>
+                      <th className="px-2 py-1 font-medium">{t.parameter}</th>
                       <th className="px-2 py-1 font-medium">
-                        Abbreviation / Unit
+                        {t.abbreviationUnit}
                       </th>
-                      <th className="px-2 py-1 font-medium">Description</th>
+                      <th className="px-2 py-1 font-medium">{t.description}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -387,45 +390,27 @@ function ConductorBundle({
   );
 }
 
-/**
- * UtilityBusBackground
- *
- * Renders a full-width SVG (card area + service-entry area) that sits BEHIND
- * the UTILITY NodeCard.  It draws:
- *   • STREET label above the bus
- *   • Four vertical conductor bars (L1, L2, N, GND) that extend above AND
- *     below the card so they are visible on both sides
- *   • Horizontal wires from each bar → riser pole
- *   • Riser pole + insulator knob on the far right
- *
- * The NodeCard is overlaid on top of this SVG via z-index in the parent.
- */
 function UtilityBusBackground({
   utilityActive,
+  streetLabel,
 }: {
   utilityActive: boolean;
+  streetLabel: string;
 }) {
-  // Combined canvas: CARD_W (130px card) + 220 (service-entry) = 350 × 220 tall
-  const W = CARD_W + 220; // 350
+  const W = CARD_W + 220;
   const H = 220;
 
-  // Bus bar positions — centred within the card area (CARD_W = 130 px)
   const hSpacing = 18;
   const count = CONDUCTORS.length;
   const totalHSpan = (count - 1) * hSpacing;
-  const firstCX = CARD_W / 2 - totalHSpan / 2; // centre of card → x ≈ 38
+  const firstCX = CARD_W / 2 - totalHSpan / 2;
 
-  // Vertical bars start below the STREET + conductor labels.
-  // lineBottom extends past the SVG viewport (overflow: visible) to reach the
-  // bottom of Generator 3: main row (220) + VWire bridge (28) + gen section (3×74+24=246) = 494
   const lineTop = 30;
   const lineBottom = 490;
 
-  // Card sits vertically centred in the container
-  const centerY = H / 2; // 110
+  const centerY = H / 2;
 
-  // Riser pole — flush with right edge of SVG
-  const riserX = W - 2; // 348
+  const riserX = W - 2;
 
   return (
     <svg
@@ -436,7 +421,6 @@ function UtilityBusBackground({
       aria-label="Utility street power bus"
       style={{ zIndex: 0, overflow: "visible" }}
     >
-      {/* ── STREET label — top of the utility section ── */}
       <text
         x={firstCX + totalHSpan / 2}
         y={10}
@@ -447,17 +431,15 @@ function UtilityBusBackground({
         textAnchor="middle"
         style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}
       >
-        STREET
+        {streetLabel}
       </text>
 
       {CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * hSpacing;
-        // Horizontal wire Y — evenly fanned around vertical centre
         const tapY = centerY + (index - (count - 1) / 2) * 12;
 
         return (
           <g key={`bus-${conductor.label}`}>
-            {/* Conductor label below STREET, above card top */}
             <text
               x={cx}
               y={22}
@@ -469,7 +451,6 @@ function UtilityBusBackground({
               {conductor.label}
             </text>
 
-            {/* Vertical conductor bar — full container height (above + below card) */}
             <line
               x1={cx} y1={lineTop}
               x2={cx} y2={lineBottom}
@@ -480,7 +461,6 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Straight horizontal wire — bus bar → bend point */}
             <line
               x1={cx} y1={tapY}
               x2={riserX - 20} y2={tapY}
@@ -491,7 +471,6 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* Short angled tip — bend point → riser pole centre */}
             <line
               x1={riserX - 20} y1={tapY}
               x2={riserX} y2={centerY}
@@ -502,7 +481,6 @@ function UtilityBusBackground({
               style={{ filter: `drop-shadow(0 0 6px ${conductor.glow})` }}
             />
 
-            {/* T-junction dot at bus bar intersection */}
             <circle cx={cx} cy={tapY} r="3"
               fill={conductor.color}
               opacity={utilityActive ? 0.95 : 0.2}
@@ -563,6 +541,145 @@ function StatusIcon({
   }
 }
 
+function buildUtilityDetails(
+  t: Translations,
+  frequency: number,
+  voltage: number,
+  current: number,
+  activePower: number,
+  apparentPower: number,
+  reactivePower: number,
+  powerFactor: number,
+): DetailRow[] {
+  return [
+    {
+      parameter: "Frequency",
+      value: `${frequency.toFixed(2)} Hz`,
+      description: t.gridStabilityDesc,
+    },
+    {
+      parameter: "Voltage",
+      value: `${voltage.toFixed(1)} V`,
+      description: t.supplyVoltageDesc(SYSTEM.utility.nominalVoltage),
+    },
+    {
+      parameter: "Current",
+      value: `${current.toFixed(2)} A`,
+      description: t.totalLoadCurrentDesc,
+    },
+    {
+      parameter: "Active Power",
+      value: `${activePower.toFixed(1)} W`,
+      description: t.realPowerDesc,
+    },
+    {
+      parameter: "Apparent Power",
+      value: `${apparentPower.toFixed(1)} VA`,
+      description: t.totalVADesc,
+    },
+    {
+      parameter: "Reactive Power",
+      value: `${reactivePower.toFixed(1)} VAR`,
+      description: t.reactiveDesc,
+    },
+    {
+      parameter: "Power Factor",
+      value: `${powerFactor.toFixed(3)} cos\u03C6`,
+      description: t.efficiencyDesc,
+    },
+  ];
+}
+
+function buildMotorDetails(
+  t: Translations,
+  motorPowered: boolean,
+  voltage: number,
+  current: number,
+  frequency: number,
+  activePower: number,
+  powerFactor: number,
+  reactivePower: number,
+): DetailRow[] {
+  return [
+    {
+      parameter: "Voltage",
+      value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`,
+      description: t.motorVoltageDesc(SYSTEM.motor.nominalVoltage),
+    },
+    {
+      parameter: "Current",
+      value: `${current.toFixed(2)} A`,
+      description: motorPowered ? t.motorCurrentRunning : t.motorCurrentStopped,
+    },
+    {
+      parameter: "Frequency",
+      value: `${frequency.toFixed(2)} Hz`,
+      description: t.motorFreqDesc(SYSTEM.motor.nominalFrequency),
+    },
+    {
+      parameter: "Active Power",
+      value: `${activePower.toFixed(1)} W`,
+      description: t.motorShaftPowerDelivered,
+    },
+    {
+      parameter: "Power Factor",
+      value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
+      description: t.motorPfNominal(SYSTEM.motor.powerFactor),
+    },
+    {
+      parameter: "Reactive Power",
+      value: `${reactivePower.toFixed(1)} VAR`,
+      description: t.motorMagnitisingReactive,
+    },
+  ];
+}
+
+function buildGeneratorDetails(
+  t: Translations,
+  gen: (typeof SYSTEM.generators)[number],
+  live: GeneratorLiveStatus | undefined,
+  isActive: boolean,
+): DetailRow[] {
+  return [
+    {
+      parameter: "Frequency",
+      value:
+        live && live.state !== "OFFLINE"
+          ? `${live.frequency.toFixed(2)} Hz`
+          : `${gen.nominalFrequency.toFixed(2)} Hz`,
+      description: isActive ? t.genLiveFreqDesc : t.genNominalFreqDesc,
+    },
+    {
+      parameter: "Voltage",
+      value:
+        live && live.state !== "OFFLINE"
+          ? `${live.voltage.toFixed(1)} V`
+          : `${gen.nominalVoltage} V`,
+      description: isActive ? t.genLiveVoltageDesc : t.genNominalVoltageDescOneline,
+    },
+    {
+      parameter: "Current",
+      value: live ? `${live.current.toFixed(2)} A` : "0 A",
+      description: isActive ? t.genLiveCurrentDesc : t.genOfflineCurrentDesc,
+    },
+    {
+      parameter: "Active Power",
+      value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
+      description: isActive ? t.genEmergencyPowerDescOneline : t.genActivePowerRunning,
+    },
+    {
+      parameter: "Reactive Power",
+      value: live ? `${live.reactivePower.toFixed(1)} VAR` : "0 VAR",
+      description: t.genReactiveDescFull,
+    },
+    {
+      parameter: "Fuel Level",
+      value: `${gen.fuelLevel}%`,
+      description: t.genFuelDescFull,
+    },
+  ];
+}
+
 export function ElectricalOneLine({
   disconnectClosed,
   breakerTripped,
@@ -581,6 +698,8 @@ export function ElectricalOneLine({
   onToggleDisconnect,
   onToggleBreaker,
 }: ElectricalOneLineProps) {
+  const { t } = useTranslation();
+
   const genLive =
     generatorLiveStates?.some(
       (s) =>
@@ -605,12 +724,6 @@ export function ElectricalOneLine({
     const mainPanelLive = disconnectClosed && !breakerTripped && atsPowered;
     const busLive = mainPanelLive;
 
-    const atsStatus = atsNormal
-      ? "ATS ON UTILITY"
-      : genLive
-        ? "ATS ON EMERGENCY"
-        : "OPEN — NO SOURCE";
-
     return {
       supplyLive,
       meterLive,
@@ -620,56 +733,34 @@ export function ElectricalOneLine({
       genBrkLive,
       mainPanelLive,
       busLive,
-      atsStatus,
     };
   }, [voltage, disconnectClosed, breakerTripped, genLive]);
+
+  const atsStatus = state.atsNormal
+    ? t.atsOnUtility
+    : state.genLive
+      ? t.atsOnEmergency
+      : t.openNoSource;
 
   const utilityNode: SourceNode = {
     kind: "source",
     tag: SYSTEM.utility.tag,
-    title: SYSTEM.utility.name,
+    title: t.utilityName,
     subtitle: SYSTEM.utility.provider,
-    status: state.supplyLive ? "ENERGIZED" : "UNAVAILABLE",
+    status: state.supplyLive ? t.energized : t.unavailable,
     active: state.supplyLive,
     accent: "cyan",
     width: 340,
-    details: [
-      {
-        parameter: "Frequency",
-        value: `${frequency.toFixed(2)} Hz`,
-        description: "Grid stability indicator.",
-      },
-      {
-        parameter: "Voltage",
-        value: `${voltage.toFixed(1)} V`,
-        description: `Supply voltage at MCC bus (nominal ${SYSTEM.utility.nominalVoltage} V).`,
-      },
-      {
-        parameter: "Current",
-        value: `${current.toFixed(2)} A`,
-        description: "Total load current drawn from supply.",
-      },
-      {
-        parameter: "Active Power",
-        value: `${activePower.toFixed(1)} W`,
-        description: "Real power actively consumed by load.",
-      },
-      {
-        parameter: "Apparent Power",
-        value: `${apparentPower.toFixed(1)} VA`,
-        description: "Total volt-ampere demand on the supply.",
-      },
-      {
-        parameter: "Reactive Power",
-        value: `${reactivePower.toFixed(1)} VAR`,
-        description: "Reactive component — essential for grid balance.",
-      },
-      {
-        parameter: "Power Factor",
-        value: `${powerFactor.toFixed(3)} cos\u03C6`,
-        description: "Energy efficiency ratio. Motor load, nominally 0.88.",
-      },
-    ],
+    details: buildUtilityDetails(
+      t,
+      frequency,
+      voltage,
+      current,
+      activePower,
+      apparentPower,
+      reactivePower,
+      powerFactor,
+    ),
     icon: (
       <StatusIcon
         icon="zap"
@@ -683,7 +774,7 @@ export function ElectricalOneLine({
     kind: "ats",
     tag: "ATS-001",
     title: "ATS",
-    status: state.atsStatus,
+    status: atsStatus,
     active: state.atsPowered,
     accent: state.atsNormal ? "cyan" : state.genLive ? "amber" : "red",
     mode: state.atsNormal ? "utility" : state.genLive ? "generator" : "offline",
@@ -714,7 +805,7 @@ export function ElectricalOneLine({
         kind: "equipment",
         tag: "CTR-001",
         title: "FEEDER CTR",
-        status: feederContactor ? "ENERGIZED" : "DE-ENERGIZED",
+        status: feederContactor ? t.energized : t.deEnergized,
         active: feederContactor,
         accent: feederContactor ? "green" : "cyan",
         icon: (
@@ -729,45 +820,21 @@ export function ElectricalOneLine({
       load: {
         kind: "equipment",
         tag: SYSTEM.motor.tag,
-        title: SYSTEM.motor.name,
-        status: motorPowered ? `${current.toFixed(2)} A` : "STOPPED",
+        title: t.motorName,
+        status: motorPowered ? `${current.toFixed(2)} A` : t.stopped,
         active: motorPowered,
         accent: motorPowered ? "green" : "cyan",
         width: 200,
-        details: [
-          {
-            parameter: "Voltage",
-            value: `${motorPowered ? voltage.toFixed(1) : "0.0"} V`,
-            description: `Motor terminal voltage (nominal ${SYSTEM.motor.nominalVoltage} V).`,
-          },
-          {
-            parameter: "Current",
-            value: `${current.toFixed(2)} A`,
-            description: motorPowered
-              ? "Running current."
-              : "Motor stopped — no current.",
-          },
-          {
-            parameter: "Frequency",
-            value: `${frequency.toFixed(2)} Hz`,
-            description: `Supply frequency (nominal ${SYSTEM.motor.nominalFrequency} Hz).`,
-          },
-          {
-            parameter: "Active Power",
-            value: `${activePower.toFixed(1)} W`,
-            description: "Real power delivered to shaft.",
-          },
-          {
-            parameter: "Power Factor",
-            value: `${motorPowered ? powerFactor.toFixed(3) : "—"} cos\u03C6`,
-            description: `Motor load PF (nominal ${SYSTEM.motor.powerFactor}).`,
-          },
-          {
-            parameter: "Reactive Power",
-            value: `${reactivePower.toFixed(1)} VAR`,
-            description: "Magnetising reactive demand.",
-          },
-        ],
+        details: buildMotorDetails(
+          t,
+          motorPowered,
+          voltage,
+          current,
+          frequency,
+          activePower,
+          powerFactor,
+          reactivePower,
+        ),
         icon: (
           <div
             className={cn(
@@ -787,7 +854,7 @@ export function ElectricalOneLine({
         kind: "equipment",
         tag: "CTR-002",
         title: "SOL CONTACTOR",
-        status: solenoidContactor ? "ENERGIZED" : "DE-ENERGIZED",
+        status: solenoidContactor ? t.energized : t.deEnergized,
         active: solenoidContactor,
         accent: solenoidContactor ? "green" : "cyan",
         icon: (
@@ -803,7 +870,7 @@ export function ElectricalOneLine({
         kind: "equipment",
         tag: "SOL-001",
         title: "HOPPER GATE",
-        status: gateOpen ? "OPEN" : "CLOSED",
+        status: gateOpen ? t.open : t.closed,
         active: gateOpen,
         accent: gateOpen ? "green" : "cyan",
         icon: (
@@ -858,59 +925,14 @@ export function ElectricalOneLine({
       live?.state === "STABILIZING" ||
       live?.state === "STARTING";
     const statusLabel =
-      live && live.state !== "OFFLINE" ? live.phaseLabel : "STANDBY / OFFLINE";
+      live && live.state !== "OFFLINE" ? live.phaseLabel : t.standbyOffline;
     return {
       tag: gen.tag,
       title: gen.name,
       status: statusLabel,
       active: isActive ?? false,
       width: 340,
-      details: [
-        {
-          parameter: "Frequency",
-          value:
-            live && live.state !== "OFFLINE"
-              ? `${live.frequency.toFixed(2)} Hz`
-              : `${gen.nominalFrequency.toFixed(2)} Hz`,
-          description: isActive
-            ? "Live output frequency."
-            : "Nominal standby output frequency.",
-        },
-        {
-          parameter: "Voltage",
-          value:
-            live && live.state !== "OFFLINE"
-              ? `${live.voltage.toFixed(1)} V`
-              : `${gen.nominalVoltage} V`,
-          description: isActive
-            ? "Live terminal voltage."
-            : "Nominal generator terminal voltage.",
-        },
-        {
-          parameter: "Current",
-          value: live ? `${live.current.toFixed(2)} A` : "0 A",
-          description: isActive
-            ? "Live output current."
-            : "Per-phase current while offline.",
-        },
-        {
-          parameter: "Active Power",
-          value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
-          description: isActive
-            ? "Emergency-source power available to ATS."
-            : "Active power when running.",
-        },
-        {
-          parameter: "Reactive Power",
-          value: live ? `${live.reactivePower.toFixed(1)} VAR` : "0 VAR",
-          description: "Reactive support available during operation.",
-        },
-        {
-          parameter: "Fuel Level",
-          value: `${gen.fuelLevel}%`,
-          description: "Available runtime capacity for standby operation.",
-        },
-      ],
+      details: buildGeneratorDetails(t, gen, live, isActive ?? false),
     };
   });
 
@@ -1008,11 +1030,8 @@ export function ElectricalOneLine({
     >
       <div ref={diagramRef} className="min-w-max">
         <div className="flex items-center gap-0">
-          {/* ── Utility section: bus behind card ── */}
           <div className="relative shrink-0" style={{ width: CARD_W + 220, height: 220 }}>
-            {/* Background power bus — z-index 0, renders behind the card */}
-            <UtilityBusBackground utilityActive={state.supplyLive} />
-            {/* UTILITY card on top — z-index 1; anchored at top so details expand downward */}
+            <UtilityBusBackground utilityActive={state.supplyLive} streetLabel="STREET" />
             <div
               className="absolute left-0 flex items-start"
               style={{ width: CARD_W, zIndex: 1, top: 65 }}
@@ -1028,7 +1047,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "POLE-001",
               title: "RISER POLE",
-              status: state.supplyLive ? "4.8 KV" : "DEAD",
+              status: state.supplyLive ? "4.8 KV" : t.dead,
               active: state.supplyLive,
               accent: "cyan",
               icon: (
@@ -1048,7 +1067,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "CB-UTIL",
               title: "POLE BREAKER",
-              status: state.supplyLive ? "CLOSED" : "OPEN",
+              status: state.supplyLive ? t.closed : t.open,
               active: state.supplyLive,
               accent: state.supplyLive ? "green" : "amber",
               icon: (
@@ -1069,7 +1088,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "XFMR-001",
               title: "PAD-MOUNT TRANSFORMER",
-              status: state.supplyLive ? "4.8K→240V" : "NO FEED",
+              status: state.supplyLive ? "4.8K→240V" : t.noFeed,
               active: state.supplyLive,
               accent: "cyan",
               icon: (
@@ -1082,7 +1101,7 @@ export function ElectricalOneLine({
             }}
           />
 
-          <ConductorBundle title="SECONDARY SERVICE CABLE" width={220} />
+          <ConductorBundle title={t.secondaryServiceCable} width={220} />
 
           <HWire powered={state.meterLive} className="w-4" />
 
@@ -1117,7 +1136,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "PNL-001",
               title: "MAIN PANEL",
-              status: state.mainPanelLive ? "ENERGIZED" : "OFFLINE",
+              status: state.mainPanelLive ? t.energized : t.genStateOffline,
               active: state.mainPanelLive,
               accent: state.mainPanelLive ? "green" : "amber",
               icon: (
@@ -1140,7 +1159,7 @@ export function ElectricalOneLine({
                 kind: "equipment",
                 tag: "SCADA-01",
                 title: "SCADA MONITOR",
-                status: state.mainPanelLive ? "MONITORING" : "OFFLINE",
+                status: state.mainPanelLive ? t.monitoring : t.genStateOffline,
                 active: state.mainPanelLive,
                 accent: "violet",
                 icon: (
@@ -1162,7 +1181,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "MDS-001",
               title: "MAIN DISCONNECT",
-              status: disconnectClosed ? "CLOSED" : "OPEN",
+              status: disconnectClosed ? t.closed : t.open,
               active: disconnectClosed && state.atsPowered,
               accent: disconnectClosed ? "green" : "amber",
               icon: (
@@ -1187,7 +1206,7 @@ export function ElectricalOneLine({
               kind: "equipment",
               tag: "CB-001",
               title: "CIRCUIT BREAKER",
-              status: breakerTripped ? "TRIPPED" : "OK",
+              status: breakerTripped ? t.tripped : t.ok,
               active: !breakerTripped && disconnectClosed && state.atsPowered,
               accent: breakerTripped ? "red" : "green",
               icon: (
@@ -1226,7 +1245,7 @@ export function ElectricalOneLine({
         <div className="flex items-start gap-0">
           <div className="w-[486px] shrink-0" />
 
-          <VerticalDivider height={campusDividerHeight} label="CAMPUS" />
+          <VerticalDivider height={campusDividerHeight} label={t.campus} />
 
           <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
             {generatorUnits.map((generator) => (
@@ -1274,7 +1293,7 @@ export function ElectricalOneLine({
                 kind: "equipment",
                 tag: "CB-GEN",
                 title: "MAIN PANEL GEN",
-                status: state.genBrkLive ? "CLOSED" : "OPEN / STANDBY",
+                status: state.genBrkLive ? t.closed : t.openStandby,
                 active: state.genBrkLive,
                 accent: "amber",
                 icon: (

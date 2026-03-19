@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ExternalLink, Maximize2, Minimize2 } from "lucide-react";
+import { useTranslation } from "@/context/LanguageContext";
 
 interface PanelProps {
   title: string;
@@ -14,6 +15,8 @@ interface PanelProps {
 }
 
 export function Panel({ title, children, className, status, icon, expanded, onToggleExpand, openUrl }: PanelProps) {
+  const { t } = useTranslation();
+
   const statusDot: Record<string, string> = {
     ok:      "bg-[#00ff50] shadow-[0_0_8px_rgba(0,255,80,0.9)] led-pulse",
     warning: "bg-[#ffb300] shadow-[0_0_8px_rgba(255,175,0,0.9)] led-pulse",
@@ -61,7 +64,7 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center rounded p-1 text-[#4a6a5a] transition hover:bg-[#1a2a1a] hover:text-[#00f7a1]"
-              title="Open full page"
+              title={t.openFullPage}
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -71,7 +74,7 @@ export function Panel({ title, children, className, status, icon, expanded, onTo
               type="button"
               onClick={onToggleExpand}
               className="flex items-center justify-center rounded p-1 text-[#4a6a5a] transition hover:bg-[#1a2a1a] hover:text-[#00f7a1]"
-              title={expanded ? "Exit full window" : "Full window"}
+              title={expanded ? t.exitFullWindow : t.fullWindow}
             >
               {expanded
                 ? <Minimize2 className="h-3.5 w-3.5" />

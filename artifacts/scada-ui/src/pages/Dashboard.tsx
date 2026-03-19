@@ -8,6 +8,7 @@ import {
   Clock3,
   Database,
   Gauge,
+  Languages,
   Power,
   Radio,
   ShieldAlert,
@@ -21,6 +22,7 @@ import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
+import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 
@@ -75,6 +77,7 @@ export default function Dashboard() {
     state.current,
     state.motorPowered,
   );
+  const { t, locale, toggleLocale } = useTranslation();
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -85,6 +88,14 @@ export default function Dashboard() {
   const activeAlarms = useMemo(() => state.alarms.filter((alarm) => alarm.active).length, [state.alarms]);
   const countdownMs = Math.max(0, state.nextFeedingTime.getTime() - now.getTime());
   const countdown = `${String(Math.floor(countdownMs / 60000)).padStart(2, "0")}:${String(Math.floor((countdownMs % 60000) / 1000)).padStart(2, "0")}`;
+
+  const synopsis = state.isFault
+    ? t.synopsisFault
+    : state.feedActive
+      ? t.synopsisFeedActive
+      : state.isPowered
+        ? t.synopsisPowered
+        : t.synopsisUnpowered;
 
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
@@ -97,38 +108,50 @@ export default function Dashboard() {
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">{SYSTEM.id}</h1>
-                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">{SYSTEM.description}</span>
+                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">{t.systemDescription}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#8a9a8a]">
-                <span>UPTIME: {formatUptime(state.uptime)}</span>
-                <span>NODE: {SYSTEM.node}</span>
-                <span>TIME: {format(now, "yyyy-MM-dd HH:mm:ss")}</span>
+                <span>{t.uptime}: {formatUptime(state.uptime)}</span>
+                <span>{t.node}: {SYSTEM.node}</span>
+                <span>{t.time}: {format(now, "yyyy-MM-dd HH:mm:ss")}</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className={cn("rounded-2xl border bg-[#1a1a1a] px-4 py-3", STATE_STYLE[state.systemState])}>
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Overall Status</div>
-              <div className="flex items-center gap-2 font-display text-xl tracking-[0.15em]">
-                <LED on={state.systemState === "RUN"} color={state.systemState === "FAULT" ? "red" : state.systemState === "STANDBY" ? "amber" : "green"} size="md" />
-                {state.systemState}
+          <div className="flex items-center gap-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className={cn("rounded-2xl border bg-[#1a1a1a] px-4 py-3", STATE_STYLE[state.systemState])}>
+                <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">{t.overallStatus}</div>
+                <div className="flex items-center gap-2 font-display text-xl tracking-[0.15em]">
+                  <LED on={state.systemState === "RUN"} color={state.systemState === "FAULT" ? "red" : state.systemState === "STANDBY" ? "amber" : "green"} size="md" />
+                  {state.systemState}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+                <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">{t.activeAlarms}</div>
+                <div className={cn("flex items-center gap-2 font-display text-xl tracking-[0.15em]", activeAlarms > 0 ? "text-[#ff4d5a]" : "text-[#00f7a1]") }>
+                  <AlertTriangle className="h-5 w-5" /> {activeAlarms}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+                <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">{t.mode}</div>
+                <div className="font-display text-xl tracking-[0.15em] text-[#b0d4b0]">{state.systemMode}</div>
+              </div>
+              <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
+                <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">{t.nextAutoFeed}</div>
+                <div className="font-mono text-2xl tracking-[0.12em] text-[#e0ece0]">{countdown}</div>
               </div>
             </div>
-            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Active Alarms</div>
-              <div className={cn("flex items-center gap-2 font-display text-xl tracking-[0.15em]", activeAlarms > 0 ? "text-[#ff4d5a]" : "text-[#00f7a1]") }>
-                <AlertTriangle className="h-5 w-5" /> {activeAlarms}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Mode</div>
-              <div className="font-display text-xl tracking-[0.15em] text-[#b0d4b0]">{state.systemMode}</div>
-            </div>
-            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] px-4 py-3">
-              <div className="mb-1 font-display text-[11px] uppercase tracking-[0.2em] text-[#8a9a8a]">Next Auto Feed</div>
-              <div className="font-mono text-2xl tracking-[0.12em] text-[#e0ece0]">{countdown}</div>
-            </div>
+
+            <button
+              type="button"
+              onClick={toggleLocale}
+              aria-label={locale === "en" ? "Passer au français" : "Switch to English"}
+              className="flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1] shrink-0"
+            >
+              <Languages className="h-4 w-4" />
+              <span>{locale === "en" ? "FR" : "EN"}</span>
+            </button>
           </div>
         </div>
       </header>
@@ -136,7 +159,7 @@ export default function Dashboard() {
       <main className="mx-auto grid max-w-[1700px] grid-cols-1 gap-5 p-5 2xl:grid-cols-[1.15fr_1.45fr]">
         <div className="space-y-5 min-w-0">
           <Panel
-            title="Electrical One-Line"
+            title={t.electricalOneLine}
             icon={<Zap className="h-4 w-4" />}
             openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
           >
@@ -160,15 +183,15 @@ export default function Dashboard() {
             />
           </Panel>
 
-          <Panel title="Command / Safety Controls" icon={<Power className="h-4 w-4" />}>
+          <Panel title={t.commandSafetyControls} icon={<Power className="h-4 w-4" />}>
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
               {[
-                { label: state.feedActive ? "FEED CYCLE ACTIVE" : "START FEED CYCLE", onClick: actions.triggerFeed, style: "border-[#00f7a1]/45 text-[#00f7a1] hover:bg-[#00f7a1]/10" },
-                { label: "REFILL HOPPER", onClick: actions.refillHopper, style: "border-[#00dcff]/45 text-[#00dcff] hover:bg-[#00dcff]/10" },
-                { label: state.estopPressed ? "RESET ESTOP" : "EMERGENCY STOP", onClick: state.estopPressed ? actions.resetEstop : actions.pressEstop, style: state.estopPressed ? "border-[#ffb347]/45 text-[#ffb347] hover:bg-[#ffb347]/10" : "border-[#ff4d5a]/45 text-[#ff4d5a] hover:bg-[#ff4d5a]/10" },
-                { label: "REMOVE BOWL", onClick: actions.removeBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
-                { label: "RESTORE BOWL", onClick: actions.restoreBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
-                { label: "EMPTY BOWL", onClick: actions.clearBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+                { label: state.feedActive ? t.feedCycleActive : t.startFeedCycle, onClick: actions.triggerFeed, style: "border-[#00f7a1]/45 text-[#00f7a1] hover:bg-[#00f7a1]/10" },
+                { label: t.refillHopper, onClick: actions.refillHopper, style: "border-[#00dcff]/45 text-[#00dcff] hover:bg-[#00dcff]/10" },
+                { label: state.estopPressed ? t.resetEstop : t.emergencyStop, onClick: state.estopPressed ? actions.resetEstop : actions.pressEstop, style: state.estopPressed ? "border-[#ffb347]/45 text-[#ffb347] hover:bg-[#ffb347]/10" : "border-[#ff4d5a]/45 text-[#ff4d5a] hover:bg-[#ff4d5a]/10" },
+                { label: t.removeBowl, onClick: actions.removeBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+                { label: t.restoreBowl, onClick: actions.restoreBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
+                { label: t.emptyBowl, onClick: actions.clearBowl, style: "border-[#334155] text-[#9fb0c7] hover:bg-[#111827]" },
               ].map((button) => (
                 <button
                   key={button.label}
@@ -184,11 +207,11 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-5">
-          <Panel title="PLC-001 Status" icon={<CircuitBoard className="h-4 w-4" />}>
+          <Panel title={t.plcStatus} icon={<CircuitBoard className="h-4 w-4" />}>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
               <div>
-                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Controller Health</div>
-                <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">{SYSTEM.controllerHealth}</div>
+                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.controllerHealth}</div>
+                <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">{t.controllerHealthStatus}</div>
               </div>
               <div className="flex items-center gap-5 rounded-xl border border-[#243245] bg-[#060d16] px-4 py-3">
                 <LED on={state.systemState === "RUN"} color="green" label="RUN" />
@@ -199,7 +222,7 @@ export default function Dashboard() {
 
             <div className="grid gap-4 xl:grid-cols-2">
               <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">Discrete Inputs (DI)</div>
+                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">{t.discreteInputs}</div>
                 <div className="space-y-3">
                   {state.digitalInputs.map((point) => (
                     <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
@@ -212,7 +235,7 @@ export default function Dashboard() {
               </div>
 
               <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">Discrete Outputs (DO)</div>
+                <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">{t.discreteOutputs}</div>
                 <div className="space-y-3">
                   {state.digitalOutputs.map((point) => (
                     <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
@@ -226,33 +249,27 @@ export default function Dashboard() {
             </div>
           </Panel>
 
-          <Panel title="Real-Time Process Values" icon={<Database className="h-4 w-4" />}
+          <Panel title={t.realTimeProcess} icon={<Database className="h-4 w-4" />}
             openUrl={`${import.meta.env.BASE_URL}simulation`}>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <ValueCard title="Supply Voltage" value={simulatedVoltage.toFixed(2)} unit="V" icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
-              <ValueCard title="Grid Frequency" value={frequency.toFixed(3)} unit="Hz" icon={<Gauge className="h-5 w-5" />} accent={state.isPowered ? "green" : "red"} />
-              <ValueCard title="Motor Current" value={state.current.toFixed(2)} unit="A" icon={<Activity className="h-5 w-5" />} accent={state.motorPowered ? "green" : "cyan"} />
-              <ValueCard title="Hopper Level" value={state.hopperLevel.toFixed(1)} unit="%" icon={<Gauge className="h-5 w-5" />} accent={state.hopperLow ? "amber" : "green"} />
-              <ValueCard title="Bowl Level / Portion" value={state.bowlLevel.toFixed(1)} unit="%" icon={<Database className="h-5 w-5" />} accent={state.bowlLevel <= 20 ? "amber" : "cyan"} />
-              <ValueCard title="Today's Feeds" value={String(state.feedCount)} icon={<Clock3 className="h-5 w-5" />} accent="cyan" />
-              <ValueCard title="System Mode" value={state.systemMode} icon={<ShieldAlert className="h-5 w-5" />} accent={state.systemMode === "LOCKOUT" ? "red" : state.systemMode === "AUTO" ? "green" : "amber"} />
+              <ValueCard title={t.supplyVoltage} value={simulatedVoltage.toFixed(2)} unit="V" icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
+              <ValueCard title={t.gridFrequency} value={frequency.toFixed(3)} unit="Hz" icon={<Gauge className="h-5 w-5" />} accent={state.isPowered ? "green" : "red"} />
+              <ValueCard title={t.motorCurrent} value={state.current.toFixed(2)} unit="A" icon={<Activity className="h-5 w-5" />} accent={state.motorPowered ? "green" : "cyan"} />
+              <ValueCard title={t.hopperLevel} value={state.hopperLevel.toFixed(1)} unit="%" icon={<Gauge className="h-5 w-5" />} accent={state.hopperLow ? "amber" : "green"} />
+              <ValueCard title={t.bowlLevelPortion} value={state.bowlLevel.toFixed(1)} unit="%" icon={<Database className="h-5 w-5" />} accent={state.bowlLevel <= 20 ? "amber" : "cyan"} />
+              <ValueCard title={t.todaysFeeds} value={String(state.feedCount)} icon={<Clock3 className="h-5 w-5" />} accent="cyan" />
+              <ValueCard title={t.systemMode} value={state.systemMode} icon={<ShieldAlert className="h-5 w-5" />} accent={state.systemMode === "LOCKOUT" ? "red" : state.systemMode === "AUTO" ? "green" : "amber"} />
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Last Feed Time</div>
+                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.lastFeedTime}</div>
                 <div className="font-mono text-lg tracking-[0.14em] text-[#e7edf6]">{state.lastFeedTime ? format(state.lastFeedTime, "yyyy-MM-dd HH:mm:ss") : "--"}</div>
               </div>
               <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">Process Synopsis</div>
+                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.processSynopsis}</div>
                 <div className="font-mono text-sm leading-6 tracking-[0.08em] text-[#b8c6d9]">
-                  {state.isFault
-                    ? "Feeder locked out due to protection condition. Reset fault inputs before restart."
-                    : state.feedActive
-                      ? "Motor and hopper gate are energized. Dry feed is being metered into the bowl."
-                      : state.isPowered
-                        ? "Electrical bus healthy. PLC armed and waiting for bowl demand / scheduled feed."
-                        : "Main disconnect open or power unavailable. Downstream control circuit is de-energized."}
+                  {synopsis}
                 </div>
               </div>
             </div>
@@ -263,12 +280,12 @@ export default function Dashboard() {
                 className="flex items-center gap-2 rounded-xl border border-[#00dcff]/30 bg-[#062032] px-4 py-2.5 font-display text-xs tracking-[0.16em] text-[#00dcff] transition hover:bg-[#0b2c45] w-fit"
               >
                 <Radio className="h-3.5 w-3.5" />
-                OPEN GRID SIMULATION PAGE
+                {t.openGridSimulation}
               </a>
             </div>
           </Panel>
 
-          <Panel title="Alarms / Events" icon={<Siren className="h-4 w-4" />}>
+          <Panel title={t.alarmsEvents} icon={<Siren className="h-4 w-4" />}>
             <div className="space-y-3">
               {state.alarms.map((alarm) => (
                 <div key={alarm.id} className={cn("rounded-2xl border p-3", ALARM_STYLE[alarm.type], alarm.active && alarm.type === "CRITICAL" ? "alarm-blink" : "") }>
@@ -282,7 +299,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="rounded-md border border-current/20 px-2 py-1 font-mono text-[11px] tracking-[0.18em]">{alarm.type}</span>
-                      <span className={cn("rounded-md px-2 py-1 font-mono text-[11px] tracking-[0.18em]", alarm.active ? "bg-[#ffffff14] text-white" : "bg-[#00000026] text-[#9fb0c7]")}>{alarm.active ? "ACTIVE" : "EVENT"}</span>
+                      <span className={cn("rounded-md px-2 py-1 font-mono text-[11px] tracking-[0.18em]", alarm.active ? "bg-[#ffffff14] text-white" : "bg-[#00000026] text-[#9fb0c7]")}>{alarm.active ? t.alarmActive : t.alarmEvent}</span>
                     </div>
                   </div>
                 </div>
