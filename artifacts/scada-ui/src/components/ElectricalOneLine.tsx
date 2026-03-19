@@ -415,9 +415,11 @@ function UtilityBusBackground({
   const totalHSpan = (count - 1) * hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2; // centre of card → x ≈ 38
 
-  // Vertical bars start below the STREET + conductor labels
+  // Vertical bars start below the STREET + conductor labels.
+  // lineBottom extends past the SVG viewport (overflow: visible) to reach the
+  // bottom of Generator 3: main row (220) + VWire bridge (28) + gen section (3×74+24=246) = 494
   const lineTop = 30;
-  const lineBottom = H;
+  const lineBottom = 490;
 
   // Card sits vertically centred in the container
   const centerY = H / 2; // 110
@@ -427,12 +429,12 @@ function UtilityBusBackground({
 
   return (
     <svg
-      className="pointer-events-none absolute inset-0 shrink-0"
+      className="pointer-events-none absolute top-0 left-0 shrink-0"
       width={W}
       height={H}
       viewBox={`0 0 ${W} ${H}`}
       aria-label="Utility street power bus"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 0, overflow: "visible" }}
     >
       {/* ── STREET label — top of the utility section ── */}
       <text
