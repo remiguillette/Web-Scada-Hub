@@ -75,7 +75,7 @@ const ScadaStateContext = createContext<ScadaStateContextValue | null>(null);
 
 function useScadaStateValue(): ScadaStateContextValue {
   const { gridEnabled } = useGridSimulationContext();
-  const [disconnectClosed, setDisconnectClosed] = useState(false);
+  const disconnectClosed = gridEnabled;
   const [breakerTripped, setBreakerTripped] = useState(false);
   const [estopPressed, setEstopPressed] = useState(false);
   const [hopperLevel, setHopperLevel] = useState(78);
@@ -227,7 +227,6 @@ function useScadaStateValue(): ScadaStateContextValue {
   }, [feedActive, isPowered, motorPowered]);
 
   useEffect(() => {
-    setDisconnectClosed(gridEnabled);
     if (gridEnabled) {
       setBreakerTripped(false);
     }
@@ -347,8 +346,8 @@ function useScadaStateValue(): ScadaStateContextValue {
       digitalOutputs,
     },
     actions: {
-      toggleDisconnect: () => setDisconnectClosed((prev) => !prev),
-      setDisconnectClosed,
+      toggleDisconnect: () => {},
+      setDisconnectClosed: (_closed: boolean) => {},
       tripBreaker: () => setBreakerTripped(true),
       resetBreaker: () => setBreakerTripped(false),
       setBreakerTripped,
