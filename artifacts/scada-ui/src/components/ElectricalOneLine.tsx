@@ -605,7 +605,7 @@ function UtilityBusAnnotations({
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
   const busCenterX = firstCX + totalHSpan / 2;
-  const horizontalShift = 26; // move labels to the right
+  const feederLabelShift = 170; // move only the feeder label to the right
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[10]">
@@ -613,7 +613,7 @@ function UtilityBusAnnotations({
         className="absolute -translate-x-1/2 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
         style={{
           top: UTILITY_BUS_GEOMETRY.titleY - 12,
-          left: busCenterX + horizontalShift,
+          left: busCenterX,
           color: utilityActive ? "#4ade80" : "#4b5563",
           textShadow: utilityActive ? "0 0 10px rgba(74,222,128,0.28)" : "none",
         }}
@@ -628,7 +628,7 @@ function UtilityBusAnnotations({
         className="absolute -translate-x-1/2 text-center font-mono text-[11px] font-semibold tracking-[0.28em] text-[#cbd5e1]"
         style={{
           top: UTILITY_BUS_GEOMETRY.lineTop - 64,
-          left: busCenterX,
+          left: busCenterX + feederLabelShift,
           textShadow: utilityActive ? "0 0 10px rgba(148,163,184,0.2)" : "none",
         }}
       >
