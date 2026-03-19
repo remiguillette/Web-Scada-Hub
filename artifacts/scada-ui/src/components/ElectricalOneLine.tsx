@@ -473,26 +473,7 @@ function UtilityBusBackground({
         const tapY = centerY + (index - (count - 1) / 2) * 12;
 
         return (
-          <g key={`bus-${conductor.label}`}>
-            <text
-              x={cx}
-              y={42}
-              fill={conductor.color}
-              fontSize="6"
-              textAnchor="middle"
-              style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
-            >
-              {conductor.lines.map((line, lineIndex) => (
-                <tspan
-                  key={`${conductor.label}-${line}-${lineIndex}`}
-                  x={cx}
-                  dy={lineIndex === 0 ? 0 : 8}
-                >
-                  {line}
-                </tspan>
-              ))}
-            </text>
-
+          <g key={`bus-lines-${conductor.label}`}>
             <line
               x1={cx} y1={lineTop}
               x2={cx} y2={lineBottom}
@@ -528,6 +509,32 @@ function UtilityBusBackground({
               opacity={utilityActive ? 0.95 : 0.2}
             />
           </g>
+        );
+      })}
+
+      {STREET_BUS_CONDUCTORS.map((conductor, index) => {
+        const cx = firstCX + index * hSpacing;
+
+        return (
+          <text
+            key={`bus-label-${conductor.label}`}
+            x={cx}
+            y={42}
+            fill={conductor.color}
+            fontSize="6"
+            textAnchor="middle"
+            style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
+          >
+            {conductor.lines.map((line, lineIndex) => (
+              <tspan
+                key={`${conductor.label}-${line}-${lineIndex}`}
+                x={cx}
+                dy={lineIndex === 0 ? 0 : 8}
+              >
+                {line}
+              </tspan>
+            ))}
+          </text>
         );
       })}
     </svg>
