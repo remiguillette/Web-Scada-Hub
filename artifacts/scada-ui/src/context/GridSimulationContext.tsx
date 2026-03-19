@@ -12,6 +12,8 @@ import {
   type GridSimulationConfig,
 } from "@/hooks/use-grid-simulation";
 
+export type HydroDispatchMode = "PHYSICS" | "GRID_FOLLOW";
+
 export interface GridFormValues {
   baseVoltage: number;
   baseFrequency: number;
@@ -73,6 +75,11 @@ interface GridSimulationContextValue {
   hydraulicHeadMeters: number;
   waterFlowActiveUnits: number;
   waterToWireEfficiency: number;
+  hydroDispatchMode: HydroDispatchMode;
+  rawWaterPowerMw: number;
+  hydraulicCapacityMw: number;
+  hydraulicReserveMw: number;
+  importedGridPowerMw: number;
   toggleGrid: () => void;
   requestGridConnection: (nextConnected: boolean) => void;
   setForm: (updater: (prev: GridFormValues) => GridFormValues) => void;
@@ -173,7 +180,13 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
     HYDRO_MAX_UNITS * HYDRO_UNIT_CAPACITY_MW,
     rawWaterPowerMw,
   );
+  const hydroDispatchMode: HydroDispatchMode = "PHYSICS";
   const dispatchedPowerMw = Math.min(gridDemandMw, hydraulicCapacityMw);
+  const hydraulicReserveMw = Math.max(
+    0,
+    hydraulicCapacityMw - dispatchedPowerMw,
+  );
+  const importedGridPowerMw = Math.max(0, gridDemandMw - dispatchedPowerMw);
   const waterFlowActiveUnits =
     gridEnabled && dispatchedPowerMw > 0
       ? Math.min(
@@ -271,6 +284,11 @@ export function GridSimulationProvider({ children }: { children: ReactNode }) {
         hydraulicHeadMeters,
         waterFlowActiveUnits,
         waterToWireEfficiency: WATER_TO_WIRE_EFFICIENCY,
+        hydroDispatchMode,
+        rawWaterPowerMw,
+        hydraulicCapacityMw,
+        hydraulicReserveMw,
+        importedGridPowerMw,
         toggleGrid,
         requestGridConnection,
         setForm,
