@@ -1618,10 +1618,10 @@ export function ElectricalOneLine({
                   gap: UTILITY_SUPPLEMENTARY_CARD_GAP,
                 }}
               >
-                <NodeCard node={utilityNode} />
                 {supplementaryUtilityNodes.map((node) => (
                   <NodeCard key={node.tag} node={node} />
                 ))}
+                <NodeCard node={utilityNode} />
               </div>
             </div>
 
