@@ -129,7 +129,7 @@ type PinchState = {
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
-const UTILITY_SECTION_SHIFT = 120;
+const UTILITY_TO_RISER_GAP = 120;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
@@ -212,7 +212,7 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 220 + UTILITY_SECTION_SHIFT,
+  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 220,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
@@ -1891,7 +1891,7 @@ export function ElectricalOneLine({
 
             <div
               className="relative flex shrink-0 items-center"
-              style={{ marginLeft: UTILITY_SECTION_SHIFT }}
+              style={{ marginLeft: UTILITY_TO_RISER_GAP }}
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
