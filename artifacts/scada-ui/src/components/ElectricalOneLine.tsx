@@ -118,7 +118,7 @@ type DragState = {
 
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
-const UTILITY_CARD_GAP = 12;
+const UTILITY_CARD_GAP = 150;
 const SCROLL_STEP = 120;
 
 const CONDUCTORS = [
