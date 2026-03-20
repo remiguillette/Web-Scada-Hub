@@ -212,7 +212,7 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 44,
+  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 92,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
