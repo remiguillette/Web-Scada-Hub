@@ -7,15 +7,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import {
-  Building2,
-  ChevronDown,
-  Layers3,
-  Monitor,
-  Power,
-  ShieldAlert,
-  Zap,
-} from "lucide-react";
+import { Building2, Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildUtilitySnapshot } from "@/lib/utility-service";
 import { SYSTEM } from "@/config/system";
@@ -124,48 +116,11 @@ type DragState = {
   scrollTop: number;
 };
 
-type LayerId = "utility" | "emergency" | "water" | "wasteWater" | "gas";
-
-type LayerConfig = {
-  id: LayerId;
-  label: string;
-  color: string;
-  glow: string;
-};
-
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const SCROLL_STEP = 120;
 const DIAGRAM_SCALE = 3;
-
-const LAYER_CONFIG: LayerConfig[] = [
-  {
-    id: "utility",
-    label: "UTILITY",
-    color: "#00dcff",
-    glow: "rgba(0,220,255,0.18)",
-  },
-  {
-    id: "emergency",
-    label: "Emergency/Backup",
-    color: "#ffb347",
-    glow: "rgba(255,179,71,0.18)",
-  },
-  {
-    id: "water",
-    label: "Water",
-    color: "#5eead4",
-    glow: "rgba(94,234,212,0.18)",
-  },
-  {
-    id: "wasteWater",
-    label: "Waste Water",
-    color: "#60a5fa",
-    glow: "rgba(96,165,250,0.18)",
-  },
-  { id: "gas", label: "Gas", color: "#f97316", glow: "rgba(249,115,22,0.18)" },
-];
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -434,41 +389,6 @@ function CompactCard({
 
 function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
   return <CompactCard {...node} />;
-}
-
-function layerCardClass(isVisible: boolean) {
-  return cn(
-    "transition-all duration-200",
-    isVisible ? "opacity-100 saturate-100" : "opacity-20 saturate-50",
-  );
-}
-
-function LayerBadge({
-  layer,
-  active,
-}: {
-  layer: LayerConfig;
-  active: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 font-mono text-[7px] uppercase tracking-[0.22em] shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition-all duration-200",
-        active ? "text-white" : "text-[#7c8aa5]",
-      )}
-      style={{
-        borderColor: active ? layer.color : "rgba(71,85,105,0.65)",
-        background: active
-          ? `linear-gradient(135deg, ${layer.glow}, rgba(15,23,42,0.92))`
-          : "rgba(15,23,42,0.82)",
-        boxShadow: active
-          ? `0 12px 28px ${layer.glow}`
-          : "0 8px 18px rgba(0,0,0,0.18)",
-      }}
-    >
-      {layer.label}
-    </div>
-  );
 }
 
 function BusNodeView({ node }: { node: BusNode }) {
@@ -903,16 +823,13 @@ function UtilityCardInterconnect({
             />
 
             {CONDUCTORS.map((conductor, index) => {
-              const offset =
-                (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
+              const offset = (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
               const conductorY = anchorY + offset;
               const animationDelay = `${index * 0.1}s`;
               const labelVisible = gapIndex === 0;
 
               return (
-                <g
-                  key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}
-                >
+                <g key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}>
                   {labelVisible ? (
                     <text
                       x={labelX}
@@ -1316,16 +1233,6 @@ export function ElectricalOneLine({
   const atsRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
-  const [activeLayers, setActiveLayers] = useState<Record<LayerId, boolean>>(
-    () => ({
-      utility: true,
-      emergency: true,
-      water: true,
-      wasteWater: true,
-      gas: true,
-    }),
-  );
   const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
   const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
 
@@ -1519,13 +1426,6 @@ export function ElectricalOneLine({
     (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - generatorSpacerWidth - 3,
   );
 
-  const toggleLayer = useCallback((layerId: LayerId) => {
-    setActiveLayers((current) => ({
-      ...current,
-      [layerId]: !current[layerId],
-    }));
-  }, []);
-
   const scrollByAmount = useCallback((left: number, top = 0) => {
     viewportRef.current?.scrollBy({ left, top, behavior: "smooth" });
   }, []);
@@ -1539,19 +1439,6 @@ export function ElectricalOneLine({
     window.addEventListener("pointerup", stopDragging);
     return () => window.removeEventListener("pointerup", stopDragging);
   }, [stopDragging]);
-
-  useEffect(() => {
-    if (!isLayerMenuOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("[data-layer-menu-root]")) return;
-      setIsLayerMenuOpen(false);
-    };
-
-    window.addEventListener("pointerdown", handlePointerDown);
-    return () => window.removeEventListener("pointerdown", handlePointerDown);
-  }, [isLayerMenuOpen]);
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1596,400 +1483,256 @@ export function ElectricalOneLine({
   );
 
   return (
-    <div className="relative h-full w-full">
-      <div data-layer-menu-root className="absolute right-3 top-3 z-20">
-        <button
-          type="button"
-          onClick={() => setIsLayerMenuOpen((open) => !open)}
-          aria-expanded={isLayerMenuOpen}
-          aria-haspopup="menu"
-          className="flex items-center gap-2 rounded-2xl border border-white/65 bg-white px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0f172a] shadow-[0_14px_35px_rgba(15,23,42,0.22)] transition hover:shadow-[0_18px_40px_rgba(15,23,42,0.28)]"
-        >
-          <Layers3 className="h-4 w-4 text-[#2563eb]" />
-          <span>Layers</span>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 text-[#475569] transition-transform duration-200",
-              isLayerMenuOpen && "rotate-180",
-            )}
-          />
-        </button>
-
-        {isLayerMenuOpen ? (
-          <div
-            role="menu"
-            className="mt-2 w-64 overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-2 shadow-[0_22px_44px_rgba(15,23,42,0.22)] backdrop-blur-xl"
-          >
-            <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#64748b]">
-              Filter menu
-            </div>
-            <div className="space-y-1">
-              {LAYER_CONFIG.map((layer) => {
-                const active = activeLayers[layer.id];
-
-                return (
-                  <button
-                    key={layer.id}
-                    type="button"
-                    role="menuitemcheckbox"
-                    aria-checked={active}
-                    onClick={() => toggleLayer(layer.id)}
-                    className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-[#eff6ff]"
-                  >
-                    <span
-                      className="flex h-5 w-5 items-center justify-center rounded-full border"
-                      style={{
-                        borderColor: active ? layer.color : "#cbd5e1",
-                        background: active ? layer.color : "transparent",
-                        boxShadow: active ? `0 0 0 4px ${layer.glow}` : "none",
-                      }}
-                    >
-                      <span
-                        className="h-2.5 w-2.5 rounded-full bg-white transition-opacity"
-                        style={{ opacity: active ? 1 : 0 }}
-                      />
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="text-sm font-semibold text-[#0f172a]">
-                        {layer.label}
-                      </span>
-                      <span className="text-[11px] text-[#64748b]">
-                        {active ? "Visible on diagram" : "Hidden from diagram"}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-      </div>
-
+    <div
+      ref={viewportRef}
+      tabIndex={0}
+      aria-label="Electrical one-line diagram viewport"
+      className={cn(
+        "w-full overflow-auto scrollbar-hidden pb-2 select-none outline-none",
+        "cursor-grab active:cursor-grabbing",
+        isDragging && "cursor-grabbing",
+      )}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={stopDragging}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          scrollByAmount(-SCROLL_STEP);
+        }
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          scrollByAmount(SCROLL_STEP);
+        }
+      }}
+    >
       <div
-        ref={viewportRef}
-        tabIndex={0}
-        aria-label="Electrical one-line diagram viewport"
-        className={cn(
-          "w-full overflow-auto scrollbar-hidden pb-2 select-none outline-none",
-          "cursor-grab active:cursor-grabbing",
-          isDragging && "cursor-grabbing",
-        )}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={stopDragging}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowLeft") {
-            event.preventDefault();
-            scrollByAmount(-SCROLL_STEP);
-          }
-          if (event.key === "ArrowRight") {
-            event.preventDefault();
-            scrollByAmount(SCROLL_STEP);
-          }
+        className="pt-1 pb-8 pl-6 pr-10"
+        style={{
+          width:
+            diagramSize.width > 0
+              ? diagramSize.width * DIAGRAM_SCALE + 64
+              : undefined,
+          height:
+            diagramSize.height > 0
+              ? diagramSize.height * DIAGRAM_SCALE + 36
+              : undefined,
         }}
       >
         <div
-          className="pt-1 pb-8 pl-6 pr-10"
+          ref={diagramRef}
+          className="min-w-max"
           style={{
-            width:
-              diagramSize.width > 0
-                ? diagramSize.width * DIAGRAM_SCALE + 64
-                : undefined,
-            height:
-              diagramSize.height > 0
-                ? diagramSize.height * DIAGRAM_SCALE + 36
-                : undefined,
+            transform: `scale(${DIAGRAM_SCALE})`,
+            transformOrigin: "top left",
           }}
         >
-          <div
-            ref={diagramRef}
-            className="min-w-max"
-            style={{
-              transform: `scale(${DIAGRAM_SCALE})`,
-              transformOrigin: "top left",
-            }}
-          >
-            <div className="flex items-center gap-0">
-              <div className={layerCardClass(activeLayers.utility)}>
-                <div className="relative shrink-0">
-                  <div className="absolute left-0 top-[-26px]">
-                    <LayerBadge
-                      layer={LAYER_CONFIG[0]}
-                      active={activeLayers.utility}
-                    />
-                  </div>
-                  <div
-                    className="relative shrink-0"
-                    style={{
-                      width: CARD_W + 220,
-                      height: UTILITY_BUS_GEOMETRY.height,
-                    }}
-                  >
-                    <UtilityBusBackground utilityActive={state.supplyLive} />
-                    <UtilityBusAnnotations
-                      utilityActive={state.supplyLive}
-                      streetLabel={t.street}
-                      conductorMetrics={conductorMetrics}
-                    />
-                    <div
-                      className="absolute left-0 flex items-start"
-                      style={{
-                        width: CARD_W,
-                        zIndex: 1,
-                        top: UTILITY_BUS_GEOMETRY.lineTop - 98,
-                      }}
-                    >
-                      <NodeCard node={utilityNode} />
-                    </div>
-                  </div>
-
-                  <div className="relative flex shrink-0 items-center">
-                    <UtilityCardInterconnect
-                      active={state.supplyLive && activeLayers.utility}
-                      cardCount={3}
-                    />
-
-                    <div className="relative z-[1]">
-                      <NodeCard
-                        node={{
-                          kind: "equipment",
-                          tag: "POLE-001",
-                          title: t.riserPole,
-                          status: state.supplyLive ? "4.8 KV" : t.dead,
-                          active: state.supplyLive && activeLayers.utility,
-                          accent: "cyan",
-                          icon: (
-                            <StatusIcon
-                              icon="power"
-                              active={state.supplyLive && activeLayers.utility}
-                              activeColor="text-[#00dcff]"
-                            />
-                          ),
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      className="relative z-[1]"
-                      style={{ marginLeft: UTILITY_CARD_GAP }}
-                    >
-                      <NodeCard
-                        node={{
-                          kind: "equipment",
-                          tag: "CB-UTIL",
-                          title: t.breakerRecloser,
-                          status: state.supplyLive ? t.closed : t.openStandby,
-                          active: state.supplyLive && activeLayers.utility,
-                          accent:
-                            state.supplyLive && activeLayers.utility
-                              ? "green"
-                              : "amber",
-                          icon: (
-                            <StatusIcon
-                              icon="shield"
-                              active={state.supplyLive && activeLayers.utility}
-                              activeColor="text-[#00f7a1]"
-                              inactiveColor="text-[#ffb347]"
-                            />
-                          ),
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      className="relative z-[1]"
-                      style={{ marginLeft: UTILITY_CARD_GAP }}
-                    >
-                      <NodeCard
-                        node={{
-                          kind: "equipment",
-                          tag: "SWGR-3W",
-                          title: t.padMountedSwitchgear,
-                          status: state.supplyLive
-                            ? t.switchgear3WayStatus
-                            : t.noFeed,
-                          active: state.supplyLive && activeLayers.utility,
-                          accent: "cyan",
-                          icon: (
-                            <StatusIcon
-                              icon="zap"
-                              active={state.supplyLive && activeLayers.utility}
-                              activeColor="text-[#00dcff]"
-                            />
-                          ),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <HWire
-                powered={state.busLive && activeLayers.utility}
-                className="w-4"
+          <div className="flex items-center gap-0">
+            <div
+              className="relative shrink-0"
+              style={{
+                width: CARD_W + 220,
+                height: UTILITY_BUS_GEOMETRY.height,
+              }}
+            >
+              <UtilityBusBackground utilityActive={state.supplyLive} />
+              <UtilityBusAnnotations
+                utilityActive={state.supplyLive}
+                streetLabel={t.street}
+                conductorMetrics={conductorMetrics}
               />
-
-              <div ref={atsRef} className="shrink-0">
-                <BusNodeView node={busNode} />
-              </div>
-
-              <HWire
-                powered={state.busLive && activeLayers.gas}
-                className="w-4"
-              />
-
               <div
-                className={cn(
-                  "flex shrink-0 flex-col items-center gap-2",
-                  layerCardClass(activeLayers.gas),
-                )}
+                className="absolute left-0 flex items-start"
+                style={{
+                  width: CARD_W,
+                  zIndex: 1,
+                  top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+                }}
               >
-                <LayerBadge layer={LAYER_CONFIG[4]} active={activeLayers.gas} />
-                <VWire
-                  powered={state.busLive && activeLayers.gas}
-                  style={{ height: 14 }}
-                />
+                <NodeCard node={utilityNode} />
+              </div>
+            </div>
+
+            <div className="relative flex shrink-0 items-center">
+              <UtilityCardInterconnect
+                active={state.supplyLive}
+                cardCount={3}
+              />
+
+              <div className="relative z-[1]">
                 <NodeCard
                   node={{
                     kind: "equipment",
-                    tag: "SCADA-01",
-                    title: t.scadaMonitor,
-                    status: state.busLive ? t.monitoring : t.genStateOffline,
-                    active: state.busLive && activeLayers.gas,
-                    accent: "violet",
+                    tag: "POLE-001",
+                    title: t.riserPole,
+                    status: state.supplyLive ? "4.8 KV" : t.dead,
+                    active: state.supplyLive,
+                    accent: "cyan",
                     icon: (
                       <StatusIcon
-                        icon="monitor"
-                        active={state.busLive && activeLayers.gas}
-                        activeColor="text-[#a78bfa]"
+                        icon="power"
+                        active={state.supplyLive}
+                        activeColor="text-[#00dcff]"
                       />
                     ),
                   }}
                 />
-                <VWire
-                  powered={state.busLive && activeLayers.gas}
-                  style={{ height: 14 }}
+              </div>
+
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "CB-UTIL",
+                    title: t.breakerRecloser,
+                    status: state.supplyLive ? t.closed : t.openStandby,
+                    active: state.supplyLive,
+                    accent: state.supplyLive ? "green" : "amber",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#00f7a1]"
+                        inactiveColor="text-[#ffb347]"
+                      />
+                    ),
+                  }}
                 />
               </div>
 
-              <div className="ml-2 flex shrink-0 flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <LayerBadge
-                    layer={LAYER_CONFIG[2]}
-                    active={activeLayers.water}
-                  />
-                  <LayerBadge
-                    layer={LAYER_CONFIG[3]}
-                    active={activeLayers.wasteWater}
-                  />
-                </div>
-                <LoopFeederSection
-                  feeders={feederLoops.filter((feeder) =>
-                    feeder.id === "feeder-a"
-                      ? activeLayers.water
-                      : activeLayers.wasteWater,
-                  )}
-                  powered={state.busLive}
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "SWGR-3W",
+                    title: t.padMountedSwitchgear,
+                    status: state.supplyLive
+                      ? t.switchgear3WayStatus
+                      : t.noFeed,
+                    active: state.supplyLive,
+                    accent: "cyan",
+                    icon: (
+                      <StatusIcon
+                        icon="zap"
+                        active={state.supplyLive}
+                        activeColor="text-[#00dcff]"
+                      />
+                    ),
+                  }}
                 />
               </div>
             </div>
 
-            <div className={layerCardClass(activeLayers.emergency)}>
-              <div className="mb-2 ml-[490px] flex">
-                <LayerBadge
-                  layer={LAYER_CONFIG[1]}
-                  active={activeLayers.emergency}
-                />
-              </div>
-              <div className="flex items-start" style={{ height: 28 }}>
-                <div
-                  style={{
-                    width: generatorBranchVerticalOffset,
-                    flexShrink: 0,
-                  }}
-                />
-                <VWire
-                  powered={state.genBrkLive && activeLayers.emergency}
-                  style={{ height: 28 }}
-                />
-              </div>
+            <HWire powered={state.busLive} className="w-4" />
 
-              <div className="flex items-start gap-0">
-                <div className="w-[486px] shrink-0" />
+            <div ref={atsRef} className="shrink-0">
+              <BusNodeView node={busNode} />
+            </div>
 
-                <VerticalDivider
-                  height={campusDividerHeight}
-                  label={t.campus}
-                />
+            <HWire powered={state.busLive} className="w-4" />
 
-                <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
-                  {activeLayers.emergency
-                    ? generatorUnits.map((generator) => (
-                        <NodeCard
-                          key={generator.tag}
-                          node={{
-                            kind: "source",
-                            tag: generator.tag,
-                            title: generator.title,
-                            status: generator.status,
-                            active: generator.active,
-                            accent: "amber",
-                            width: generator.width,
-                            details: generator.details,
-                            icon: <Zap className="h-4 w-4 text-[#475569]" />,
-                          }}
-                        />
-                      ))
-                    : null}
-                </div>
-
-                <div
-                  className="flex shrink-0 items-center"
-                  style={{
-                    width: generatorBranchWireWidth,
-                    minHeight: generatorUnits.length * 74 - 12,
-                  }}
-                >
-                  <div className="flex h-full items-center">
-                    <VWire
-                      powered={state.genBrkLive && activeLayers.emergency}
-                      className="self-stretch"
+            <div className="flex shrink-0 flex-col items-center">
+              <VWire powered={state.busLive} style={{ height: 14 }} />
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "SCADA-01",
+                  title: t.scadaMonitor,
+                  status: state.busLive ? t.monitoring : t.genStateOffline,
+                  active: state.busLive,
+                  accent: "violet",
+                  icon: (
+                    <StatusIcon
+                      icon="monitor"
+                      active={state.busLive}
+                      activeColor="text-[#a78bfa]"
                     />
-                  </div>
-                  <div className="flex flex-1 flex-col justify-center gap-[58px]">
-                    {activeLayers.emergency
-                      ? generatorUnits.map((generator) => (
-                          <HWire
-                            key={`${generator.tag}-branch`}
-                            powered={generator.active && activeLayers.emergency}
-                            className="w-full"
-                          />
-                        ))
-                      : null}
-                  </div>
-                </div>
+                  ),
+                }}
+              />
+              <VWire powered={state.busLive} style={{ height: 14 }} />
+            </div>
 
-                <div className="flex shrink-0 items-center">
-                  <NodeCard
-                    node={{
-                      kind: "equipment",
-                      tag: "CB-GEN",
-                      title: t.mainPanelGen,
-                      status: state.genBrkLive ? t.closed : t.openStandby,
-                      active: state.genBrkLive && activeLayers.emergency,
-                      accent: "amber",
-                      icon: (
-                        <StatusIcon
-                          icon="shield"
-                          active={state.genBrkLive && activeLayers.emergency}
-                          activeColor="text-[#ffb347]"
-                        />
-                      ),
-                    }}
-                  />
-                </div>
+            <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
+          </div>
+
+          <div className="flex items-start" style={{ height: 28 }}>
+            <div
+              style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
+            />
+            <VWire powered={state.genBrkLive} style={{ height: 28 }} />
+          </div>
+
+          <div className="flex items-start gap-0">
+            <div className="w-[486px] shrink-0" />
+
+            <VerticalDivider height={campusDividerHeight} label={t.campus} />
+
+            <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
+              {generatorUnits.map((generator) => (
+                <NodeCard
+                  key={generator.tag}
+                  node={{
+                    kind: "source",
+                    tag: generator.tag,
+                    title: generator.title,
+                    status: generator.status,
+                    active: generator.active,
+                    accent: "amber",
+                    width: generator.width,
+                    details: generator.details,
+                    icon: <Zap className="h-4 w-4 text-[#475569]" />,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div
+              className="flex shrink-0 items-center"
+              style={{
+                width: generatorBranchWireWidth,
+                minHeight: generatorUnits.length * 74 - 12,
+              }}
+            >
+              <div className="flex h-full items-center">
+                <VWire powered={state.genBrkLive} className="self-stretch" />
               </div>
+              <div className="flex flex-1 flex-col justify-center gap-[58px]">
+                {generatorUnits.map((generator) => (
+                  <HWire
+                    key={`${generator.tag}-branch`}
+                    powered={generator.active}
+                    className="w-full"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center">
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "CB-GEN",
+                  title: t.mainPanelGen,
+                  status: state.genBrkLive ? t.closed : t.openStandby,
+                  active: state.genBrkLive,
+                  accent: "amber",
+                  icon: (
+                    <StatusIcon
+                      icon="shield"
+                      active={state.genBrkLive}
+                      activeColor="text-[#ffb347]"
+                    />
+                  ),
+                }}
+              />
             </div>
           </div>
         </div>
