@@ -116,6 +116,16 @@ type DragState = {
   offsetY: number;
 };
 
+type PinchState = {
+  pointerIds: [number, number];
+  startDistance: number;
+  startZoom: number;
+  midpointX: number;
+  midpointY: number;
+  contentX: number;
+  contentY: number;
+};
+
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
@@ -131,6 +141,8 @@ const BASE_DIAGRAM_SCALE = 3;
 const MIN_ZOOM = 0.45;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.0015;
+const KEYBOARD_ZOOM_STEP = 0.1;
+const BUTTON_ZOOM_STEP = 0.15;
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -1257,6 +1269,8 @@ export function ElectricalOneLine({
   const diagramRef = useRef<HTMLDivElement>(null);
   const atsRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
+  const pinchStateRef = useRef<PinchState | null>(null);
+  const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
   const [isDragging, setIsDragging] = useState(false);
   const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
   const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
@@ -1558,21 +1572,85 @@ export function ElectricalOneLine({
 
   const stopDragging = useCallback(() => {
     dragStateRef.current = null;
-    setIsDragging(false);
+    pinchStateRef.current = null;
+    if (activePointersRef.current.size <= 1) {
+      setIsDragging(false);
+    }
   }, []);
 
+  const zoomAroundPoint = useCallback((nextZoom: number, pointerX: number, pointerY: number) => {
+    if (!viewportRef.current || !diagramSize.width || !diagramSize.height) return;
+
+    const clampedZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+    const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * clampedZoom;
+    const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * clampedZoom;
+    const contentX = (pointerX - offset.x) / zoom;
+    const contentY = (pointerY - offset.y) / zoom;
+
+    setZoom(clampedZoom);
+    setOffset({
+      x: clampOffset(pointerX - contentX * clampedZoom, viewportSize.width, nextContentWidth),
+      y: clampOffset(pointerY - contentY * clampedZoom, viewportSize.height, nextContentHeight),
+    });
+  }, [diagramSize.height, diagramSize.width, offset.x, offset.y, viewportSize.height, viewportSize.width, zoom]);
+
+  const zoomByStep = useCallback((delta: number) => {
+    if (!viewportRef.current) return;
+
+    const rect = viewportRef.current.getBoundingClientRect();
+    zoomAroundPoint(zoom + delta, rect.width / 2, rect.height / 2);
+  }, [zoom, zoomAroundPoint]);
+
   useEffect(() => {
-    window.addEventListener("pointerup", stopDragging);
-    return () => window.removeEventListener("pointerup", stopDragging);
+    const resetInteraction = () => {
+      activePointersRef.current.clear();
+      stopDragging();
+    };
+
+    window.addEventListener("pointercancel", resetInteraction);
+    window.addEventListener("blur", resetInteraction);
+    return () => {
+      window.removeEventListener("pointercancel", resetInteraction);
+      window.removeEventListener("blur", resetInteraction);
+    };
   }, [stopDragging]);
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 || !viewportRef.current) return;
+      if (!viewportRef.current) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
 
       const target = event.target as HTMLElement;
       if (target.closest("button, a, input, select, textarea")) return;
 
+      activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      event.currentTarget.setPointerCapture(event.pointerId);
+
+      if (activePointersRef.current.size >= 2) {
+        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const [[firstId, first], [secondId, second]] = entries;
+        const midpointX = (first.x + second.x) / 2;
+        const midpointY = (first.y + second.y) / 2;
+        const startDistance = Math.hypot(second.x - first.x, second.y - first.y) || 1;
+        const rect = viewportRef.current.getBoundingClientRect();
+        const pointerX = midpointX - rect.left;
+        const pointerY = midpointY - rect.top;
+
+        pinchStateRef.current = {
+          pointerIds: [firstId, secondId],
+          startDistance,
+          startZoom: zoom,
+          midpointX: pointerX,
+          midpointY: pointerY,
+          contentX: (pointerX - offset.x) / zoom,
+          contentY: (pointerY - offset.y) / zoom,
+        };
+        dragStateRef.current = null;
+        setIsDragging(false);
+        return;
+      }
+
+      pinchStateRef.current = null;
       dragStateRef.current = {
         startX: event.clientX,
         startY: event.clientY,
@@ -1580,14 +1658,37 @@ export function ElectricalOneLine({
         offsetY: offset.y,
       };
 
-      event.currentTarget.setPointerCapture(event.pointerId);
       setIsDragging(true);
     },
-    [offset.x, offset.y],
+    [offset.x, offset.y, zoom],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (activePointersRef.current.has(event.pointerId)) {
+        activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      }
+
+      const pinch = pinchStateRef.current;
+      if (pinch) {
+        const [firstId, secondId] = pinch.pointerIds;
+        const first = activePointersRef.current.get(firstId);
+        const second = activePointersRef.current.get(secondId);
+        if (!first || !second) return;
+
+        const distance = Math.hypot(second.x - first.x, second.y - first.y) || pinch.startDistance;
+        const nextZoom = clamp(pinch.startZoom * (distance / pinch.startDistance), MIN_ZOOM, MAX_ZOOM);
+        const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * nextZoom;
+        const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * nextZoom;
+
+        setZoom(nextZoom);
+        setOffset({
+          x: clampOffset(pinch.midpointX - pinch.contentX * nextZoom, viewportSize.width, nextContentWidth),
+          y: clampOffset(pinch.midpointY - pinch.contentY * nextZoom, viewportSize.height, nextContentHeight),
+        });
+        return;
+      }
+
       const drag = dragStateRef.current;
       if (!drag) return;
 
@@ -1604,7 +1705,7 @@ export function ElectricalOneLine({
         ),
       });
     },
-    [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width],
+    [contentMetrics.height, contentMetrics.width, diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width],
   );
 
   const handlePointerUp = useCallback(
@@ -1612,9 +1713,49 @@ export function ElectricalOneLine({
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
+
+      activePointersRef.current.delete(event.pointerId);
+
+      if (activePointersRef.current.size >= 2) {
+        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const [[firstId, first], [secondId, second]] = entries;
+        const midpointX = (first.x + second.x) / 2;
+        const midpointY = (first.y + second.y) / 2;
+        const rect = viewportRef.current?.getBoundingClientRect();
+        if (rect) {
+          const pointerX = midpointX - rect.left;
+          const pointerY = midpointY - rect.top;
+          pinchStateRef.current = {
+            pointerIds: [firstId, secondId],
+            startDistance: Math.hypot(second.x - first.x, second.y - first.y) || 1,
+            startZoom: zoom,
+            midpointX: pointerX,
+            midpointY: pointerY,
+            contentX: (pointerX - offset.x) / zoom,
+            contentY: (pointerY - offset.y) / zoom,
+          };
+        }
+        setIsDragging(false);
+        return;
+      }
+
+      pinchStateRef.current = null;
+
+      const remainingPointer = Array.from(activePointersRef.current.values())[0];
+      if (remainingPointer) {
+        dragStateRef.current = {
+          startX: remainingPointer.x,
+          startY: remainingPointer.y,
+          offsetX: offset.x,
+          offsetY: offset.y,
+        };
+        setIsDragging(true);
+        return;
+      }
+
       stopDragging();
     },
-    [stopDragging],
+    [offset.x, offset.y, stopDragging, zoom],
   );
 
   return (
@@ -1641,18 +1782,7 @@ export function ElectricalOneLine({
         if (nextZoom === zoom) return;
 
         const rect = viewport.getBoundingClientRect();
-        const pointerX = event.clientX - rect.left;
-        const pointerY = event.clientY - rect.top;
-        const contentX = (pointerX - offset.x) / zoom;
-        const contentY = (pointerY - offset.y) / zoom;
-        const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * nextZoom;
-        const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * nextZoom;
-
-        setZoom(nextZoom);
-        setOffset({
-          x: clampOffset(pointerX - contentX * nextZoom, rect.width, nextContentWidth),
-          y: clampOffset(pointerY - contentY * nextZoom, rect.height, nextContentHeight),
-        });
+        zoomAroundPoint(nextZoom, event.clientX - rect.left, event.clientY - rect.top);
       }}
       onDoubleClick={() => {
         setZoom(1);
@@ -1680,17 +1810,35 @@ export function ElectricalOneLine({
         }
         if ((event.key === "+" || event.key === "=") && !event.metaKey && !event.ctrlKey) {
           event.preventDefault();
-          setZoom((current) => clamp(current + 0.1, MIN_ZOOM, MAX_ZOOM));
+          zoomByStep(KEYBOARD_ZOOM_STEP);
         }
         if (event.key === "-" && !event.metaKey && !event.ctrlKey) {
           event.preventDefault();
-          setZoom((current) => clamp(current - 0.1, MIN_ZOOM, MAX_ZOOM));
+          zoomByStep(-KEYBOARD_ZOOM_STEP);
         }
       }}
     >
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
-        <span>Drag to pan · Wheel to zoom</span>
-        <span>{Math.round(zoom * 100)}%</span>
+        <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
+        <div className="pointer-events-auto flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Zoom out"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/35 text-sm text-[#d9f7ff] transition hover:border-[#2a6078] hover:bg-[#08131a]"
+            onClick={() => zoomByStep(-BUTTON_ZOOM_STEP)}
+          >
+            −
+          </button>
+          <span className="min-w-14 text-center">{Math.round(zoom * 100)}%</span>
+          <button
+            type="button"
+            aria-label="Zoom in"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/35 text-sm text-[#d9f7ff] transition hover:border-[#2a6078] hover:bg-[#08131a]"
+            onClick={() => zoomByStep(BUTTON_ZOOM_STEP)}
+          >
+            +
+          </button>
+        </div>
       </div>
 
       <div className="absolute inset-0 overflow-hidden">
