@@ -1415,8 +1415,6 @@ export function ElectricalOneLine({
             }}
           />
 
-          <ConductorBundle title={t.secondaryServiceCable} width={220} powered={state.supplyLive} />
-
           <HWire powered={state.busLive} className="w-4" />
 
           <div ref={atsRef} className="shrink-0">
