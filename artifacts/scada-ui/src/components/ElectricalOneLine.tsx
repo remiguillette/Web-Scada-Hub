@@ -773,8 +773,18 @@ function UtilityCardInterconnect({
   cardCount: number;
 }) {
   const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
-  const lineStart = 6;
-  const lineEnd = cardSpanWidth - 6;
+
+  const cards = Array.from({ length: cardCount }, (_, index) => {
+    const left = index * (CARD_W + UTILITY_CARD_GAP);
+    return { left, right: left + CARD_W };
+  });
+
+  const gapPoints = cards
+    .slice(1)
+    .map((card, idx) => {
+      const prev = cards[idx];
+      return { x: (prev.right + card.left) / 2 };
+    });
 
   return (
     <svg
@@ -792,7 +802,7 @@ function UtilityCardInterconnect({
         return (
           <g key={`utility-card-interconnect-${conductor.label}`}>
             <text
-              x={lineStart}
+              x={6}
               y={y - 5}
               fill={active ? conductor.color : "#475569"}
               fontSize="8"
@@ -802,33 +812,67 @@ function UtilityCardInterconnect({
             >
               {conductor.label}
             </text>
-            <line
-              x1={lineStart + 26}
-              y1={y}
-              x2={lineEnd}
-              y2={y}
-              stroke={conductor.color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              opacity={active ? 0.4 : 0.16}
-            />
-            {active && (
-              <line
-                x1={lineStart + 26}
-                y1={y}
-                x2={lineEnd}
-                y2={y}
-                stroke={conductor.color}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray="10 8"
-                opacity={0.85}
-                style={{
-                  animation: `dash-flow 0.8s linear infinite`,
-                  animationDelay,
-                }}
-              />
-            )}
+
+            {cards.map((card, cardIndex) => {
+              const cardX1 = card.left + 6;
+              const cardX2 = card.right - 6;
+
+              return (
+                <g key={`card-${cardIndex}-${conductor.label}`}>
+                  <line
+                    x1={cardX1}
+                    y1={y}
+                    x2={cardX2}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity={active ? 0.4 : 0.16}
+                  />
+                  {active && (
+                    <line
+                      x1={cardX1}
+                      y1={y}
+                      x2={cardX2}
+                      y2={y}
+                      stroke={conductor.color}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="10 8"
+                      opacity={0.9}
+                      style={{
+                        animation: `dash-flow 0.8s linear infinite`,
+                        animationDelay,
+                      }}
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {gapPoints.map((gap, gapIndex) => (
+              <g key={`gap-${gapIndex}-${conductor.label}`}>
+                <circle
+                  cx={gap.x}
+                  cy={y}
+                  r={2.5}
+                  fill={conductor.color}
+                  opacity={active ? 0.95 : 0.2}
+                />
+                {active && (
+                  <line
+                    x1={gap.x - 6}
+                    y1={y}
+                    x2={gap.x + 6}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity={0.9}
+                  />
+                )}
+              </g>
+            ))}
           </g>
         );
       })}
