@@ -773,71 +773,94 @@ function UtilityCardInterconnect({
   cardCount: number;
 }) {
   const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
+  const svgHeight = 92;
+  const anchorY = svgHeight / 2;
+  const conductorSpread = 8;
+  const breakoutLength = 18;
+  const convergeLength = 22;
+  const labelX = 4;
 
   const cards = Array.from({ length: cardCount }, (_, index) => {
     const left = index * (CARD_W + UTILITY_CARD_GAP);
     return { left, right: left + CARD_W };
   });
 
-  const gapPoints = cards
-    .slice(1)
-    .map((card, idx) => {
-      const prev = cards[idx];
-      return { x: (prev.right + card.left) / 2 };
-    });
+  const gaps = cards.slice(1).map((target, index) => ({
+    source: cards[index],
+    target,
+  }));
 
   return (
     <svg
       className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2"
       width={cardSpanWidth}
-      height={92}
-      viewBox={`0 0 ${cardSpanWidth} 92`}
+      height={svgHeight}
+      viewBox={`0 0 ${cardSpanWidth} ${svgHeight}`}
       aria-hidden="true"
       style={{ overflow: "visible" }}
     >
-      {CONDUCTORS.map((conductor, index) => {
-        const y = 16 + index * 16;
-        const animationDelay = `${index * 0.1}s`;
+      {gaps.map((gap, gapIndex) => {
+        const sourceAnchorX = gap.source.right;
+        const targetAnchorX = gap.target.left;
+        const parallelStartX = sourceAnchorX + breakoutLength;
+        const parallelEndX = targetAnchorX - convergeLength;
 
         return (
-          <g key={`utility-card-interconnect-${conductor.label}`}>
-            <text
-              x={6}
-              y={y - 5}
-              fill={active ? conductor.color : "#475569"}
-              fontSize="8"
-              fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
-              letterSpacing="1.4"
-              opacity={active ? 0.9 : 0.5}
-            >
-              {conductor.label}
-            </text>
+          <g key={`utility-card-gap-${gapIndex}`}>
+            <circle
+              cx={sourceAnchorX}
+              cy={anchorY}
+              r="3"
+              fill={active ? "#cbd5e1" : "#475569"}
+              opacity={active ? 0.9 : 0.4}
+            />
+            <circle
+              cx={targetAnchorX}
+              cy={anchorY}
+              r="3"
+              fill={active ? "#cbd5e1" : "#475569"}
+              opacity={active ? 0.9 : 0.4}
+            />
 
-            {cards.map((card, cardIndex) => {
-              const cardX1 = card.left + 6;
-              const cardX2 = card.right - 6;
+            {CONDUCTORS.map((conductor, index) => {
+              const offset = (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
+              const conductorY = anchorY + offset;
+              const animationDelay = `${index * 0.1}s`;
+              const labelVisible = gapIndex === 0;
 
               return (
-                <g key={`card-${cardIndex}-${conductor.label}`}>
-                  <line
-                    x1={cardX1}
-                    y1={y}
-                    x2={cardX2}
-                    y2={y}
+                <g key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}>
+                  {labelVisible ? (
+                    <text
+                      x={labelX}
+                      y={conductorY - 4}
+                      fill={active ? conductor.color : "#475569"}
+                      fontSize="8"
+                      fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
+                      letterSpacing="1.4"
+                      opacity={active ? 0.9 : 0.5}
+                    >
+                      {conductor.label}
+                    </text>
+                  ) : null}
+
+                  <path
+                    d={`M ${sourceAnchorX} ${anchorY} L ${parallelStartX} ${conductorY} L ${parallelEndX} ${conductorY} L ${targetAnchorX} ${anchorY}`}
+                    fill="none"
                     stroke={conductor.color}
                     strokeWidth="2.5"
                     strokeLinecap="round"
-                    opacity={active ? 0.4 : 0.16}
+                    strokeLinejoin="round"
+                    opacity={active ? 0.45 : 0.16}
                   />
                   {active && (
-                    <line
-                      x1={cardX1}
-                      y1={y}
-                      x2={cardX2}
-                      y2={y}
+                    <path
+                      d={`M ${sourceAnchorX} ${anchorY} L ${parallelStartX} ${conductorY} L ${parallelEndX} ${conductorY} L ${targetAnchorX} ${anchorY}`}
+                      fill="none"
                       stroke={conductor.color}
                       strokeWidth="2.5"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeDasharray="10 8"
                       opacity={0.9}
                       style={{
@@ -849,30 +872,6 @@ function UtilityCardInterconnect({
                 </g>
               );
             })}
-
-            {gapPoints.map((gap, gapIndex) => (
-              <g key={`gap-${gapIndex}-${conductor.label}`}>
-                <circle
-                  cx={gap.x}
-                  cy={y}
-                  r={2.5}
-                  fill={conductor.color}
-                  opacity={active ? 0.95 : 0.2}
-                />
-                {active && (
-                  <line
-                    x1={gap.x - 6}
-                    y1={y}
-                    x2={gap.x + 6}
-                    y2={y}
-                    stroke={conductor.color}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    opacity={0.9}
-                  />
-                )}
-              </g>
-            ))}
           </g>
         );
       })}
