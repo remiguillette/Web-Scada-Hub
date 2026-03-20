@@ -119,6 +119,8 @@ type DragState = {
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
+const UTILITY_SECTION_SHIFT = 120;
+const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
 const SCROLL_STEP = 120;
 const DIAGRAM_SCALE = 3;
 
@@ -178,7 +180,7 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: CARD_W + 220,
+  width: CARD_W + 220 + UTILITY_SECTION_SHIFT,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
@@ -823,13 +825,16 @@ function UtilityCardInterconnect({
             />
 
             {CONDUCTORS.map((conductor, index) => {
-              const offset = (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
+              const offset =
+                (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
               const conductorY = anchorY + offset;
               const animationDelay = `${index * 0.1}s`;
               const labelVisible = gapIndex === 0;
 
               return (
-                <g key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}>
+                <g
+                  key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}
+                >
                   {labelVisible ? (
                     <text
                       x={labelX}
@@ -1292,6 +1297,69 @@ export function ElectricalOneLine({
     ),
   };
 
+  const supplementaryUtilityNodes: EquipmentNode[] = [
+    {
+      kind: "equipment",
+      tag: "UTIL-WTR",
+      title: "Water",
+      status: t.available,
+      active: state.supplyLive,
+      accent: "cyan",
+      icon: (
+        <StatusIcon
+          icon="power"
+          active={state.supplyLive}
+          activeColor="text-[#00dcff]"
+        />
+      ),
+    },
+    {
+      kind: "equipment",
+      tag: "UTIL-WW",
+      title: "Wastewater",
+      status: t.available,
+      active: state.supplyLive,
+      accent: "cyan",
+      icon: (
+        <StatusIcon
+          icon="power"
+          active={state.supplyLive}
+          activeColor="text-[#00dcff]"
+        />
+      ),
+    },
+    {
+      kind: "equipment",
+      tag: "UTIL-GAS",
+      title: "Gas",
+      status: t.available,
+      active: state.supplyLive,
+      accent: "cyan",
+      icon: (
+        <StatusIcon
+          icon="power"
+          active={state.supplyLive}
+          activeColor="text-[#00dcff]"
+        />
+      ),
+    },
+    {
+      kind: "equipment",
+      tag: "UTIL-TEL",
+      title: "Telecom",
+      status: t.available,
+      active: state.supplyLive,
+      accent: "cyan",
+      icon: (
+        <StatusIcon
+          icon="monitor"
+          active={state.supplyLive}
+          activeColor="text-[#00dcff]"
+        />
+      ),
+    },
+  ];
+
   const atsNode: ATSNode = {
     kind: "ats",
     tag: "ATS-001",
@@ -1532,7 +1600,7 @@ export function ElectricalOneLine({
             <div
               className="relative shrink-0"
               style={{
-                width: CARD_W + 220,
+                width: UTILITY_BUS_GEOMETRY.width,
                 height: UTILITY_BUS_GEOMETRY.height,
               }}
             >
@@ -1545,16 +1613,22 @@ export function ElectricalOneLine({
               <div
                 className="absolute left-0 flex items-start"
                 style={{
-                  width: CARD_W,
                   zIndex: 1,
                   top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+                  gap: UTILITY_SUPPLEMENTARY_CARD_GAP,
                 }}
               >
                 <NodeCard node={utilityNode} />
+                {supplementaryUtilityNodes.map((node) => (
+                  <NodeCard key={node.tag} node={node} />
+                ))}
               </div>
             </div>
 
-            <div className="relative flex shrink-0 items-center">
+            <div
+              className="relative flex shrink-0 items-center"
+              style={{ marginLeft: UTILITY_SECTION_SHIFT }}
+            >
               <UtilityCardInterconnect
                 active={state.supplyLive}
                 cardCount={3}
