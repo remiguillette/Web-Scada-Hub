@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Languages, Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
 import { useScadaState } from "@/hooks/use-scada-state";
@@ -8,6 +9,19 @@ import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 
 export default function ElectricalOneLinePage() {
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
   const { state, actions } = useScadaState();
   const { voltage, frequency, requestGridConnection } = useGridSimulationContext();
   const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
@@ -19,7 +33,7 @@ export default function ElectricalOneLinePage() {
   const { t, locale, toggleLocale } = useTranslation();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0d0d0d] text-[#d6deea]">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#0d0d0d] text-[#d6deea]">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-[#2a2a2a] bg-[#0a0a0a] shrink-0">
         <div className="w-[3px] h-5 rounded-sm bg-[#00f7a1]" />
         <Zap className="h-4 w-4 text-[#00f7a1] opacity-80" />
@@ -41,7 +55,7 @@ export default function ElectricalOneLinePage() {
           </button>
         </div>
       </div>
-      <div className="flex-1 p-4 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden p-4">
         <ElectricalOneLine
           disconnectClosed={state.disconnectClosed}
           breakerTripped={state.breakerTripped}
