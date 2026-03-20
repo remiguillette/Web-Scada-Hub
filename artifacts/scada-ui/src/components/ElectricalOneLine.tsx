@@ -1302,7 +1302,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-WTR",
       title: "Water",
-      status: t.available,
+      status: state.supplyLive ? t.energized : t.unavailable,
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1317,7 +1317,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-WW",
       title: "Wastewater",
-      status: t.available,
+      status: state.supplyLive ? t.energized : t.unavailable,
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1332,7 +1332,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-GAS",
       title: "Gas",
-      status: t.available,
+      status: state.supplyLive ? t.energized : t.unavailable,
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1347,7 +1347,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-TEL",
       title: "Telecom",
-      status: t.available,
+      status: state.supplyLive ? t.energized : t.unavailable,
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1611,7 +1611,7 @@ export function ElectricalOneLine({
                 conductorMetrics={conductorMetrics}
               />
               <div
-                className="absolute left-0 flex items-start"
+                className="absolute right-0 flex items-start justify-end"
                 style={{
                   zIndex: 1,
                   top: UTILITY_BUS_GEOMETRY.lineTop - 98,
