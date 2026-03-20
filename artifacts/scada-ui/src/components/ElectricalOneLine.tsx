@@ -121,6 +121,11 @@ const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const UTILITY_SECTION_SHIFT = 120;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
+const UTILITY_SUPPLEMENTARY_COUNT = 4;
+const UTILITY_LEFT_CLUSTER_WIDTH =
+  UTILITY_SUPPLEMENTARY_COUNT * CARD_W +
+  (UTILITY_SUPPLEMENTARY_COUNT - 1) * UTILITY_SUPPLEMENTARY_CARD_GAP +
+  UTILITY_SUPPLEMENTARY_CARD_GAP;
 const SCROLL_STEP = 120;
 const DIAGRAM_SCALE = 3;
 
@@ -180,7 +185,7 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: CARD_W + 220 + UTILITY_SECTION_SHIFT,
+  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 220 + UTILITY_SECTION_SHIFT,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
@@ -557,7 +562,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
   const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
-  const firstCX = CARD_W / 2 - totalHSpan / 2;
+  const firstCX = UTILITY_LEFT_CLUSTER_WIDTH + CARD_W / 2 - totalHSpan / 2;
   const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
   const centerY = UTILITY_BUS_GEOMETRY.lineTop - 20;
   const riserX = W - 2;
@@ -692,7 +697,7 @@ function UtilityBusAnnotations({
   const feederLabel = "NPE-FDR-13.8-01";
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
-  const firstCX = CARD_W / 2 - totalHSpan / 2;
+  const firstCX = UTILITY_LEFT_CLUSTER_WIDTH + CARD_W / 2 - totalHSpan / 2;
   const busCenterX = firstCX + totalHSpan / 2;
   const feederLabelShift = 145; // move only the feeder label to the right
 
@@ -1618,10 +1623,10 @@ export function ElectricalOneLine({
                   gap: UTILITY_SUPPLEMENTARY_CARD_GAP,
                 }}
               >
-                <NodeCard node={utilityNode} />
                 {supplementaryUtilityNodes.map((node) => (
                   <NodeCard key={node.tag} node={node} />
                 ))}
+                <NodeCard node={utilityNode} />
               </div>
             </div>
 
