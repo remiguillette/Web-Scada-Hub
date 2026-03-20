@@ -112,8 +112,8 @@ type GeneratorUnit = {
 type DragState = {
   startX: number;
   startY: number;
-  scrollLeft: number;
-  scrollTop: number;
+  offsetX: number;
+  offsetY: number;
 };
 
 const CARD_W = 130;
@@ -126,8 +126,11 @@ const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_COUNT * CARD_W +
   (UTILITY_SUPPLEMENTARY_COUNT - 1) * UTILITY_SUPPLEMENTARY_CARD_GAP +
   UTILITY_SUPPLEMENTARY_CARD_GAP;
-const SCROLL_STEP = 120;
-const DIAGRAM_SCALE = 3;
+const PAN_STEP = 120;
+const BASE_DIAGRAM_SCALE = 3;
+const MIN_ZOOM = 0.45;
+const MAX_ZOOM = 2.6;
+const ZOOM_STEP = 0.0015;
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -174,6 +177,18 @@ type StreetBusMetric = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function clampOffset(
+  offset: number,
+  viewportSize: number,
+  contentSize: number,
+) {
+  if (contentSize <= viewportSize) {
+    return (viewportSize - contentSize) / 2;
+  }
+
+  return clamp(offset, viewportSize - contentSize, 0);
 }
 
 function formatBusVoltage(value: number) {
@@ -1245,6 +1260,9 @@ export function ElectricalOneLine({
   const [isDragging, setIsDragging] = useState(false);
   const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
   const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   const state = useMemo(() => {
     const supplyLive = voltage > 0;
@@ -1307,7 +1325,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-WTR",
       title: "Water",
-      status: t.available,
+      status: "Available",
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1322,7 +1340,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-WW",
       title: "Wastewater",
-      status: t.available,
+      status: "Available",
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1337,7 +1355,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-GAS",
       title: "Gas",
-      status: t.available,
+      status: "Available",
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1352,7 +1370,7 @@ export function ElectricalOneLine({
       kind: "equipment",
       tag: "UTIL-TEL",
       title: "Telecom",
-      status: t.available,
+      status: "Available",
       active: state.supplyLive,
       accent: "cyan",
       icon: (
@@ -1447,6 +1465,13 @@ export function ElectricalOneLine({
           height: diagram.offsetHeight,
         });
       }
+      const viewport = viewportRef.current;
+      if (viewport) {
+        setViewportSize({
+          width: viewport.clientWidth,
+          height: viewport.clientHeight,
+        });
+      }
       measureAtsCenter();
     };
 
@@ -1468,6 +1493,38 @@ export function ElectricalOneLine({
       window.removeEventListener("resize", updateLayoutMeasurements);
     };
   }, [measureAtsCenter]);
+
+
+  const contentMetrics = useMemo(() => {
+    const width = diagramSize.width * BASE_DIAGRAM_SCALE * zoom;
+    const height = diagramSize.height * BASE_DIAGRAM_SCALE * zoom;
+
+    return { width, height };
+  }, [diagramSize.height, diagramSize.width, zoom]);
+
+  useEffect(() => {
+    if (!viewportSize.width || !viewportSize.height) return;
+
+    setOffset((current) => ({
+      x: clampOffset(current.x, viewportSize.width, contentMetrics.width),
+      y: clampOffset(current.y, viewportSize.height, contentMetrics.height),
+    }));
+  }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
+
+  const panBy = useCallback((deltaX: number, deltaY: number) => {
+    setOffset((current) => ({
+      x: clampOffset(
+        current.x + deltaX,
+        viewportSize.width,
+        contentMetrics.width,
+      ),
+      y: clampOffset(
+        current.y + deltaY,
+        viewportSize.height,
+        contentMetrics.height,
+      ),
+    }));
+  }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
 
   const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
     const live = generatorLiveStates?.[idx];
@@ -1499,10 +1556,6 @@ export function ElectricalOneLine({
     (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - generatorSpacerWidth - 3,
   );
 
-  const scrollByAmount = useCallback((left: number, top = 0) => {
-    viewportRef.current?.scrollBy({ left, top, behavior: "smooth" });
-  }, []);
-
   const stopDragging = useCallback(() => {
     dragStateRef.current = null;
     setIsDragging(false);
@@ -1523,26 +1576,35 @@ export function ElectricalOneLine({
       dragStateRef.current = {
         startX: event.clientX,
         startY: event.clientY,
-        scrollLeft: viewportRef.current.scrollLeft,
-        scrollTop: viewportRef.current.scrollTop,
+        offsetX: offset.x,
+        offsetY: offset.y,
       };
 
       event.currentTarget.setPointerCapture(event.pointerId);
       setIsDragging(true);
     },
-    [],
+    [offset.x, offset.y],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      const viewport = viewportRef.current;
       const drag = dragStateRef.current;
-      if (!viewport || !drag) return;
+      if (!drag) return;
 
-      viewport.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
-      viewport.scrollTop = drag.scrollTop - (event.clientY - drag.startY);
+      setOffset({
+        x: clampOffset(
+          drag.offsetX + (event.clientX - drag.startX),
+          viewportSize.width,
+          contentMetrics.width,
+        ),
+        y: clampOffset(
+          drag.offsetY + (event.clientY - drag.startY),
+          viewportSize.height,
+          contentMetrics.height,
+        ),
+      });
     },
-    [],
+    [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width],
   );
 
   const handlePointerUp = useCallback(
@@ -1561,46 +1623,95 @@ export function ElectricalOneLine({
       tabIndex={0}
       aria-label="Electrical one-line diagram viewport"
       className={cn(
-        "w-full overflow-auto scrollbar-hidden pb-2 select-none outline-none",
-        "cursor-grab active:cursor-grabbing",
+        "relative h-full w-full overflow-hidden rounded-[28px] border border-[#163041] bg-[#050b10] select-none outline-none",
+        "cursor-grab active:cursor-grabbing touch-none",
         isDragging && "cursor-grabbing",
       )}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={stopDragging}
+      onWheel={(event) => {
+        event.preventDefault();
+
+        const viewport = viewportRef.current;
+        if (!viewport || !diagramSize.width || !diagramSize.height) return;
+
+        const nextZoom = clamp(zoom - event.deltaY * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM);
+        if (nextZoom === zoom) return;
+
+        const rect = viewport.getBoundingClientRect();
+        const pointerX = event.clientX - rect.left;
+        const pointerY = event.clientY - rect.top;
+        const contentX = (pointerX - offset.x) / zoom;
+        const contentY = (pointerY - offset.y) / zoom;
+        const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * nextZoom;
+        const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * nextZoom;
+
+        setZoom(nextZoom);
+        setOffset({
+          x: clampOffset(pointerX - contentX * nextZoom, rect.width, nextContentWidth),
+          y: clampOffset(pointerY - contentY * nextZoom, rect.height, nextContentHeight),
+        });
+      }}
+      onDoubleClick={() => {
+        setZoom(1);
+        setOffset({
+          x: clampOffset(0, viewportSize.width, diagramSize.width * BASE_DIAGRAM_SCALE),
+          y: clampOffset(0, viewportSize.height, diagramSize.height * BASE_DIAGRAM_SCALE),
+        });
+      }}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") {
           event.preventDefault();
-          scrollByAmount(-SCROLL_STEP);
+          panBy(PAN_STEP, 0);
         }
         if (event.key === "ArrowRight") {
           event.preventDefault();
-          scrollByAmount(SCROLL_STEP);
+          panBy(-PAN_STEP, 0);
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          panBy(0, PAN_STEP);
+        }
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          panBy(0, -PAN_STEP);
+        }
+        if ((event.key === "+" || event.key === "=") && !event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          setZoom((current) => clamp(current + 0.1, MIN_ZOOM, MAX_ZOOM));
+        }
+        if (event.key === "-" && !event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          setZoom((current) => clamp(current - 0.1, MIN_ZOOM, MAX_ZOOM));
         }
       }}
     >
-      <div
-        className="pt-1 pb-8 pl-6 pr-10"
-        style={{
-          width:
-            diagramSize.width > 0
-              ? diagramSize.width * DIAGRAM_SCALE + 64
-              : undefined,
-          height:
-            diagramSize.height > 0
-              ? diagramSize.height * DIAGRAM_SCALE + 36
-              : undefined,
-        }}
-      >
+      <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
+        <span>Drag to pan · Wheel to zoom</span>
+        <span>{Math.round(zoom * 100)}%</span>
+      </div>
+
+      <div className="absolute inset-0 overflow-hidden">
         <div
-          ref={diagramRef}
-          className="min-w-max"
+          className="pt-1 pb-8 pl-6 pr-10"
           style={{
-            transform: `scale(${DIAGRAM_SCALE})`,
+            width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined,
+            height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined,
+            transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
             transformOrigin: "top left",
+            willChange: "transform",
           }}
         >
+          <div
+            ref={diagramRef}
+            className="min-w-max"
+            style={{
+              transform: `scale(${BASE_DIAGRAM_SCALE})`,
+              transformOrigin: "top left",
+            }}
+          >
           <div className="flex items-center gap-0">
             <div
               className="relative shrink-0"
@@ -1813,6 +1924,7 @@ export function ElectricalOneLine({
                 }}
               />
             </div>
+          </div>
           </div>
         </div>
       </div>
