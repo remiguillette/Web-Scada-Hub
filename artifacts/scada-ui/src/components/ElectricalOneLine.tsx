@@ -220,6 +220,8 @@ const UTILITY_BUS_GEOMETRY = {
   lineBottom: 560,
   hSpacing: 25,
   annotationWidth: 44,
+  feederLabelY: 216,
+  feederRiserInset: 20,
 } as const;
 
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
@@ -583,23 +585,52 @@ function ConductorBundle({
   );
 }
 
-function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
-  const W = UTILITY_BUS_GEOMETRY.width;
-  const H = UTILITY_BUS_GEOMETRY.height;
-  const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
+function getUtilityBusLayout() {
+  const width = UTILITY_BUS_GEOMETRY.width;
+  const height = UTILITY_BUS_GEOMETRY.height;
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = UTILITY_LEFT_CLUSTER_WIDTH + CARD_W / 2 - totalHSpan / 2;
-  const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
+  const busCenterX = firstCX + totalHSpan / 2;
   const centerY = UTILITY_BUS_GEOMETRY.lineTop - 20;
-  const riserX = W - 2;
+  const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
+  const riserX = width - 2;
+  const riserTapX = riserX - UTILITY_BUS_GEOMETRY.feederRiserInset;
+  const feederLabelX = (busCenterX + riserX) / 2;
+
+  return {
+    width,
+    height,
+    count,
+    totalHSpan,
+    firstCX,
+    busCenterX,
+    centerY,
+    lineBottom,
+    riserX,
+    riserTapX,
+    feederLabelX,
+  };
+}
+
+function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
+  const {
+    width,
+    height,
+    count,
+    firstCX,
+    lineBottom,
+    centerY,
+    riserX,
+    riserTapX,
+  } = getUtilityBusLayout();
 
   return (
     <svg
       className="pointer-events-none absolute top-0 left-0 shrink-0"
-      width={W}
-      height={H}
-      viewBox={`0 0 ${W} ${H}`}
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
       aria-label="Utility street power bus"
       style={{ zIndex: 0, overflow: "visible" }}
     >
@@ -644,7 +675,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
             <line
               x1={cx}
               y1={tapY}
-              x2={riserX - 20}
+              x2={riserTapX}
               y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
@@ -655,7 +686,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               <line
                 x1={cx}
                 y1={tapY}
-                x2={riserX - 20}
+                x2={riserTapX}
                 y2={tapY}
                 stroke={conductor.color}
                 strokeWidth="2.5"
@@ -671,7 +702,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
 
             {/* Diagonal line */}
             <line
-              x1={riserX - 20}
+              x1={riserTapX}
               y1={tapY}
               x2={riserX}
               y2={centerY}
@@ -682,7 +713,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
             />
             {utilityActive && (
               <line
-                x1={riserX - 20}
+                x1={riserTapX}
                 y1={tapY}
                 x2={riserX}
                 y2={centerY}
@@ -722,11 +753,7 @@ function UtilityBusAnnotations({
   conductorMetrics: StreetBusMetric[];
 }) {
   const feederLabel = "NPE-FDR-13.8-01";
-  const count = STREET_BUS_CONDUCTORS.length;
-  const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
-  const firstCX = UTILITY_LEFT_CLUSTER_WIDTH + CARD_W / 2 - totalHSpan / 2;
-  const busCenterX = firstCX + totalHSpan / 2;
-  const feederLabelShift = 145; // move only the feeder label to the right
+  const { count, firstCX, busCenterX, feederLabelX } = getUtilityBusLayout();
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[10]">
@@ -748,8 +775,8 @@ function UtilityBusAnnotations({
       <div
         className="absolute -translate-x-1/2 text-center font-mono text-[11px] font-semibold tracking-[0.28em] text-[#cbd5e1]"
         style={{
-          top: UTILITY_BUS_GEOMETRY.lineTop - 64,
-          left: busCenterX + feederLabelShift,
+          top: UTILITY_BUS_GEOMETRY.feederLabelY,
+          left: feederLabelX,
           textShadow: utilityActive ? "0 0 10px rgba(148,163,184,0.2)" : "none",
         }}
       >
