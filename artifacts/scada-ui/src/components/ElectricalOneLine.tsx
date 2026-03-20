@@ -118,6 +118,7 @@ type DragState = {
 
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
+const UTILITY_CARD_GAP = 12;
 const SCROLL_STEP = 120;
 
 const CONDUCTORS = [
@@ -754,9 +755,9 @@ function UtilityCardInterconnect({
   active: boolean;
   cardCount: number;
 }) {
-  const cardSpanWidth = CARD_W * cardCount;
-  const lineStart = 10;
-  const lineEnd = cardSpanWidth - 10;
+  const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
+  const lineStart = 6;
+  const lineEnd = cardSpanWidth - 6;
 
   return (
     <svg
@@ -1454,7 +1455,7 @@ export function ElectricalOneLine({
               />
             </div>
 
-            <div className="relative z-[1]">
+            <div className="relative z-[1]" style={{ marginLeft: UTILITY_CARD_GAP }}>
               <NodeCard
                 node={{
                   kind: "equipment",
@@ -1475,7 +1476,7 @@ export function ElectricalOneLine({
               />
             </div>
 
-            <div className="relative z-[1]">
+            <div className="relative z-[1]" style={{ marginLeft: UTILITY_CARD_GAP }}>
               <NodeCard
                 node={{
                   kind: "equipment",
