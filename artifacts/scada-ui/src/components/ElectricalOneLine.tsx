@@ -121,10 +121,6 @@ const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const SCROLL_STEP = 120;
 const DIAGRAM_SCALE = 3;
-const CARD_H = 92;
-const CARD_PIN_LENGTH = 18;
-const CARD_LINK_COLOR = "#4de2c5";
-const CARD_LINK_STROKE = 3;
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -179,74 +175,6 @@ function formatBusVoltage(value: number) {
 
 function formatBusCurrent(value: number) {
   return `${Math.max(0, Math.round(value))} A`;
-}
-
-function getCardAnchors(x: number, y: number, w: number, h: number) {
-  return {
-    left: { x, y: y + h / 2 },
-    right: { x: x + w, y: y + h / 2 },
-  };
-}
-
-function CardPin({
-  x,
-  y,
-  side,
-  len = CARD_PIN_LENGTH,
-  color = CARD_LINK_COLOR,
-  strokeWidth = CARD_LINK_STROKE,
-  opacity = 1,
-}: {
-  x: number;
-  y: number;
-  side: "left" | "right";
-  len?: number;
-  color?: string;
-  strokeWidth?: number;
-  opacity?: number;
-}) {
-  const x2 = side === "left" ? x - len : x + len;
-
-  return (
-    <line
-      x1={x}
-      y1={y}
-      x2={x2}
-      y2={y}
-      stroke={color}
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      opacity={opacity}
-    />
-  );
-}
-
-function OrthogonalLink({
-  from,
-  to,
-  color = CARD_LINK_COLOR,
-  strokeWidth = CARD_LINK_STROKE,
-  opacity = 1,
-}: {
-  from: { x: number; y: number };
-  to: { x: number; y: number };
-  color?: string;
-  strokeWidth?: number;
-  opacity?: number;
-}) {
-  const midX = (from.x + to.x) / 2;
-
-  return (
-    <path
-      d={`M ${from.x} ${from.y} L ${midX} ${from.y} L ${midX} ${to.y} L ${to.x} ${to.y}`}
-      fill="none"
-      stroke={color}
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      opacity={opacity}
-    />
-  );
 }
 
 const UTILITY_BUS_GEOMETRY = {
@@ -624,16 +552,13 @@ function ConductorBundle({
 function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
   const W = UTILITY_BUS_GEOMETRY.width;
   const H = UTILITY_BUS_GEOMETRY.height;
+  const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
   const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
-  const riserCardX = W;
-  const riserCardY = UTILITY_BUS_GEOMETRY.lineTop - CARD_H / 2;
-  const riserAnchors = getCardAnchors(riserCardX, riserCardY, CARD_W, CARD_H);
-  const conductorSpacing = 12;
-  const conductorStartY =
-    riserAnchors.left.y - ((count - 1) * conductorSpacing) / 2;
+  const centerY = UTILITY_BUS_GEOMETRY.lineTop - 20;
+  const riserX = W - 2;
 
   return (
     <svg
@@ -646,7 +571,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
     >
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
-        const tapY = conductorStartY + index * conductorSpacing;
+        const tapY = centerY + (index - (count - 1) / 2) * 12;
         const animDelay = `${index * 0.12}s`;
 
         return (
@@ -681,10 +606,11 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               />
             )}
 
+            {/* Horizontal tap line */}
             <line
               x1={cx}
               y1={tapY}
-              x2={riserAnchors.left.x}
+              x2={riserX - 20}
               y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
@@ -695,7 +621,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               <line
                 x1={cx}
                 y1={tapY}
-                x2={riserAnchors.left.x}
+                x2={riserX - 20}
                 y2={tapY}
                 stroke={conductor.color}
                 strokeWidth="2.5"
@@ -704,6 +630,35 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
                 strokeDasharray="10 8"
                 style={{
                   animation: `dash-flow 0.7s linear infinite`,
+                  animationDelay: animDelay,
+                }}
+              />
+            )}
+
+            {/* Diagonal line */}
+            <line
+              x1={riserX - 20}
+              y1={tapY}
+              x2={riserX}
+              y2={centerY}
+              stroke={conductor.color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={utilityActive ? 0.7 : 0.2}
+            />
+            {utilityActive && (
+              <line
+                x1={riserX - 20}
+                y1={tapY}
+                x2={riserX}
+                y2={centerY}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity={0.9}
+                strokeDasharray="10 8"
+                style={{
+                  animation: `dash-flow 0.8s linear infinite`,
                   animationDelay: animDelay,
                 }}
               />
@@ -818,66 +773,109 @@ function UtilityCardInterconnect({
   cardCount: number;
 }) {
   const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
+
   const cards = Array.from({ length: cardCount }, (_, index) => {
     const left = index * (CARD_W + UTILITY_CARD_GAP);
-    return getCardAnchors(left, 0, CARD_W, CARD_H);
+    return { left, right: left + CARD_W };
   });
-  const links = cards.slice(0, -1).map((card, index) => ({
-    from: { x: card.right.x + CARD_PIN_LENGTH, y: card.right.y },
-    to: {
-      x: cards[index + 1].left.x - CARD_PIN_LENGTH,
-      y: cards[index + 1].left.y,
-    },
-  }));
-  const lineOpacity = active ? 0.88 : 0.28;
+
+  const gapPoints = cards
+    .slice(1)
+    .map((card, idx) => {
+      const prev = cards[idx];
+      return { x: (prev.right + card.left) / 2 };
+    });
 
   return (
     <svg
       className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2"
       width={cardSpanWidth}
-      height={CARD_H}
-      viewBox={`0 0 ${cardSpanWidth} ${CARD_H}`}
+      height={92}
+      viewBox={`0 0 ${cardSpanWidth} 92`}
       aria-hidden="true"
       style={{ overflow: "visible" }}
     >
-      {cards.map((card, index) => (
-        <g key={`utility-card-anchor-${index}`}>
-          <CardPin
-            x={card.left.x}
-            y={card.left.y}
-            side="left"
-            color={CARD_LINK_COLOR}
-            opacity={lineOpacity}
-          />
-          <CardPin
-            x={card.right.x}
-            y={card.right.y}
-            side="right"
-            color={CARD_LINK_COLOR}
-            opacity={lineOpacity}
-          />
-        </g>
-      ))}
+      {CONDUCTORS.map((conductor, index) => {
+        const y = 16 + index * 16;
+        const animationDelay = `${index * 0.1}s`;
 
-      {links.map((link, index) => (
-        <g key={`utility-card-link-${index}`}>
-          <OrthogonalLink
-            from={link.from}
-            to={link.to}
-            color={CARD_LINK_COLOR}
-            opacity={lineOpacity}
-          />
-          {active && (
-            <OrthogonalLink
-              from={link.from}
-              to={link.to}
-              color="#c8fff6"
-              strokeWidth={1.2}
-              opacity={0.95}
-            />
-          )}
-        </g>
-      ))}
+        return (
+          <g key={`utility-card-interconnect-${conductor.label}`}>
+            <text
+              x={6}
+              y={y - 5}
+              fill={active ? conductor.color : "#475569"}
+              fontSize="8"
+              fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
+              letterSpacing="1.4"
+              opacity={active ? 0.9 : 0.5}
+            >
+              {conductor.label}
+            </text>
+
+            {cards.map((card, cardIndex) => {
+              const cardX1 = card.left + 6;
+              const cardX2 = card.right - 6;
+
+              return (
+                <g key={`card-${cardIndex}-${conductor.label}`}>
+                  <line
+                    x1={cardX1}
+                    y1={y}
+                    x2={cardX2}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity={active ? 0.4 : 0.16}
+                  />
+                  {active && (
+                    <line
+                      x1={cardX1}
+                      y1={y}
+                      x2={cardX2}
+                      y2={y}
+                      stroke={conductor.color}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="10 8"
+                      opacity={0.9}
+                      style={{
+                        animation: `dash-flow 0.8s linear infinite`,
+                        animationDelay,
+                      }}
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {gapPoints.map((gap, gapIndex) => (
+              <g key={`gap-${gapIndex}-${conductor.label}`}>
+                <circle
+                  cx={gap.x}
+                  cy={y}
+                  r={2.5}
+                  fill={conductor.color}
+                  opacity={active ? 0.95 : 0.2}
+                />
+                {active && (
+                  <line
+                    x1={gap.x - 6}
+                    y1={y}
+                    x2={gap.x + 6}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity={0.9}
+                  />
+                )}
+              </g>
+            ))}
+          </g>
+        );
+      })}
     </svg>
   );
 }
