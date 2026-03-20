@@ -84,10 +84,19 @@ type BusNode = {
   active: boolean;
 };
 
-type LoadBranch = {
-  kind: "loadBranch";
-  control: EquipmentNode;
-  load: EquipmentNode;
+type FeederLoop = {
+  id: string;
+  label: string;
+  feederTag: string;
+  feederStatus: string;
+  feederPowered: boolean;
+  transformerTag: string;
+  transformerLabel: string;
+  transformerStatus: string;
+  transformerPowered: boolean;
+  loadTag: string;
+  loadLabel: string;
+  loadStatus: string;
   loadPowered: boolean;
 };
 
@@ -392,13 +401,73 @@ function BusNodeView({ node }: { node: BusNode }) {
   );
 }
 
-function LoadBranchView({ branch }: { branch: LoadBranch }) {
+function LoopFeederSection({
+  feeders,
+  powered,
+}: {
+  feeders: FeederLoop[];
+  powered: boolean;
+}) {
   return (
-    <div className="flex items-center gap-0">
-      <HWire powered={branch.control.active} className="w-4" />
-      <NodeCard node={branch.control} />
-      <HWire powered={branch.loadPowered} className="w-4" />
-      <NodeCard node={branch.load} />
+    <div className="ml-2 flex shrink-0 flex-col gap-6">
+      {feeders.map((feeder) => (
+        <div key={feeder.id} className="flex items-center gap-3">
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <div className={cn(
+              "font-mono text-[8px] tracking-[0.28em]",
+              feeder.feederPowered ? "text-[#8ecae6]" : "text-[#475569]",
+            )}>
+              {feeder.label}
+            </div>
+            <ConductorBundle
+              title={feeder.feederTag}
+              width={190}
+              simLabel={feeder.feederStatus}
+              powered={feeder.feederPowered}
+            />
+          </div>
+
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: feeder.transformerTag,
+              title: feeder.transformerLabel,
+              status: feeder.transformerStatus,
+              active: feeder.transformerPowered,
+              accent: feeder.transformerPowered ? "cyan" : "amber",
+              icon: (
+                <StatusIcon
+                  icon="zap"
+                  active={feeder.transformerPowered}
+                  activeColor="text-[#00dcff]"
+                  inactiveColor="text-[#64748b]"
+                />
+              ),
+            }}
+          />
+
+          <HWire powered={feeder.loadPowered} className="w-4" />
+
+          <NodeCard
+            node={{
+              kind: "equipment",
+              tag: feeder.loadTag,
+              title: feeder.loadLabel,
+              status: feeder.loadStatus,
+              active: feeder.loadPowered,
+              accent: feeder.loadPowered ? "green" : "cyan",
+              icon: (
+                <StatusIcon
+                  icon="power"
+                  active={feeder.loadPowered}
+                  activeColor="text-[#00f7a1]"
+                  inactiveColor="text-[#64748b]"
+                />
+              ),
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -1087,96 +1156,39 @@ export function ElectricalOneLine({
 
   const busNode: BusNode = {
     kind: "bus",
-    label: "BUS",
+    label: t.busBarLabel,
     active: state.busLive,
   };
 
-  const loadBranches: LoadBranch[] = [
+  const feederLoops: FeederLoop[] = [
     {
-      kind: "loadBranch",
-      control: {
-        kind: "equipment",
-        tag: "CTR-001",
-        title: t.feederCtr,
-        status: feederContactor ? t.energized : t.deEnergized,
-        active: feederContactor,
-        accent: feederContactor ? "green" : "cyan",
-        icon: (
-          <StatusIcon
-            icon="zap"
-            active={feederContactor}
-            activeColor="text-[#00f7a1]"
-            inactiveColor="text-[#00dcff]"
-          />
-        ),
-      },
-      load: {
-        kind: "equipment",
-        tag: SYSTEM.motor.tag,
-        title: t.motorName,
-        status: motorPowered ? `${current.toFixed(2)} A` : t.stopped,
-        active: motorPowered,
-        accent: motorPowered ? "green" : "cyan",
-        width: 200,
-        details: buildMotorDetails(
-          t,
-          motorPowered,
-          voltage,
-          current,
-          frequency,
-          activePower,
-          powerFactor,
-          reactivePower,
-        ),
-        icon: (
-          <div
-            className={cn(
-              "font-display text-base font-bold leading-none",
-              motorPowered ? "text-[#00f7a1]" : "text-[#64748b]",
-            )}
-          >
-            M
-          </div>
-        ),
-      },
+      id: "feeder-a",
+      label: t.feederALabel,
+      feederTag: "UG-FDR-A",
+      feederStatus: feederContactor ? t.loopFeedStatus : t.openStandby,
+      feederPowered: feederContactor && state.busLive,
+      transformerTag: "XFMR-RES",
+      transformerLabel: t.loopTransformerResidential,
+      transformerStatus: feederContactor && state.busLive ? "13.8kV→120/240V" : t.noFeed,
+      transformerPowered: feederContactor && state.busLive,
+      loadTag: "CAT-FEED",
+      loadLabel: t.residentialCatFeed,
+      loadStatus: motorPowered ? `${current.toFixed(2)} A` : t.stopped,
       loadPowered: motorPowered,
     },
     {
-      kind: "loadBranch",
-      control: {
-        kind: "equipment",
-        tag: "CTR-002",
-        title: t.solContactor,
-        status: solenoidContactor ? t.energized : t.deEnergized,
-        active: solenoidContactor,
-        accent: solenoidContactor ? "green" : "cyan",
-        icon: (
-          <StatusIcon
-            icon="zap"
-            active={solenoidContactor}
-            activeColor="text-[#00f7a1]"
-            inactiveColor="text-[#00dcff]"
-          />
-        ),
-      },
-      load: {
-        kind: "equipment",
-        tag: "SOL-001",
-        title: t.hopperGate,
-        status: gateOpen ? t.open : t.closed,
-        active: gateOpen,
-        accent: gateOpen ? "green" : "cyan",
-        icon: (
-          <div
-            className={cn(
-              "font-display text-base leading-none",
-              gateOpen ? "text-[#00f7a1]" : "text-[#64748b]",
-            )}
-          >
-            ◫
-          </div>
-        ),
-      },
+      id: "feeder-b",
+      label: t.feederBLabel,
+      feederTag: "UG-FDR-B",
+      feederStatus: solenoidContactor ? t.loopFeedStatus : t.openStandby,
+      feederPowered: solenoidContactor && state.busLive,
+      transformerTag: "XFMR-COM",
+      transformerLabel: t.loopTransformerCommercial,
+      transformerStatus: solenoidContactor && state.busLive ? "13.8kV→347/600V" : t.noFeed,
+      transformerPowered: solenoidContactor && state.busLive,
+      loadTag: "COMM-001",
+      loadLabel: t.commercialLoad,
+      loadStatus: gateOpen ? t.energized : t.deEnergized,
       loadPowered: gateOpen,
     },
   ];
@@ -1374,8 +1386,8 @@ export function ElectricalOneLine({
             node={{
               kind: "equipment",
               tag: "CB-UTIL",
-              title: t.poleBreaker,
-              status: state.supplyLive ? t.closed : t.open,
+              title: t.breakerRecloser,
+              status: state.supplyLive ? t.closed : t.openStandby,
               active: state.supplyLive,
               accent: state.supplyLive ? "green" : "amber",
               icon: (
@@ -1394,9 +1406,9 @@ export function ElectricalOneLine({
           <NodeCard
             node={{
               kind: "equipment",
-              tag: "XFMR-001",
-              title: t.padMountTransformer,
-              status: state.supplyLive ? "4.8K→240V" : t.noFeed,
+              tag: "SWGR-3W",
+              title: t.padMountedSwitchgear,
+              status: state.supplyLive ? t.switchgear3WayStatus : t.noFeed,
               active: state.supplyLive,
               accent: "cyan",
               icon: (
@@ -1411,136 +1423,37 @@ export function ElectricalOneLine({
 
           <ConductorBundle title={t.secondaryServiceCable} width={220} powered={state.supplyLive} />
 
-          <HWire powered={state.meterLive} className="w-4" />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "MTR-UTIL",
-              title: t.meter,
-              status: state.meterLive ? `${voltage.toFixed(1)} VAC` : "0.0 VAC",
-              active: state.meterLive,
-              accent: "cyan",
-              icon: (
-                <StatusIcon
-                  icon="zap"
-                  active={state.meterLive}
-                  activeColor="text-[#00dcff]"
-                />
-              ),
-            }}
-          />
-
-          <HWire powered={state.meterLive} className="w-4" />
+          <HWire powered={state.busLive} className="w-4" />
 
           <div ref={atsRef} className="shrink-0">
-            <NodeCard node={atsNode} />
+            <BusNodeView node={busNode} />
           </div>
 
-          <HWire powered={state.atsPowered} className="w-4" />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "PNL-001",
-              title: t.mainPanel,
-              status: state.mainPanelLive ? t.energized : t.genStateOffline,
-              active: state.mainPanelLive,
-              accent: state.mainPanelLive ? "green" : "amber",
-              icon: (
-                <StatusIcon
-                  icon="power"
-                  active={state.mainPanelLive}
-                  activeColor="text-[#00f7a1]"
-                  inactiveColor="text-[#ffb347]"
-                />
-              ),
-            }}
-          />
-
-          <HWire powered={state.atsPowered} className="w-4" />
+          <HWire powered={state.busLive} className="w-4" />
 
           <div className="flex shrink-0 flex-col items-center">
-            <VWire powered={state.mainPanelLive} style={{ height: 14 }} />
+            <VWire powered={state.busLive} style={{ height: 14 }} />
             <NodeCard
               node={{
                 kind: "equipment",
                 tag: "SCADA-01",
                 title: t.scadaMonitor,
-                status: state.mainPanelLive ? t.monitoring : t.genStateOffline,
-                active: state.mainPanelLive,
+                status: state.busLive ? t.monitoring : t.genStateOffline,
+                active: state.busLive,
                 accent: "violet",
                 icon: (
                   <StatusIcon
                     icon="monitor"
-                    active={state.mainPanelLive}
+                    active={state.busLive}
                     activeColor="text-[#a78bfa]"
                   />
                 ),
               }}
             />
-            <VWire powered={state.mainPanelLive} style={{ height: 14 }} />
+            <VWire powered={state.busLive} style={{ height: 14 }} />
           </div>
 
-          <HWire powered={state.atsPowered} className="w-4" />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "MDS-001",
-              title: t.mainDisconnect,
-              status: disconnectClosed ? t.closed : t.open,
-              active: disconnectClosed && state.atsPowered,
-              accent: disconnectClosed ? "green" : "amber",
-              icon: (
-                <StatusIcon
-                  icon="power"
-                  active={disconnectClosed}
-                  activeColor="text-[#00f7a1]"
-                  inactiveColor="text-[#ffb347]"
-                />
-              ),
-              onClick: onToggleDisconnect,
-            }}
-          />
-
-          <HWire
-            powered={disconnectClosed && state.atsPowered}
-            className="w-4"
-          />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "CB-001",
-              title: t.circuitBreaker,
-              status: breakerTripped ? t.tripped : t.ok,
-              active: !breakerTripped && disconnectClosed && state.atsPowered,
-              accent: breakerTripped ? "red" : "green",
-              icon: (
-                <StatusIcon
-                  icon="shield"
-                  active={!breakerTripped}
-                  activeColor="text-[#00f7a1]"
-                  inactiveColor="text-[#ff4d5a]"
-                />
-              ),
-              onClick: onToggleBreaker,
-            }}
-          />
-
-          <HWire powered={state.busLive} className="w-4" />
-
-          <BusNodeView node={busNode} />
-
-          <div className="ml-0 flex self-stretch flex-col items-stretch justify-center gap-0">
-            {loadBranches.map((branch, index) => (
-              <div key={`${branch.control.tag}-${branch.load.tag}`}>
-                {index > 0 ? <div className="h-3" /> : null}
-                <LoadBranchView branch={branch} />
-              </div>
-            ))}
-          </div>
+          <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
         </div>
 
         <div className="flex items-start" style={{ height: 28 }}>
