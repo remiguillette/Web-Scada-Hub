@@ -129,7 +129,7 @@ type PinchState = {
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
-const UTILITY_TO_RISER_GAP = 120;
+const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
@@ -212,7 +212,7 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 220,
+  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 44,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
@@ -841,7 +841,6 @@ function UtilityCardInterconnect({
   const conductorSpread = 8;
   const breakoutLength = 18;
   const convergeLength = 22;
-  const labelX = 4;
   const totalWidth = cardSpanWidth + leadInWidth;
 
   const cards = Array.from({ length: cardCount }, (_, index) => {
@@ -879,24 +878,13 @@ function UtilityCardInterconnect({
               (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
             const conductorY = anchorY + offset;
             const animationDelay = `${index * 0.1}s`;
-            const parallelStartX = Math.max(leadInWidth - breakoutLength, 0);
+            const fanoutStartX = firstCard.left;
+            const fanoutEndX = firstCard.left + breakoutLength;
 
             return (
               <g key={`utility-card-entry-${conductor.label}`}>
-                <text
-                  x={labelX}
-                  y={conductorY - 4}
-                  fill={active ? conductor.color : "#475569"}
-                  fontSize="8"
-                  fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
-                  letterSpacing="1.4"
-                  opacity={active ? 0.9 : 0.5}
-                >
-                  {conductor.label}
-                </text>
-
                 <path
-                  d={`M 0 ${anchorY} L ${parallelStartX} ${conductorY} L ${firstCard.left} ${conductorY} L ${firstCard.left} ${anchorY}`}
+                  d={`M ${fanoutStartX} ${anchorY} L ${fanoutEndX} ${conductorY} L ${firstCard.right} ${conductorY}`}
                   fill="none"
                   stroke={conductor.color}
                   strokeWidth="2.5"
@@ -906,7 +894,7 @@ function UtilityCardInterconnect({
                 />
                 {active && (
                   <path
-                    d={`M 0 ${anchorY} L ${parallelStartX} ${conductorY} L ${firstCard.left} ${conductorY} L ${firstCard.left} ${anchorY}`}
+                    d={`M ${fanoutStartX} ${anchorY} L ${fanoutEndX} ${conductorY} L ${firstCard.right} ${conductorY}`}
                     fill="none"
                     stroke={conductor.color}
                     strokeWidth="2.5"
