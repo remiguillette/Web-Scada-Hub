@@ -829,9 +829,11 @@ function UtilityBusAnnotations({
 function UtilityCardInterconnect({
   active,
   cardCount,
+  leadInWidth = 0,
 }: {
   active: boolean;
   cardCount: number;
+  leadInWidth?: number;
 }) {
   const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
   const svgHeight = 92;
@@ -840,12 +842,14 @@ function UtilityCardInterconnect({
   const breakoutLength = 18;
   const convergeLength = 22;
   const labelX = 4;
+  const totalWidth = cardSpanWidth + leadInWidth;
 
   const cards = Array.from({ length: cardCount }, (_, index) => {
-    const left = index * (CARD_W + UTILITY_CARD_GAP);
+    const left = leadInWidth + index * (CARD_W + UTILITY_CARD_GAP);
     return { left, right: left + CARD_W };
   });
 
+  const firstCard = cards[0];
   const gaps = cards.slice(1).map((target, index) => ({
     source: cards[index],
     target,
@@ -853,13 +857,75 @@ function UtilityCardInterconnect({
 
   return (
     <svg
-      className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2"
-      width={cardSpanWidth}
+      className="pointer-events-none absolute top-1/2 z-0 -translate-y-1/2"
+      width={totalWidth}
       height={svgHeight}
-      viewBox={`0 0 ${cardSpanWidth} ${svgHeight}`}
+      viewBox={`0 0 ${totalWidth} ${svgHeight}`}
       aria-hidden="true"
-      style={{ overflow: "visible" }}
+      style={{ overflow: "visible", left: -leadInWidth }}
     >
+      {firstCard ? (
+        <g key="utility-card-entry">
+          <circle
+            cx={firstCard.left}
+            cy={anchorY}
+            r="3"
+            fill={active ? "#cbd5e1" : "#475569"}
+            opacity={active ? 0.9 : 0.4}
+          />
+
+          {CONDUCTORS.map((conductor, index) => {
+            const offset =
+              (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
+            const conductorY = anchorY + offset;
+            const animationDelay = `${index * 0.1}s`;
+            const parallelStartX = Math.max(leadInWidth - breakoutLength, 0);
+
+            return (
+              <g key={`utility-card-entry-${conductor.label}`}>
+                <text
+                  x={labelX}
+                  y={conductorY - 4}
+                  fill={active ? conductor.color : "#475569"}
+                  fontSize="8"
+                  fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
+                  letterSpacing="1.4"
+                  opacity={active ? 0.9 : 0.5}
+                >
+                  {conductor.label}
+                </text>
+
+                <path
+                  d={`M 0 ${anchorY} L ${parallelStartX} ${conductorY} L ${firstCard.left} ${conductorY} L ${firstCard.left} ${anchorY}`}
+                  fill="none"
+                  stroke={conductor.color}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={active ? 0.45 : 0.16}
+                />
+                {active && (
+                  <path
+                    d={`M 0 ${anchorY} L ${parallelStartX} ${conductorY} L ${firstCard.left} ${conductorY} L ${firstCard.left} ${anchorY}`}
+                    fill="none"
+                    stroke={conductor.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="10 8"
+                    opacity={0.9}
+                    style={{
+                      animation: `dash-flow 0.8s linear infinite`,
+                      animationDelay,
+                    }}
+                  />
+                )}
+              </g>
+            );
+          })}
+        </g>
+      ) : null}
+
       {gaps.map((gap, gapIndex) => {
         const sourceAnchorX = gap.source.right;
         const targetAnchorX = gap.target.left;
@@ -888,26 +954,11 @@ function UtilityCardInterconnect({
                 (index - (CONDUCTORS.length - 1) / 2) * conductorSpread;
               const conductorY = anchorY + offset;
               const animationDelay = `${index * 0.1}s`;
-              const labelVisible = gapIndex === 0;
 
               return (
                 <g
                   key={`utility-card-interconnect-${gapIndex}-${conductor.label}`}
                 >
-                  {labelVisible ? (
-                    <text
-                      x={labelX}
-                      y={conductorY - 4}
-                      fill={active ? conductor.color : "#475569"}
-                      fontSize="8"
-                      fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
-                      letterSpacing="1.4"
-                      opacity={active ? 0.9 : 0.5}
-                    >
-                      {conductor.label}
-                    </text>
-                  ) : null}
-
                   <path
                     d={`M ${sourceAnchorX} ${anchorY} L ${parallelStartX} ${conductorY} L ${parallelEndX} ${conductorY} L ${targetAnchorX} ${anchorY}`}
                     fill="none"
@@ -1923,6 +1974,7 @@ export function ElectricalOneLine({
               <UtilityCardInterconnect
                 active={state.supplyLive}
                 cardCount={3}
+                leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
               <div className="relative z-[1]">
