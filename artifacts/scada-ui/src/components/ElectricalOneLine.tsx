@@ -120,6 +120,7 @@ const CARD_W = 130;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const SCROLL_STEP = 120;
+const DIAGRAM_SCALE = 3;
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -192,34 +193,31 @@ const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
 const getWireClasses = (powered: boolean, axis: "h" | "v" = "h") =>
   cn(
     powered
-      ? axis === "h" ? "wire-powered-h" : "wire-powered-v"
+      ? axis === "h"
+        ? "wire-powered-h"
+        : "wire-powered-v"
       : "bg-[#1e293b]",
   );
 
 const ACCENT_STYLES: Record<Accent, { active: string; inactive: string }> = {
   green: {
-    active:
-      "border-[#5aa784] text-[#8bd6b6] bg-[#132a1f]",
+    active: "border-[#5aa784] text-[#8bd6b6] bg-[#132a1f]",
     inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   cyan: {
-    active:
-      "border-[#5bc2db] text-[#9fd8ea] bg-[#0c1f25]",
+    active: "border-[#5bc2db] text-[#9fd8ea] bg-[#0c1f25]",
     inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   red: {
-    active:
-      "border-[#d55e68] text-[#edb2b5] bg-[#1f0f11]",
+    active: "border-[#d55e68] text-[#edb2b5] bg-[#1f0f11]",
     inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   amber: {
-    active:
-      "border-[#d89a5a] text-[#eed6a2] bg-[#1d150b]",
+    active: "border-[#d89a5a] text-[#eed6a2] bg-[#1d150b]",
     inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
   violet: {
-    active:
-      "border-[#9b87c4] text-[#d3ccf8] bg-[#1b1522]",
+    active: "border-[#9b87c4] text-[#d3ccf8] bg-[#1b1522]",
     inactive: "border-[#333333] text-[#7a7a7a] bg-[#1a1a1a]",
   },
 };
@@ -302,7 +300,11 @@ function CompactCard({
             <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
               {detailsOpen ? "−" : "+"}
             </span>
-            <span>{detailsOpen ? t.utility.details.button.close : t.utility.details.button.open}</span>
+            <span>
+              {detailsOpen
+                ? t.utility.details.button.close
+                : t.utility.details.button.open}
+            </span>
           </button>
 
           <div
@@ -319,11 +321,15 @@ function CompactCard({
                 <table className="w-full border-collapse text-left font-mono text-[8px]">
                   <thead className="bg-white/5 text-[#9fb3c8]">
                     <tr>
-                      <th className="px-2 py-1 font-medium">{t.utility.details.table.parameter}</th>
+                      <th className="px-2 py-1 font-medium">
+                        {t.utility.details.table.parameter}
+                      </th>
                       <th className="px-2 py-1 font-medium">
                         {t.utility.details.table.unit}
                       </th>
-                      <th className="px-2 py-1 font-medium">{t.utility.details.table.description}</th>
+                      <th className="px-2 py-1 font-medium">
+                        {t.utility.details.table.description}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -414,10 +420,12 @@ function LoopFeederSection({
       {feeders.map((feeder) => (
         <div key={feeder.id} className="flex items-center gap-3">
           <div className="flex shrink-0 flex-col items-center gap-1">
-            <div className={cn(
-              "font-mono text-[8px] tracking-[0.28em]",
-              feeder.feederPowered ? "text-[#8ecae6]" : "text-[#475569]",
-            )}>
+            <div
+              className={cn(
+                "font-mono text-[8px] tracking-[0.28em]",
+                feeder.feederPowered ? "text-[#8ecae6]" : "text-[#475569]",
+              )}
+            >
               {feeder.label}
             </div>
             <ConductorBundle
@@ -487,7 +495,12 @@ function ConductorBundle({
   return (
     <div className="mx-4 flex shrink-0 flex-col gap-[5px]">
       <div className="mb-1 flex items-center gap-2">
-        <span className={cn("font-mono text-[9px] tracking-[0.28em]", powered ? "text-[#6b7a6b]" : "text-[#3a3a3a]")}>
+        <span
+          className={cn(
+            "font-mono text-[9px] tracking-[0.28em]",
+            powered ? "text-[#6b7a6b]" : "text-[#3a3a3a]",
+          )}
+        >
           {title}
         </span>
         {simLabel ? (
@@ -536,11 +549,7 @@ function ConductorBundle({
   );
 }
 
-function UtilityBusBackground({
-  utilityActive,
-}: {
-  utilityActive: boolean;
-}) {
+function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
   const W = UTILITY_BUS_GEOMETRY.width;
   const H = UTILITY_BUS_GEOMETRY.height;
   const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
@@ -599,8 +608,10 @@ function UtilityBusBackground({
 
             {/* Horizontal tap line */}
             <line
-              x1={cx} y1={tapY}
-              x2={riserX - 20} y2={tapY}
+              x1={cx}
+              y1={tapY}
+              x2={riserX - 20}
+              y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
@@ -608,8 +619,10 @@ function UtilityBusBackground({
             />
             {utilityActive && (
               <line
-                x1={cx} y1={tapY}
-                x2={riserX - 20} y2={tapY}
+                x1={cx}
+                y1={tapY}
+                x2={riserX - 20}
+                y2={tapY}
                 stroke={conductor.color}
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -624,8 +637,10 @@ function UtilityBusBackground({
 
             {/* Diagonal line */}
             <line
-              x1={riserX - 20} y1={tapY}
-              x2={riserX} y2={centerY}
+              x1={riserX - 20}
+              y1={tapY}
+              x2={riserX}
+              y2={centerY}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
@@ -633,8 +648,10 @@ function UtilityBusBackground({
             />
             {utilityActive && (
               <line
-                x1={riserX - 20} y1={tapY}
-                x2={riserX} y2={centerY}
+                x1={riserX - 20}
+                y1={tapY}
+                x2={riserX}
+                y2={centerY}
                 stroke={conductor.color}
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -729,8 +746,8 @@ function UtilityBusAnnotations({
                 lineIndex === 0
                   ? "text-[8px] font-semibold tracking-[0.14em]"
                   : lineIndex === 1
-                  ? "text-[7px] tracking-[0.08em]"
-                  : "text-[6px] tracking-[0.08em] opacity-70";
+                    ? "text-[7px] tracking-[0.08em]"
+                    : "text-[6px] tracking-[0.08em] opacity-70";
 
               return (
                 <span
@@ -1017,7 +1034,9 @@ function buildGeneratorDetails(
         live && live.state !== "OFFLINE"
           ? `${live.voltage.toFixed(1)} V`
           : `${gen.nominalVoltage} V`,
-      description: isActive ? t.genLiveVoltageDesc : t.genNominalVoltageDescOneline,
+      description: isActive
+        ? t.genLiveVoltageDesc
+        : t.genNominalVoltageDescOneline,
     },
     {
       parameter: t.current,
@@ -1027,7 +1046,9 @@ function buildGeneratorDetails(
     {
       parameter: t.activePower,
       value: live ? `${live.activePower.toFixed(1)} W` : "0 W",
-      description: isActive ? t.genEmergencyPowerDescOneline : t.genActivePowerRunning,
+      description: isActive
+        ? t.genEmergencyPowerDescOneline
+        : t.genActivePowerRunning,
     },
     {
       parameter: t.reactivePower,
@@ -1080,34 +1101,53 @@ export function ElectricalOneLine({
   const conductorMetrics = useMemo<StreetBusMetric[]>(() => {
     const basePhaseVoltage = clamp(voltage > 0 ? voltage : 347, 338, 354);
     const phaseOffsets = [1, -1, 0.5];
-    const phaseCurrents = [
-      current * 1.01,
-      current * 0.98,
-      current * 1.02,
-    ];
+    const phaseCurrents = [current * 1.01, current * 0.98, current * 1.02];
     const cycle = Date.now() / 1000;
-    const startingPulse = motorPowered ? (Math.sin(cycle * 3.6) > 0.985 ? 1.2 : 1) : 0;
+    const startingPulse = motorPowered
+      ? Math.sin(cycle * 3.6) > 0.985
+        ? 1.2
+        : 1
+      : 0;
     const phaseLabels = ["L1", "L2", "L3"];
 
     const phaseMetrics = phaseLabels.map((label, index) => {
       const drift = Math.sin(cycle * (0.18 + index * 0.03)) * 1.2;
-      const noise = Math.sin(cycle * (3.3 + index * 0.4)) * (motorPowered ? current * 0.012 : 0);
+      const noise =
+        Math.sin(cycle * (3.3 + index * 0.4)) *
+        (motorPowered ? current * 0.012 : 0);
       const burst = index === 2 ? startingPulse : 1;
-      const liveVoltage = utilityActive ? clamp(basePhaseVoltage + phaseOffsets[index] + drift, 338, 354) : 0;
+      const liveVoltage = utilityActive
+        ? clamp(basePhaseVoltage + phaseOffsets[index] + drift, 338, 354)
+        : 0;
       const liveCurrent = utilityActive
         ? clamp(phaseCurrents[index] * burst + noise, 0, current * 1.25 + 25)
         : 0;
 
       return {
         label,
-        lines: [label, formatBusVoltage(liveVoltage), formatBusCurrent(liveCurrent)],
+        lines: [
+          label,
+          formatBusVoltage(liveVoltage),
+          formatBusCurrent(liveCurrent),
+        ],
         color: STREET_BUS_CONDUCTORS[index].color,
         glow: STREET_BUS_CONDUCTORS[index].glow,
       };
     });
 
     const neutralCurrent = utilityActive
-      ? clamp(Math.abs(phaseMetrics.reduce((sum, phase) => sum + Number.parseFloat(phase.lines[2]), 0) / 100) + 8 + Math.sin(cycle * 2.1) * 6, 5, 25)
+      ? clamp(
+          Math.abs(
+            phaseMetrics.reduce(
+              (sum, phase) => sum + Number.parseFloat(phase.lines[2]),
+              0,
+            ) / 100,
+          ) +
+            8 +
+            Math.sin(cycle * 2.1) * 6,
+          5,
+          25,
+        )
       : 0;
     const neutralVoltage = utilityActive
       ? clamp(1.4 + Math.sin(cycle * 0.7) * 0.8, 0.5, 3)
@@ -1120,7 +1160,11 @@ export function ElectricalOneLine({
       ...phaseMetrics,
       {
         label: "N",
-        lines: ["N", `${neutralVoltage.toFixed(1)} V`, formatBusCurrent(neutralCurrent)],
+        lines: [
+          "N",
+          `${neutralVoltage.toFixed(1)} V`,
+          formatBusCurrent(neutralCurrent),
+        ],
         color: STREET_BUS_CONDUCTORS[3].color,
         glow: STREET_BUS_CONDUCTORS[3].glow,
       },
@@ -1147,6 +1191,7 @@ export function ElectricalOneLine({
   const dragStateRef = useRef<DragState | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
+  const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
 
   const state = useMemo(() => {
     const supplyLive = voltage > 0;
@@ -1241,7 +1286,8 @@ export function ElectricalOneLine({
       feederPowered: feederContactor && state.busLive,
       transformerTag: "XFMR-RES",
       transformerLabel: t.loopTransformerResidential,
-      transformerStatus: feederContactor && state.busLive ? "13.8kV→120/240V" : t.noFeed,
+      transformerStatus:
+        feederContactor && state.busLive ? "13.8kV→120/240V" : t.noFeed,
       transformerPowered: feederContactor && state.busLive,
       loadTag: "CAT-FEED",
       loadLabel: t.residentialCatFeed,
@@ -1256,7 +1302,8 @@ export function ElectricalOneLine({
       feederPowered: solenoidContactor && state.busLive,
       transformerTag: "XFMR-COM",
       transformerLabel: t.loopTransformerCommercial,
-      transformerStatus: solenoidContactor && state.busLive ? "13.8kV→347/600V" : t.noFeed,
+      transformerStatus:
+        solenoidContactor && state.busLive ? "13.8kV→347/600V" : t.noFeed,
       transformerPowered: solenoidContactor && state.busLive,
       loadTag: "COMM-001",
       loadLabel: t.commercialLoad,
@@ -1276,21 +1323,33 @@ export function ElectricalOneLine({
   }, []);
 
   useEffect(() => {
-    measureAtsCenter();
+    const updateLayoutMeasurements = () => {
+      const diagram = diagramRef.current;
+      if (diagram) {
+        setDiagramSize({
+          width: diagram.offsetWidth,
+          height: diagram.offsetHeight,
+        });
+      }
+      measureAtsCenter();
+    };
+
+    updateLayoutMeasurements();
 
     if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", measureAtsCenter);
-      return () => window.removeEventListener("resize", measureAtsCenter);
+      window.addEventListener("resize", updateLayoutMeasurements);
+      return () =>
+        window.removeEventListener("resize", updateLayoutMeasurements);
     }
 
-    const observer = new ResizeObserver(() => measureAtsCenter());
+    const observer = new ResizeObserver(() => updateLayoutMeasurements());
     if (diagramRef.current) observer.observe(diagramRef.current);
     if (atsRef.current) observer.observe(atsRef.current);
-    window.addEventListener("resize", measureAtsCenter);
+    window.addEventListener("resize", updateLayoutMeasurements);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", measureAtsCenter);
+      window.removeEventListener("resize", updateLayoutMeasurements);
     };
   }, [measureAtsCenter]);
 
@@ -1405,201 +1464,233 @@ export function ElectricalOneLine({
         }
       }}
     >
-      <div ref={diagramRef} className="min-w-max pt-1 pb-8 pl-6 pr-10">
-        <div className="flex items-center gap-0">
-          <div
-            className="relative shrink-0"
-            style={{
-              width: CARD_W + 220,
-              height: UTILITY_BUS_GEOMETRY.height,
-            }}
-          >
-            <UtilityBusBackground utilityActive={state.supplyLive} />
-            <UtilityBusAnnotations
-              utilityActive={state.supplyLive}
-              streetLabel={t.street}
-              conductorMetrics={conductorMetrics}
-            />
+      <div
+        className="pt-1 pb-8 pl-6 pr-10"
+        style={{
+          width:
+            diagramSize.width > 0
+              ? diagramSize.width * DIAGRAM_SCALE + 64
+              : undefined,
+          height:
+            diagramSize.height > 0
+              ? diagramSize.height * DIAGRAM_SCALE + 36
+              : undefined,
+        }}
+      >
+        <div
+          ref={diagramRef}
+          className="min-w-max"
+          style={{
+            transform: `scale(${DIAGRAM_SCALE})`,
+            transformOrigin: "top left",
+          }}
+        >
+          <div className="flex items-center gap-0">
             <div
-              className="absolute left-0 flex items-start"
+              className="relative shrink-0"
               style={{
-                width: CARD_W,
-                zIndex: 1,
-                top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+                width: CARD_W + 220,
+                height: UTILITY_BUS_GEOMETRY.height,
               }}
             >
-              <NodeCard node={utilityNode} />
+              <UtilityBusBackground utilityActive={state.supplyLive} />
+              <UtilityBusAnnotations
+                utilityActive={state.supplyLive}
+                streetLabel={t.street}
+                conductorMetrics={conductorMetrics}
+              />
+              <div
+                className="absolute left-0 flex items-start"
+                style={{
+                  width: CARD_W,
+                  zIndex: 1,
+                  top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+                }}
+              >
+                <NodeCard node={utilityNode} />
+              </div>
             </div>
-          </div>
 
-          <div className="relative flex shrink-0 items-center">
-            <UtilityCardInterconnect active={state.supplyLive} cardCount={3} />
+            <div className="relative flex shrink-0 items-center">
+              <UtilityCardInterconnect
+                active={state.supplyLive}
+                cardCount={3}
+              />
 
-            <div className="relative z-[1]">
+              <div className="relative z-[1]">
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "POLE-001",
+                    title: t.riserPole,
+                    status: state.supplyLive ? "4.8 KV" : t.dead,
+                    active: state.supplyLive,
+                    accent: "cyan",
+                    icon: (
+                      <StatusIcon
+                        icon="power"
+                        active={state.supplyLive}
+                        activeColor="text-[#00dcff]"
+                      />
+                    ),
+                  }}
+                />
+              </div>
+
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "CB-UTIL",
+                    title: t.breakerRecloser,
+                    status: state.supplyLive ? t.closed : t.openStandby,
+                    active: state.supplyLive,
+                    accent: state.supplyLive ? "green" : "amber",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#00f7a1]"
+                        inactiveColor="text-[#ffb347]"
+                      />
+                    ),
+                  }}
+                />
+              </div>
+
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "SWGR-3W",
+                    title: t.padMountedSwitchgear,
+                    status: state.supplyLive
+                      ? t.switchgear3WayStatus
+                      : t.noFeed,
+                    active: state.supplyLive,
+                    accent: "cyan",
+                    icon: (
+                      <StatusIcon
+                        icon="zap"
+                        active={state.supplyLive}
+                        activeColor="text-[#00dcff]"
+                      />
+                    ),
+                  }}
+                />
+              </div>
+            </div>
+
+            <HWire powered={state.busLive} className="w-4" />
+
+            <div ref={atsRef} className="shrink-0">
+              <BusNodeView node={busNode} />
+            </div>
+
+            <HWire powered={state.busLive} className="w-4" />
+
+            <div className="flex shrink-0 flex-col items-center">
+              <VWire powered={state.busLive} style={{ height: 14 }} />
               <NodeCard
                 node={{
                   kind: "equipment",
-                  tag: "POLE-001",
-                  title: t.riserPole,
-                  status: state.supplyLive ? "4.8 KV" : t.dead,
-                  active: state.supplyLive,
-                  accent: "cyan",
+                  tag: "SCADA-01",
+                  title: t.scadaMonitor,
+                  status: state.busLive ? t.monitoring : t.genStateOffline,
+                  active: state.busLive,
+                  accent: "violet",
                   icon: (
                     <StatusIcon
-                      icon="power"
-                      active={state.supplyLive}
-                      activeColor="text-[#00dcff]"
+                      icon="monitor"
+                      active={state.busLive}
+                      activeColor="text-[#a78bfa]"
                     />
                   ),
                 }}
               />
+              <VWire powered={state.busLive} style={{ height: 14 }} />
             </div>
 
-            <div className="relative z-[1]" style={{ marginLeft: UTILITY_CARD_GAP }}>
-              <NodeCard
-                node={{
-                  kind: "equipment",
-                  tag: "CB-UTIL",
-                  title: t.breakerRecloser,
-                  status: state.supplyLive ? t.closed : t.openStandby,
-                  active: state.supplyLive,
-                  accent: state.supplyLive ? "green" : "amber",
-                  icon: (
-                    <StatusIcon
-                      icon="shield"
-                      active={state.supplyLive}
-                      activeColor="text-[#00f7a1]"
-                      inactiveColor="text-[#ffb347]"
-                    />
-                  ),
-                }}
-              />
-            </div>
-
-            <div className="relative z-[1]" style={{ marginLeft: UTILITY_CARD_GAP }}>
-              <NodeCard
-                node={{
-                  kind: "equipment",
-                  tag: "SWGR-3W",
-                  title: t.padMountedSwitchgear,
-                  status: state.supplyLive ? t.switchgear3WayStatus : t.noFeed,
-                  active: state.supplyLive,
-                  accent: "cyan",
-                  icon: (
-                    <StatusIcon
-                      icon="zap"
-                      active={state.supplyLive}
-                      activeColor="text-[#00dcff]"
-                    />
-                  ),
-                }}
-              />
-            </div>
+            <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
           </div>
 
-          <HWire powered={state.busLive} className="w-4" />
-
-          <div ref={atsRef} className="shrink-0">
-            <BusNodeView node={busNode} />
-          </div>
-
-          <HWire powered={state.busLive} className="w-4" />
-
-          <div className="flex shrink-0 flex-col items-center">
-            <VWire powered={state.busLive} style={{ height: 14 }} />
-            <NodeCard
-              node={{
-                kind: "equipment",
-                tag: "SCADA-01",
-                title: t.scadaMonitor,
-                status: state.busLive ? t.monitoring : t.genStateOffline,
-                active: state.busLive,
-                accent: "violet",
-                icon: (
-                  <StatusIcon
-                    icon="monitor"
-                    active={state.busLive}
-                    activeColor="text-[#a78bfa]"
-                  />
-                ),
-              }}
+          <div className="flex items-start" style={{ height: 28 }}>
+            <div
+              style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
             />
-            <VWire powered={state.busLive} style={{ height: 14 }} />
+            <VWire powered={state.genBrkLive} style={{ height: 28 }} />
           </div>
 
-          <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
-        </div>
+          <div className="flex items-start gap-0">
+            <div className="w-[486px] shrink-0" />
 
-        <div className="flex items-start" style={{ height: 28 }}>
-          <div
-            style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
-          />
-          <VWire powered={state.genBrkLive} style={{ height: 28 }} />
-        </div>
+            <VerticalDivider height={campusDividerHeight} label={t.campus} />
 
-        <div className="flex items-start gap-0">
-          <div className="w-[486px] shrink-0" />
-
-          <VerticalDivider height={campusDividerHeight} label={t.campus} />
-
-          <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
-            {generatorUnits.map((generator) => (
-              <NodeCard
-                key={generator.tag}
-                node={{
-                  kind: "source",
-                  tag: generator.tag,
-                  title: generator.title,
-                  status: generator.status,
-                  active: generator.active,
-                  accent: "amber",
-                  width: generator.width,
-                  details: generator.details,
-                  icon: <Zap className="h-4 w-4 text-[#475569]" />,
-                }}
-              />
-            ))}
-          </div>
-
-          <div
-            className="flex shrink-0 items-center"
-            style={{
-              width: generatorBranchWireWidth,
-              minHeight: generatorUnits.length * 74 - 12,
-            }}
-          >
-            <div className="flex h-full items-center">
-              <VWire powered={state.genBrkLive} className="self-stretch" />
-            </div>
-            <div className="flex flex-1 flex-col justify-center gap-[58px]">
+            <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
               {generatorUnits.map((generator) => (
-                <HWire
-                  key={`${generator.tag}-branch`}
-                  powered={generator.active}
-                  className="w-full"
+                <NodeCard
+                  key={generator.tag}
+                  node={{
+                    kind: "source",
+                    tag: generator.tag,
+                    title: generator.title,
+                    status: generator.status,
+                    active: generator.active,
+                    accent: "amber",
+                    width: generator.width,
+                    details: generator.details,
+                    icon: <Zap className="h-4 w-4 text-[#475569]" />,
+                  }}
                 />
               ))}
             </div>
-          </div>
 
-          <div className="flex shrink-0 items-center">
-            <NodeCard
-              node={{
-                kind: "equipment",
-                tag: "CB-GEN",
-                title: t.mainPanelGen,
-                status: state.genBrkLive ? t.closed : t.openStandby,
-                active: state.genBrkLive,
-                accent: "amber",
-                icon: (
-                  <StatusIcon
-                    icon="shield"
-                    active={state.genBrkLive}
-                    activeColor="text-[#ffb347]"
-                  />
-                ),
+            <div
+              className="flex shrink-0 items-center"
+              style={{
+                width: generatorBranchWireWidth,
+                minHeight: generatorUnits.length * 74 - 12,
               }}
-            />
+            >
+              <div className="flex h-full items-center">
+                <VWire powered={state.genBrkLive} className="self-stretch" />
+              </div>
+              <div className="flex flex-1 flex-col justify-center gap-[58px]">
+                {generatorUnits.map((generator) => (
+                  <HWire
+                    key={`${generator.tag}-branch`}
+                    powered={generator.active}
+                    className="w-full"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center">
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "CB-GEN",
+                  title: t.mainPanelGen,
+                  status: state.genBrkLive ? t.closed : t.openStandby,
+                  active: state.genBrkLive,
+                  accent: "amber",
+                  icon: (
+                    <StatusIcon
+                      icon="shield"
+                      active={state.genBrkLive}
+                      activeColor="text-[#ffb347]"
+                    />
+                  ),
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
