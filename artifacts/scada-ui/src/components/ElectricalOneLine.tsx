@@ -1961,7 +1961,7 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={3}
+                cardCount={5}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
@@ -1979,6 +1979,55 @@ export function ElectricalOneLine({
                         icon="power"
                         active={state.supplyLive}
                         activeColor="text-[#00dcff]"
+                      />
+                    ),
+                  }}
+                />
+              </div>
+
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "LA-UTIL",
+                    title: t.lightningArresters,
+                    status: state.supplyLive
+                      ? t.lightningArresterStatus
+                      : t.noFeed,
+                    active: state.supplyLive,
+                    accent: "cyan",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#00dcff]"
+                      />
+                    ),
+                  }}
+                />
+              </div>
+
+              <div
+                className="relative z-[1]"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "FCO-UTIL",
+                    title: t.fusedCutouts,
+                    status: state.supplyLive ? t.fusedCutoutStatus : t.openStandby,
+                    active: state.supplyLive,
+                    accent: "amber",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#ffb347]"
+                        inactiveColor="text-[#94a3b8]"
                       />
                     ),
                   }}
