@@ -747,6 +747,77 @@ function UtilityBusAnnotations({
   );
 }
 
+function UtilityCardInterconnect({
+  active,
+  cardCount,
+}: {
+  active: boolean;
+  cardCount: number;
+}) {
+  const cardSpanWidth = CARD_W * cardCount;
+  const lineStart = 10;
+  const lineEnd = cardSpanWidth - 10;
+
+  return (
+    <svg
+      className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2"
+      width={cardSpanWidth}
+      height={92}
+      viewBox={`0 0 ${cardSpanWidth} 92`}
+      aria-hidden="true"
+      style={{ overflow: "visible" }}
+    >
+      {CONDUCTORS.map((conductor, index) => {
+        const y = 16 + index * 16;
+        const animationDelay = `${index * 0.1}s`;
+
+        return (
+          <g key={`utility-card-interconnect-${conductor.label}`}>
+            <text
+              x={lineStart}
+              y={y - 5}
+              fill={active ? conductor.color : "#475569"}
+              fontSize="8"
+              fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace"
+              letterSpacing="1.4"
+              opacity={active ? 0.9 : 0.5}
+            >
+              {conductor.label}
+            </text>
+            <line
+              x1={lineStart + 26}
+              y1={y}
+              x2={lineEnd}
+              y2={y}
+              stroke={conductor.color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={active ? 0.4 : 0.16}
+            />
+            {active && (
+              <line
+                x1={lineStart + 26}
+                y1={y}
+                x2={lineEnd}
+                y2={y}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray="10 8"
+                opacity={0.85}
+                style={{
+                  animation: `dash-flow 0.8s linear infinite`,
+                  animationDelay,
+                }}
+              />
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 function VerticalDivider({
   height,
   label,
@@ -1360,60 +1431,70 @@ export function ElectricalOneLine({
             </div>
           </div>
 
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "POLE-001",
-              title: t.riserPole,
-              status: state.supplyLive ? "4.8 KV" : t.dead,
-              active: state.supplyLive,
-              accent: "cyan",
-              icon: (
-                <StatusIcon
-                  icon="power"
-                  active={state.supplyLive}
-                  activeColor="text-[#00dcff]"
-                />
-              ),
-            }}
-          />
+          <div className="relative flex shrink-0 items-center">
+            <UtilityCardInterconnect active={state.supplyLive} cardCount={3} />
 
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "CB-UTIL",
-              title: t.breakerRecloser,
-              status: state.supplyLive ? t.closed : t.openStandby,
-              active: state.supplyLive,
-              accent: state.supplyLive ? "green" : "amber",
-              icon: (
-                <StatusIcon
-                  icon="shield"
-                  active={state.supplyLive}
-                  activeColor="text-[#00f7a1]"
-                  inactiveColor="text-[#ffb347]"
-                />
-              ),
-            }}
-          />
+            <div className="relative z-[1]">
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "POLE-001",
+                  title: t.riserPole,
+                  status: state.supplyLive ? "4.8 KV" : t.dead,
+                  active: state.supplyLive,
+                  accent: "cyan",
+                  icon: (
+                    <StatusIcon
+                      icon="power"
+                      active={state.supplyLive}
+                      activeColor="text-[#00dcff]"
+                    />
+                  ),
+                }}
+              />
+            </div>
 
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: "SWGR-3W",
-              title: t.padMountedSwitchgear,
-              status: state.supplyLive ? t.switchgear3WayStatus : t.noFeed,
-              active: state.supplyLive,
-              accent: "cyan",
-              icon: (
-                <StatusIcon
-                  icon="zap"
-                  active={state.supplyLive}
-                  activeColor="text-[#00dcff]"
-                />
-              ),
-            }}
-          />
+            <div className="relative z-[1]">
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "CB-UTIL",
+                  title: t.breakerRecloser,
+                  status: state.supplyLive ? t.closed : t.openStandby,
+                  active: state.supplyLive,
+                  accent: state.supplyLive ? "green" : "amber",
+                  icon: (
+                    <StatusIcon
+                      icon="shield"
+                      active={state.supplyLive}
+                      activeColor="text-[#00f7a1]"
+                      inactiveColor="text-[#ffb347]"
+                    />
+                  ),
+                }}
+              />
+            </div>
+
+            <div className="relative z-[1]">
+              <NodeCard
+                node={{
+                  kind: "equipment",
+                  tag: "SWGR-3W",
+                  title: t.padMountedSwitchgear,
+                  status: state.supplyLive ? t.switchgear3WayStatus : t.noFeed,
+                  active: state.supplyLive,
+                  accent: "cyan",
+                  icon: (
+                    <StatusIcon
+                      icon="zap"
+                      active={state.supplyLive}
+                      activeColor="text-[#00dcff]"
+                    />
+                  ),
+                }}
+              />
+            </div>
+          </div>
 
           <HWire powered={state.busLive} className="w-4" />
 
