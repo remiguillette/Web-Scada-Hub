@@ -863,7 +863,7 @@ function UtilityCardInterconnect({
       aria-hidden="true"
       style={{ overflow: "visible", left: -leadInWidth }}
     >
-      {firstCard ? (
+      {firstCard && leadInWidth > 0 ? (
         <g key="utility-card-entry">
           <circle
             cx={firstCard.left}
