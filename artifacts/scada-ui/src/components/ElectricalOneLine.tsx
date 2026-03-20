@@ -552,11 +552,13 @@ function ConductorBundle({
 function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
   const W = UTILITY_BUS_GEOMETRY.width;
   const H = UTILITY_BUS_GEOMETRY.height;
+  const lineTop = UTILITY_BUS_GEOMETRY.lineTop;
   const count = STREET_BUS_CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = CARD_W / 2 - totalHSpan / 2;
-  const routeStartY = 154;
-  const riserX = W - 10;
+  const lineBottom = UTILITY_BUS_GEOMETRY.lineBottom;
+  const centerY = UTILITY_BUS_GEOMETRY.lineTop - 20;
+  const riserX = W - 2;
 
   return (
     <svg
@@ -569,27 +571,29 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
     >
       {STREET_BUS_CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
-        const tapY = 236 + index * 12;
+        const tapY = centerY + (index - (count - 1) / 2) * 12;
         const animDelay = `${index * 0.12}s`;
 
         return (
           <g key={`bus-lines-${conductor.label}`}>
+            {/* Base static line */}
             <line
               x1={cx}
-              y1={routeStartY}
+              y1={155}
               x2={cx}
-              y2={tapY}
+              y2={lineBottom}
               stroke={conductor.color}
               strokeWidth="2.5"
               strokeLinecap="round"
               opacity={utilityActive ? 0.7 : 0.2}
             />
+            {/* Animated flow overlay on vertical bus bar */}
             {utilityActive && (
               <line
                 x1={cx}
-                y1={routeStartY}
+                y1={155}
                 x2={cx}
-                y2={tapY}
+                y2={lineBottom}
                 stroke={conductor.color}
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -602,10 +606,11 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               />
             )}
 
+            {/* Horizontal tap line */}
             <line
               x1={cx}
               y1={tapY}
-              x2={riserX}
+              x2={riserX - 20}
               y2={tapY}
               stroke={conductor.color}
               strokeWidth="2.5"
@@ -616,7 +621,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               <line
                 x1={cx}
                 y1={tapY}
-                x2={riserX}
+                x2={riserX - 20}
                 y2={tapY}
                 stroke={conductor.color}
                 strokeWidth="2.5"
@@ -630,15 +635,37 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
               />
             )}
 
+            {/* Diagonal line */}
+            <line
+              x1={riserX - 20}
+              y1={tapY}
+              x2={riserX}
+              y2={centerY}
+              stroke={conductor.color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={utilityActive ? 0.7 : 0.2}
+            />
+            {utilityActive && (
+              <line
+                x1={riserX - 20}
+                y1={tapY}
+                x2={riserX}
+                y2={centerY}
+                stroke={conductor.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity={0.9}
+                strokeDasharray="10 8"
+                style={{
+                  animation: `dash-flow 0.8s linear infinite`,
+                  animationDelay: animDelay,
+                }}
+              />
+            )}
+
             <circle
               cx={cx}
-              cy={tapY}
-              r="3"
-              fill={conductor.color}
-              opacity={utilityActive ? 0.95 : 0.2}
-            />
-            <circle
-              cx={riserX}
               cy={tapY}
               r="3"
               fill={conductor.color}
@@ -752,6 +779,13 @@ function UtilityCardInterconnect({
     return { left, right: left + CARD_W };
   });
 
+  const gapPoints = cards
+    .slice(1)
+    .map((card, idx) => {
+      const prev = cards[idx];
+      return { x: (prev.right + card.left) / 2 };
+    });
+
   return (
     <svg
       className="pointer-events-none absolute inset-x-0 top-1/2 z-0 -translate-y-1/2"
@@ -764,8 +798,6 @@ function UtilityCardInterconnect({
       {CONDUCTORS.map((conductor, index) => {
         const y = 16 + index * 16;
         const animationDelay = `${index * 0.1}s`;
-        const startX = 6;
-        const endX = cardSpanWidth - 6;
 
         return (
           <g key={`utility-card-interconnect-${conductor.label}`}>
@@ -781,56 +813,64 @@ function UtilityCardInterconnect({
               {conductor.label}
             </text>
 
-            <line
-              x1={startX}
-              y1={y}
-              x2={endX}
-              y2={y}
-              stroke={conductor.color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              opacity={active ? 0.4 : 0.16}
-            />
-            {active && (
-              <line
-                x1={startX}
-                y1={y}
-                x2={endX}
-                y2={y}
-                stroke={conductor.color}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray="10 8"
-                opacity={0.9}
-                style={{
-                  animation: `dash-flow 0.8s linear infinite`,
-                  animationDelay,
-                }}
-              />
-            )}
+            {cards.map((card, cardIndex) => {
+              const cardX1 = card.left + 6;
+              const cardX2 = card.right - 6;
 
-            {cards.map((card, cardIndex) => (
-              <g key={`terminal-${cardIndex}-${conductor.label}`}>
-                <line
-                  x1={card.left + 6}
-                  y1={y}
-                  x2={card.left + 16}
-                  y2={y}
-                  stroke={conductor.color}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  opacity={active ? 0.85 : 0.2}
+              return (
+                <g key={`card-${cardIndex}-${conductor.label}`}>
+                  <line
+                    x1={cardX1}
+                    y1={y}
+                    x2={cardX2}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity={active ? 0.4 : 0.16}
+                  />
+                  {active && (
+                    <line
+                      x1={cardX1}
+                      y1={y}
+                      x2={cardX2}
+                      y2={y}
+                      stroke={conductor.color}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="10 8"
+                      opacity={0.9}
+                      style={{
+                        animation: `dash-flow 0.8s linear infinite`,
+                        animationDelay,
+                      }}
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {gapPoints.map((gap, gapIndex) => (
+              <g key={`gap-${gapIndex}-${conductor.label}`}>
+                <circle
+                  cx={gap.x}
+                  cy={y}
+                  r={2.5}
+                  fill={conductor.color}
+                  opacity={active ? 0.95 : 0.2}
                 />
-                <line
-                  x1={card.right - 16}
-                  y1={y}
-                  x2={card.right - 6}
-                  y2={y}
-                  stroke={conductor.color}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  opacity={active ? 0.85 : 0.2}
-                />
+                {active && (
+                  <line
+                    x1={gap.x - 6}
+                    y1={y}
+                    x2={gap.x + 6}
+                    y2={y}
+                    stroke={conductor.color}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity={0.9}
+                  />
+                )}
               </g>
             ))}
           </g>
