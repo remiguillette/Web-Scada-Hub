@@ -127,10 +127,9 @@ type PinchState = {
 };
 
 const CARD_W = 130;
-const UTILITY_NODE_CARD_W = 192;
 const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
-const UTILITY_TO_RISER_GAP = 88;
+const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
@@ -213,16 +212,16 @@ function formatBusCurrent(value: number) {
 }
 
 const UTILITY_BUS_GEOMETRY = {
-  width: UTILITY_LEFT_CLUSTER_WIDTH + UTILITY_TO_RISER_GAP + 44,
+  width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 44,
   height: 500,
   titleY: 100,
   conductorLabelY: 108,
   lineTop: 280,
   lineBottom: 560,
-  hSpacing: 32,
-  annotationWidth: 72,
+  hSpacing: 25,
+  annotationWidth: 44,
   feederLabelY: 216,
-  feederRiserInset: 64,
+  feederRiserInset: 20,
 } as const;
 
 const BASE_WIRE_CLASSES = "transition-all duration-300 rounded-full shrink-0";
@@ -830,16 +829,13 @@ function UtilityBusAnnotations({
 function UtilityCardInterconnect({
   active,
   cardCount,
-  cardWidth = CARD_W,
   leadInWidth = 0,
 }: {
   active: boolean;
   cardCount: number;
-  cardWidth?: number;
   leadInWidth?: number;
 }) {
-  const cardSpanWidth =
-    cardWidth * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
+  const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
   const svgHeight = 92;
   const anchorY = svgHeight / 2;
   const conductorSpread = 8;
@@ -848,8 +844,8 @@ function UtilityCardInterconnect({
   const totalWidth = cardSpanWidth + leadInWidth;
 
   const cards = Array.from({ length: cardCount }, (_, index) => {
-    const left = leadInWidth + index * (cardWidth + UTILITY_CARD_GAP);
-    return { left, right: left + cardWidth };
+    const left = leadInWidth + index * (CARD_W + UTILITY_CARD_GAP);
+    return { left, right: left + CARD_W };
   });
 
   const firstCard = cards[0];
@@ -1966,7 +1962,6 @@ export function ElectricalOneLine({
               <UtilityCardInterconnect
                 active={state.supplyLive}
                 cardCount={3}
-                cardWidth={UTILITY_NODE_CARD_W}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
@@ -1986,7 +1981,6 @@ export function ElectricalOneLine({
                         activeColor="text-[#00dcff]"
                       />
                     ),
-                    width: UTILITY_NODE_CARD_W,
                   }}
                 />
               </div>
@@ -2011,7 +2005,6 @@ export function ElectricalOneLine({
                         inactiveColor="text-[#ffb347]"
                       />
                     ),
-                    width: UTILITY_NODE_CARD_W,
                   }}
                 />
               </div>
@@ -2037,7 +2030,6 @@ export function ElectricalOneLine({
                         activeColor="text-[#00dcff]"
                       />
                     ),
-                    width: UTILITY_NODE_CARD_W,
                   }}
                 />
               </div>
