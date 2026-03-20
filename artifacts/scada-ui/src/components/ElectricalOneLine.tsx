@@ -1360,8 +1360,6 @@ export function ElectricalOneLine({
             </div>
           </div>
 
-          <HWire powered={state.supplyLive} className="w-2" />
-
           <NodeCard
             node={{
               kind: "equipment",
@@ -1379,8 +1377,6 @@ export function ElectricalOneLine({
               ),
             }}
           />
-
-          <HWire powered={state.supplyLive} className="w-4" />
 
           <NodeCard
             node={{
@@ -1400,8 +1396,6 @@ export function ElectricalOneLine({
               ),
             }}
           />
-
-          <HWire powered={state.supplyLive} className="w-4" />
 
           <NodeCard
             node={{
