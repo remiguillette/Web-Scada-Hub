@@ -166,8 +166,7 @@ export const translations = {
     genLiveCurrentDesc: "Live output current.",
     genOfflineCurrentDesc: "Per-phase current while offline.",
     genEmergencyPowerDesc: "Emergency-source power available to the ATS path.",
-    genEmergencyPowerDescOneline:
-      "Emergency-source power available to ATS.",
+    genEmergencyPowerDescOneline: "Emergency-source power available to ATS.",
     genZeroWhileOffline: "Zero while offline.",
     genActivePowerRunning: "Active power when running.",
     genReactiveDesc: "Reactive support available.",
@@ -323,7 +322,8 @@ export const translations = {
     street: "STREET",
     riserPole: "RISER POLE",
     structureLabel: "Structure:",
-    riserPoleStatus: "Class 2 wood pole\nHeight: 45 ft\nLoad class: heavy distribution",
+    riserPoleStatus:
+      "Class 2 wood pole\nHeight: 45 ft\nLoad class: heavy distribution",
     surgeArresters: "Surge arresters",
     lightningArresters: "LIGHTNING ARRESTERS",
     lightningArresterStatus: "SURGE PROTECTION",
@@ -334,17 +334,8 @@ export const translations = {
     padMountTransformer: "PAD-MOUNT TRANSFORMER",
     padMountedSwitchgear: "PAD-MOUNTED SWITCHGEAR",
     switchgear3WayStatus: "3-WAY LOOP FEED",
-    busBarLabel: "BUS BAR",
-    feederALabel: "FEEDER A → RESIDENTIAL (LOOP)",
-    feederBLabel: "FEEDER B → COMMERCIAL (LOOP)",
-    loopFeedStatus: "UNDERGROUND LOOP FEED",
-    loopTransformerResidential: "LOOP-FEED XFMR",
-    loopTransformerCommercial: "LOOP-FEED XFMR",
-    residentialCatFeed: "RESIDENTIAL (CAT FEED)",
-    commercialLoad: "COMMERCIAL",
     meter: "METER",
     mainPanel: "MAIN PANEL",
-    scadaMonitor: "SCADA MONITOR",
     mainDisconnect: "MAIN DISCONNECT",
     circuitBreaker: "CIRCUIT BREAKER",
     mainPanelGen: "MAIN PANEL GEN",
@@ -360,7 +351,8 @@ export const translations = {
     isolateGrid: "OPEN GRID COUPLING",
     connected: "CONNECTED",
     disconnected: "DISCONNECTED",
-    powerSourceDesc: "Separates hydro production from grid injection so units can synchronize before exporting power to the utility.",
+    powerSourceDesc:
+      "Separates hydro production from grid injection so units can synchronize before exporting power to the utility.",
     syncIndicator: "GRID SYNCHRONIZATION",
     sourceVoltage: "SOURCE VOLTAGE",
     sourceFrequency: "SOURCE FREQUENCY",
@@ -378,7 +370,8 @@ export const translations = {
     injectedPower: "INJECTED POWER",
     hydroProcess: "HYDRO PROCESS",
     waterFlowPanel: "WATER FLOW",
-    waterFlowSubtitle: "Hydraulic intake and reservoir conditions feeding the hydro units.",
+    waterFlowSubtitle:
+      "Hydraulic intake and reservoir conditions feeding the hydro units.",
     waterDrivingTurbines: "WATER DRIVING TURBINES",
     waterOnStandby: "WATER PATH STANDBY",
     waterFlowRate: "WATER FLOW RATE",
@@ -386,14 +379,18 @@ export const translations = {
     hydraulicHead: "HYDRAULIC HEAD",
     waterToWireEfficiencyLabel: "WATER-TO-WIRE EFFICIENCY",
     waterFlowScriptTitle: "WATER → DELIVERY STATION SCRIPT",
-    waterFlowScriptDesc: "Live script showing how water flow becomes synchronized power at the teacher interface.",
+    waterFlowScriptDesc:
+      "Live script showing how water flow becomes synchronized power at the teacher interface.",
     simulationClock: "SIMULATION CLOCK",
     waterIntake: "WATER INTAKE",
-    waterIntakeDesc: "Forebay flow and head pressure feed the penstock toward the turbine runners.",
+    waterIntakeDesc:
+      "Forebay flow and head pressure feed the penstock toward the turbine runners.",
     turbineGovernor: "TURBINE GOVERNOR",
-    turbineGovernorDesc: "Guide vanes modulate water volume so generation follows the simulated grid demand profile.",
+    turbineGovernorDesc:
+      "Guide vanes modulate water volume so generation follows the simulated grid demand profile.",
     teacherDeliveryNode: "TEACHER INTERFACE NODE",
-    teacherDeliveryNodeDesc: "Conditioned hydro output is delivered to the delivery station after synchronization is complete.",
+    teacherDeliveryNodeDesc:
+      "Conditioned hydro output is delivered to the delivery station after synchronization is complete.",
     unitOffline: "UNIT OFFLINE",
     startupWaterToTurbine: "START-UP · WATER → TURBINE",
     gridSynchronizationStep: "GRID SYNCHRONIZATION",
@@ -540,8 +537,7 @@ export const translations = {
     gridStabilityDesc: "Indicateur de stabilité du réseau.",
     supplyVoltageDesc: (nominalVoltage: number) =>
       `Tension du bus d'interconnexion (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
-    totalLoadCurrentDesc:
-      "Courant de charge total tiré de l'alimentation.",
+    totalLoadCurrentDesc: "Courant de charge total tiré de l'alimentation.",
     realPowerDesc: "Puissance active réellement consommée par la charge.",
     totalVADesc: "Demande totale en volt-ampères sur l'alimentation.",
     reactiveDesc:
@@ -579,18 +575,15 @@ export const translations = {
     genReactiveDescFull:
       "Support réactif disponible pendant le fonctionnement.",
     genFuelDesc: "Capacité de fonctionnement disponible.",
-    genFuelDescFull:
-      "Capacité de fonctionnement disponible en mode veille.",
+    genFuelDescFull: "Capacité de fonctionnement disponible en mode veille.",
     genLiveOutputCurrent: "Courant de sortie en direct.",
 
     supplyAtMccShort: (nominalVoltage: number) =>
       `Tension du bus d'interconnexion (nominal ${nominalVoltage >= 1000 ? (nominalVoltage / 1000).toFixed(1) + " kV" : nominalVoltage + " V"}).`,
-    totalLoadCurrentShort:
-      "Courant de charge total tiré de l'alimentation.",
+    totalLoadCurrentShort: "Courant de charge total tiré de l'alimentation.",
     realPowerConsumed: "Puissance active consommée par la charge.",
     totalVAShort: "Demande totale VA sur l'alimentation.",
-    reactiveInductive:
-      "Composante réactive — charge moteur inductif.",
+    reactiveInductive: "Composante réactive — charge moteur inductif.",
     motorPfNominalShort: (pf: number) => `FP nominal moteur : ${pf}.`,
 
     generatorsAvailable: (count: number) =>
@@ -732,7 +725,8 @@ export const translations = {
     street: "RUE",
     riserPole: "MONTÉE POTEAU",
     structureLabel: "Structure :",
-    riserPoleStatus: "Poteau bois classe 2\nHauteur : 45 pi\nClasse de charge : distribution lourde",
+    riserPoleStatus:
+      "Poteau bois classe 2\nHauteur : 45 pi\nClasse de charge : distribution lourde",
     surgeArresters: "Parafoudres",
     lightningArresters: "PARAFOUDRES",
     lightningArresterStatus: "PROTECTION SURTENSION",
@@ -743,17 +737,8 @@ export const translations = {
     padMountTransformer: "TRANSFO. SOCLE",
     padMountedSwitchgear: "CELLULE SUR SOCLE",
     switchgear3WayStatus: "BOUCLE 3 VOIES",
-    busBarLabel: "JEU DE BARRES",
-    feederALabel: "DÉPART A → RÉSIDENTIEL (BOUCLE)",
-    feederBLabel: "DÉPART B → COMMERCIAL (BOUCLE)",
-    loopFeedStatus: "BOUCLE SOUTERRAINE",
-    loopTransformerResidential: "TRANSFO BOUCLÉ",
-    loopTransformerCommercial: "TRANSFO BOUCLÉ",
-    residentialCatFeed: "RÉSIDENTIEL (CAT FEED)",
-    commercialLoad: "COMMERCIAL",
     meter: "COMPTEUR",
     mainPanel: "TABLEAU PRINCIPAL",
-    scadaMonitor: "MONITEUR SCADA",
     mainDisconnect: "SECT. PRINCIPAL",
     circuitBreaker: "DISJONCTEUR",
     mainPanelGen: "TABLEAU PRINC. GEN",
@@ -769,7 +754,8 @@ export const translations = {
     isolateGrid: "OUVRIR LE COUPLAGE RÉSEAU",
     connected: "CONNECTÉ",
     disconnected: "DÉCONNECTÉ",
-    powerSourceDesc: "Sépare la production hydroélectrique de l'injection réseau afin de synchroniser les groupes avant l'exportation.",
+    powerSourceDesc:
+      "Sépare la production hydroélectrique de l'injection réseau afin de synchroniser les groupes avant l'exportation.",
     syncIndicator: "SYNCHRONISATION RÉSEAU",
     sourceVoltage: "TENSION SOURCE",
     sourceFrequency: "FRÉQUENCE SOURCE",
@@ -784,7 +770,8 @@ export const translations = {
     injectedPower: "PUISSANCE INJECTÉE",
     hydroProcess: "PROCESSUS HYDRO",
     waterFlowPanel: "DÉBIT D'EAU",
-    waterFlowSubtitle: "Conditions hydrauliques d'admission et du réservoir alimentant les groupes hydroélectriques.",
+    waterFlowSubtitle:
+      "Conditions hydrauliques d'admission et du réservoir alimentant les groupes hydroélectriques.",
     waterDrivingTurbines: "EAU ENTRAÎNE LES TURBINES",
     waterOnStandby: "CIRCUIT D'EAU EN VEILLE",
     waterFlowRate: "DÉBIT D'EAU",
@@ -792,14 +779,18 @@ export const translations = {
     hydraulicHead: "CHUTE HYDRAULIQUE",
     waterToWireEfficiencyLabel: "RENDEMENT EAU-ÉLECTRICITÉ",
     waterFlowScriptTitle: "SCRIPT EAU → STATION DE LIVRAISON",
-    waterFlowScriptDesc: "Script en direct montrant comment le débit d'eau devient une puissance synchronisée à l'interface enseignant.",
+    waterFlowScriptDesc:
+      "Script en direct montrant comment le débit d'eau devient une puissance synchronisée à l'interface enseignant.",
     simulationClock: "HORLOGE SIMULATION",
     waterIntake: "PRISE D'EAU",
-    waterIntakeDesc: "Le débit du bassin amont et la pression de chute alimentent la conduite forcée vers les turbines.",
+    waterIntakeDesc:
+      "Le débit du bassin amont et la pression de chute alimentent la conduite forcée vers les turbines.",
     turbineGovernor: "RÉGULATEUR TURBINE",
-    turbineGovernorDesc: "Les directrices modulent le volume d'eau afin que la production suive la demande réseau simulée.",
+    turbineGovernorDesc:
+      "Les directrices modulent le volume d'eau afin que la production suive la demande réseau simulée.",
     teacherDeliveryNode: "NŒUD INTERFACE ENSEIGNANT",
-    teacherDeliveryNodeDesc: "La puissance hydro conditionnée est livrée à la station de livraison une fois la synchronisation terminée.",
+    teacherDeliveryNodeDesc:
+      "La puissance hydro conditionnée est livrée à la station de livraison une fois la synchronisation terminée.",
     internalBus: "BUS INTERNE",
     busOpen: "OUVERT",
     busClosed: "FERMÉ",
