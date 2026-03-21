@@ -472,9 +472,12 @@ function BeaverWoodsMtCard({
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
   const accentColors = ["#22d3ee", "#f59e0b", "#8b5cf6"];
-  const phaseLabels = STREET_BUS_CONDUCTORS.map((conductor) => conductor.label);
+  const phaseLabels = ["L1", "L2", "L3"];
   const activeGenerator = generatorLiveStates?.find(
     (generator) => generator.state !== "OFFLINE",
+  );
+  const livePhaseMetrics = conductorMetrics.filter((conductor) =>
+    ["L1", "L2", "L3"].includes(conductor.label),
   );
   const beaverCards = t.beaverWoodsMt.cards.map((card, index) => ({
     originLabel: "",
@@ -568,23 +571,42 @@ function BeaverWoodsMtCard({
                     </div>
                   </div>
                 ) : null}
-                <div>
+                <div className="col-span-2">
                   <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {phaseLabels.map((phase, phaseIndex) => (
-                      <span
-                        key={`${card.sourceLabel}-${phase}`}
-                        className="rounded border px-1.5 py-0.5 text-[7px]"
-                        style={{
-                          borderColor: `${STREET_BUS_CONDUCTORS[phaseIndex]?.color ?? "#22d3ee"}55`,
-                          color:
-                            STREET_BUS_CONDUCTORS[phaseIndex]?.color ??
-                            "#dce7f3",
-                        }}
-                      >
-                        {phase}
-                      </span>
-                    ))}
+                  <div className="mt-1 grid grid-cols-3 gap-1.5">
+                    {phaseLabels.map((phase, phaseIndex) => {
+                      const liveMetric = livePhaseMetrics.find(
+                        (conductor) => conductor.label === phase,
+                      );
+
+                      return (
+                        <div
+                          key={`${card.sourceLabel}-${phase}`}
+                          className="rounded-md border px-1.5 py-1 text-center"
+                          style={{
+                            borderColor: `${STREET_BUS_CONDUCTORS[phaseIndex]?.color ?? "#22d3ee"}55`,
+                            color:
+                              STREET_BUS_CONDUCTORS[phaseIndex]?.color ??
+                              "#dce7f3",
+                            background:
+                              STREET_BUS_CONDUCTORS[phaseIndex]?.glow.replace(
+                                /0\.1\d\)/,
+                                "0.18)",
+                              ) ?? "rgba(34,211,238,0.12)",
+                          }}
+                        >
+                          <div className="text-[7px] font-semibold tracking-[0.14em]">
+                            {phase}
+                          </div>
+                          <div className="mt-1 text-[5.5px] leading-tight tracking-[0.06em] opacity-90">
+                            {active && liveMetric ? liveMetric.lines[1] : "0.0 V"}
+                          </div>
+                          <div className="text-[5.5px] leading-tight tracking-[0.06em] opacity-70">
+                            {active && liveMetric ? liveMetric.lines[2] : "0.0 A"}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div>
@@ -602,41 +624,6 @@ function BeaverWoodsMtCard({
                     </div>
                     <div className="mt-1 text-[#dce7f3]">
                       {card.detailSecondaryValue}
-                    </div>
-                  </div>
-                ) : null}
-                {index === 0 ? (
-                  <div className="col-span-2 mt-1 rounded-lg border border-white/8 bg-[#041017] px-2 py-2">
-                    <div className="mb-2 text-[7px] uppercase tracking-[0.22em] text-[#7f93ab]">
-                      Network entry · live conductors
-                    </div>
-                    <div className="grid grid-cols-5 gap-1">
-                      {conductorMetrics.map((conductor) => (
-                        <div
-                          key={`${card.cardLabel}-${conductor.label}`}
-                          className="rounded-md border px-1 py-1 text-center"
-                          style={{
-                            borderColor: `${conductor.color}55`,
-                            color: conductor.color,
-                            background: `${conductor.glow.replace(/0\.1\d\)/, "0.18)")}`,
-                          }}
-                        >
-                          {conductor.lines.map((line, lineIndex) => (
-                            <div
-                              key={`${conductor.label}-${lineIndex}`}
-                              className={cn(
-                                lineIndex === 0
-                                  ? "text-[7px] font-semibold tracking-[0.14em]"
-                                  : lineIndex === 1
-                                    ? "text-[6px] tracking-[0.08em]"
-                                    : "text-[6px] tracking-[0.08em] opacity-75",
-                              )}
-                            >
-                              {line}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
                     </div>
                   </div>
                 ) : null}
