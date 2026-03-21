@@ -267,34 +267,6 @@ const ACCENT_STYLES: Record<Accent, { active: string; inactive: string }> = {
   },
 };
 
-function HWire({ powered, className, style }: WireProps) {
-  return (
-    <div
-      className={cn(
-        "h-1.5",
-        BASE_WIRE_CLASSES,
-        getWireClasses(powered, "h"),
-        className,
-      )}
-      style={style}
-    />
-  );
-}
-
-function VWire({ powered, className, style }: WireProps) {
-  return (
-    <div
-      className={cn(
-        "w-1.5",
-        BASE_WIRE_CLASSES,
-        getWireClasses(powered, "v"),
-        className,
-      )}
-      style={style}
-    />
-  );
-}
-
 function CompactCard({
   tag,
   title,
@@ -480,7 +452,6 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
 function BusNodeView({ node }: { node: BusNode }) {
   return (
     <div className="flex shrink-0 flex-col items-center">
-      <VWire powered={node.active} className="h-10" />
       <div
         className={cn(
           "px-2 font-mono text-[8px] tracking-[0.22em]",
@@ -489,7 +460,6 @@ function BusNodeView({ node }: { node: BusNode }) {
       >
         {node.label}
       </div>
-      <VWire powered={node.active} className="h-10" />
     </div>
   );
 }
@@ -540,8 +510,6 @@ function LoopFeederSection({
               ),
             }}
           />
-
-          <HWire powered={feeder.loadPowered} className="w-4" />
 
           <NodeCard
             node={{
@@ -2125,8 +2093,6 @@ Load class: heavy distribution`,
                   }}
                 />
 
-                <HWire powered={state.supplyLive} className="w-4" />
-
                 <NodeCard
                   node={{
                     kind: "equipment",
@@ -2149,16 +2115,11 @@ Load class: heavy distribution`,
               </div>
             </div>
 
-            <HWire powered={state.busLive} className="w-4" />
-
             <div ref={atsRef} className="shrink-0">
               <BusNodeView node={busNode} />
             </div>
 
-            <HWire powered={state.busLive} className="w-4" />
-
             <div className="flex shrink-0 flex-col items-center">
-              <VWire powered={state.busLive} style={{ height: 14 }} />
               <NodeCard
                 node={{
                   kind: "equipment",
@@ -2176,7 +2137,6 @@ Load class: heavy distribution`,
                   ),
                 }}
               />
-              <VWire powered={state.busLive} style={{ height: 14 }} />
             </div>
 
             <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
@@ -2186,7 +2146,6 @@ Load class: heavy distribution`,
             <div
               style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
             />
-            <VWire powered={state.genBrkLive} style={{ height: 28 }} />
           </div>
 
           <div className="flex items-start gap-0">
@@ -2220,17 +2179,7 @@ Load class: heavy distribution`,
                 minHeight: generatorUnits.length * 74 - 12,
               }}
             >
-              <div className="flex h-full items-center">
-                <VWire powered={state.genBrkLive} className="self-stretch" />
-              </div>
               <div className="flex flex-1 flex-col justify-center gap-[58px]">
-                {generatorUnits.map((generator) => (
-                  <HWire
-                    key={`${generator.tag}-branch`}
-                    powered={generator.active}
-                    className="w-full"
-                  />
-                ))}
               </div>
             </div>
 
