@@ -89,24 +89,7 @@ type ATSNode = BaseNode & {
 
 type BusNode = {
   kind: "bus";
-  label: string;
   active: boolean;
-};
-
-type FeederLoop = {
-  id: string;
-  label: string;
-  feederTag: string;
-  feederStatus: string;
-  feederPowered: boolean;
-  transformerTag: string;
-  transformerLabel: string;
-  transformerStatus: string;
-  transformerPowered: boolean;
-  loadTag: string;
-  loadLabel: string;
-  loadStatus: string;
-  loadPowered: boolean;
 };
 
 type GeneratorUnit = {
@@ -415,7 +398,9 @@ function CompactCard({
                   >
                     <div className="min-w-0">
                       <div className="text-[#dce7f3]">{miniStatus.label}</div>
-                      <div className="mt-0.5 text-[#70839f]">{miniStatus.tag}</div>
+                      <div className="mt-0.5 text-[#70839f]">
+                        {miniStatus.tag}
+                      </div>
                     </div>
                     <div
                       className={cn(
@@ -464,87 +449,10 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
 
 function BusNodeView({ node }: { node: BusNode }) {
   return (
-    <div className="flex shrink-0 flex-col items-center">
-      <div
-        className={cn(
-          "px-2 font-mono text-[8px] tracking-[0.22em]",
-          node.active ? "text-[#00dcff]" : "text-[#475569]",
-        )}
-      >
-        {node.label}
-      </div>
-    </div>
-  );
-}
-
-function LoopFeederSection({
-  feeders,
-  powered,
-}: {
-  feeders: FeederLoop[];
-  powered: boolean;
-}) {
-  return (
-    <div className="ml-2 flex shrink-0 flex-col gap-6">
-      {feeders.map((feeder) => (
-        <div key={feeder.id} className="flex items-center gap-3">
-          <div className="flex shrink-0 flex-col items-center gap-1">
-            <div
-              className={cn(
-                "font-mono text-[8px] tracking-[0.28em]",
-                feeder.feederPowered ? "text-[#8ecae6]" : "text-[#475569]",
-              )}
-            >
-              {feeder.label}
-            </div>
-            <ConductorBundle
-              title={feeder.feederTag}
-              width={190}
-              simLabel={feeder.feederStatus}
-              powered={feeder.feederPowered}
-            />
-          </div>
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: feeder.transformerTag,
-              title: feeder.transformerLabel,
-              status: feeder.transformerStatus,
-              active: feeder.transformerPowered,
-              accent: feeder.transformerPowered ? "cyan" : "amber",
-              icon: (
-                <StatusIcon
-                  icon="zap"
-                  active={feeder.transformerPowered}
-                  activeColor="text-[#00dcff]"
-                  inactiveColor="text-[#64748b]"
-                />
-              ),
-            }}
-          />
-
-          <NodeCard
-            node={{
-              kind: "equipment",
-              tag: feeder.loadTag,
-              title: feeder.loadLabel,
-              status: feeder.loadStatus,
-              active: feeder.loadPowered,
-              accent: feeder.loadPowered ? "green" : "cyan",
-              icon: (
-                <StatusIcon
-                  icon="power"
-                  active={feeder.loadPowered}
-                  activeColor="text-[#00f7a1]"
-                  inactiveColor="text-[#64748b]"
-                />
-              ),
-            }}
-          />
-        </div>
-      ))}
-    </div>
+    <div
+      className={cn("shrink-0", node.active ? "" : "opacity-70")}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -1518,44 +1426,8 @@ export function ElectricalOneLine({
 
   const busNode: BusNode = {
     kind: "bus",
-    label: t.busBarLabel,
     active: state.busLive,
   };
-
-  const feederLoops: FeederLoop[] = [
-    {
-      id: "feeder-a",
-      label: t.feederALabel,
-      feederTag: "UG-FDR-A",
-      feederStatus: feederContactor ? t.loopFeedStatus : t.openStandby,
-      feederPowered: feederContactor && state.busLive,
-      transformerTag: "XFMR-RES",
-      transformerLabel: t.loopTransformerResidential,
-      transformerStatus:
-        feederContactor && state.busLive ? "13.8kV→120/240V" : t.noFeed,
-      transformerPowered: feederContactor && state.busLive,
-      loadTag: "CAT-FEED",
-      loadLabel: t.residentialCatFeed,
-      loadStatus: motorPowered ? `${current.toFixed(2)} A` : t.stopped,
-      loadPowered: motorPowered,
-    },
-    {
-      id: "feeder-b",
-      label: t.feederBLabel,
-      feederTag: "UG-FDR-B",
-      feederStatus: solenoidContactor ? t.loopFeedStatus : t.openStandby,
-      feederPowered: solenoidContactor && state.busLive,
-      transformerTag: "XFMR-COM",
-      transformerLabel: t.loopTransformerCommercial,
-      transformerStatus:
-        solenoidContactor && state.busLive ? "13.8kV→347/600V" : t.noFeed,
-      transformerPowered: solenoidContactor && state.busLive,
-      loadTag: "COMM-001",
-      loadLabel: t.commercialLoad,
-      loadStatus: gateOpen ? t.energized : t.deEnergized,
-      loadPowered: gateOpen,
-    },
-  ];
 
   const measureAtsCenter = useCallback(() => {
     const diagram = diagramRef.current;
@@ -1605,7 +1477,6 @@ export function ElectricalOneLine({
     };
   }, [measureAtsCenter]);
 
-
   const contentMetrics = useMemo(() => {
     const width = diagramSize.width * BASE_DIAGRAM_SCALE * zoom;
     const height = diagramSize.height * BASE_DIAGRAM_SCALE * zoom;
@@ -1620,22 +1491,35 @@ export function ElectricalOneLine({
       x: clampOffset(current.x, viewportSize.width, contentMetrics.width),
       y: clampOffset(current.y, viewportSize.height, contentMetrics.height),
     }));
-  }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
+  }, [
+    contentMetrics.height,
+    contentMetrics.width,
+    viewportSize.height,
+    viewportSize.width,
+  ]);
 
-  const panBy = useCallback((deltaX: number, deltaY: number) => {
-    setOffset((current) => ({
-      x: clampOffset(
-        current.x + deltaX,
-        viewportSize.width,
-        contentMetrics.width,
-      ),
-      y: clampOffset(
-        current.y + deltaY,
-        viewportSize.height,
-        contentMetrics.height,
-      ),
-    }));
-  }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
+  const panBy = useCallback(
+    (deltaX: number, deltaY: number) => {
+      setOffset((current) => ({
+        x: clampOffset(
+          current.x + deltaX,
+          viewportSize.width,
+          contentMetrics.width,
+        ),
+        y: clampOffset(
+          current.y + deltaY,
+          viewportSize.height,
+          contentMetrics.height,
+        ),
+      }));
+    },
+    [
+      contentMetrics.height,
+      contentMetrics.width,
+      viewportSize.height,
+      viewportSize.width,
+    ],
+  );
 
   const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
     const live = generatorLiveStates?.[idx];
@@ -1675,28 +1559,53 @@ export function ElectricalOneLine({
     }
   }, []);
 
-  const zoomAroundPoint = useCallback((nextZoom: number, pointerX: number, pointerY: number) => {
-    if (!viewportRef.current || !diagramSize.width || !diagramSize.height) return;
+  const zoomAroundPoint = useCallback(
+    (nextZoom: number, pointerX: number, pointerY: number) => {
+      if (!viewportRef.current || !diagramSize.width || !diagramSize.height)
+        return;
 
-    const clampedZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
-    const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * clampedZoom;
-    const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * clampedZoom;
-    const contentX = (pointerX - offset.x) / zoom;
-    const contentY = (pointerY - offset.y) / zoom;
+      const clampedZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+      const nextContentWidth =
+        diagramSize.width * BASE_DIAGRAM_SCALE * clampedZoom;
+      const nextContentHeight =
+        diagramSize.height * BASE_DIAGRAM_SCALE * clampedZoom;
+      const contentX = (pointerX - offset.x) / zoom;
+      const contentY = (pointerY - offset.y) / zoom;
 
-    setZoom(clampedZoom);
-    setOffset({
-      x: clampOffset(pointerX - contentX * clampedZoom, viewportSize.width, nextContentWidth),
-      y: clampOffset(pointerY - contentY * clampedZoom, viewportSize.height, nextContentHeight),
-    });
-  }, [diagramSize.height, diagramSize.width, offset.x, offset.y, viewportSize.height, viewportSize.width, zoom]);
+      setZoom(clampedZoom);
+      setOffset({
+        x: clampOffset(
+          pointerX - contentX * clampedZoom,
+          viewportSize.width,
+          nextContentWidth,
+        ),
+        y: clampOffset(
+          pointerY - contentY * clampedZoom,
+          viewportSize.height,
+          nextContentHeight,
+        ),
+      });
+    },
+    [
+      diagramSize.height,
+      diagramSize.width,
+      offset.x,
+      offset.y,
+      viewportSize.height,
+      viewportSize.width,
+      zoom,
+    ],
+  );
 
-  const zoomByStep = useCallback((delta: number) => {
-    if (!viewportRef.current) return;
+  const zoomByStep = useCallback(
+    (delta: number) => {
+      if (!viewportRef.current) return;
 
-    const rect = viewportRef.current.getBoundingClientRect();
-    zoomAroundPoint(zoom + delta, rect.width / 2, rect.height / 2);
-  }, [zoom, zoomAroundPoint]);
+      const rect = viewportRef.current.getBoundingClientRect();
+      zoomAroundPoint(zoom + delta, rect.width / 2, rect.height / 2);
+    },
+    [zoom, zoomAroundPoint],
+  );
 
   useEffect(() => {
     const resetInteraction = () => {
@@ -1720,15 +1629,22 @@ export function ElectricalOneLine({
       const target = event.target as HTMLElement;
       if (target.closest("button, a, input, select, textarea")) return;
 
-      activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      activePointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
       event.currentTarget.setPointerCapture(event.pointerId);
 
       if (activePointersRef.current.size >= 2) {
-        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const entries = Array.from(activePointersRef.current.entries()).slice(
+          0,
+          2,
+        );
         const [[firstId, first], [secondId, second]] = entries;
         const midpointX = (first.x + second.x) / 2;
         const midpointY = (first.y + second.y) / 2;
-        const startDistance = Math.hypot(second.x - first.x, second.y - first.y) || 1;
+        const startDistance =
+          Math.hypot(second.x - first.x, second.y - first.y) || 1;
         const rect = viewportRef.current.getBoundingClientRect();
         const pointerX = midpointX - rect.left;
         const pointerY = midpointY - rect.top;
@@ -1763,7 +1679,10 @@ export function ElectricalOneLine({
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (activePointersRef.current.has(event.pointerId)) {
-        activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        activePointersRef.current.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+        });
       }
 
       const pinch = pinchStateRef.current;
@@ -1773,15 +1692,31 @@ export function ElectricalOneLine({
         const second = activePointersRef.current.get(secondId);
         if (!first || !second) return;
 
-        const distance = Math.hypot(second.x - first.x, second.y - first.y) || pinch.startDistance;
-        const nextZoom = clamp(pinch.startZoom * (distance / pinch.startDistance), MIN_ZOOM, MAX_ZOOM);
-        const nextContentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * nextZoom;
-        const nextContentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * nextZoom;
+        const distance =
+          Math.hypot(second.x - first.x, second.y - first.y) ||
+          pinch.startDistance;
+        const nextZoom = clamp(
+          pinch.startZoom * (distance / pinch.startDistance),
+          MIN_ZOOM,
+          MAX_ZOOM,
+        );
+        const nextContentWidth =
+          diagramSize.width * BASE_DIAGRAM_SCALE * nextZoom;
+        const nextContentHeight =
+          diagramSize.height * BASE_DIAGRAM_SCALE * nextZoom;
 
         setZoom(nextZoom);
         setOffset({
-          x: clampOffset(pinch.midpointX - pinch.contentX * nextZoom, viewportSize.width, nextContentWidth),
-          y: clampOffset(pinch.midpointY - pinch.contentY * nextZoom, viewportSize.height, nextContentHeight),
+          x: clampOffset(
+            pinch.midpointX - pinch.contentX * nextZoom,
+            viewportSize.width,
+            nextContentWidth,
+          ),
+          y: clampOffset(
+            pinch.midpointY - pinch.contentY * nextZoom,
+            viewportSize.height,
+            nextContentHeight,
+          ),
         });
         return;
       }
@@ -1802,7 +1737,14 @@ export function ElectricalOneLine({
         ),
       });
     },
-    [contentMetrics.height, contentMetrics.width, diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width],
+    [
+      contentMetrics.height,
+      contentMetrics.width,
+      diagramSize.height,
+      diagramSize.width,
+      viewportSize.height,
+      viewportSize.width,
+    ],
   );
 
   const handlePointerUp = useCallback(
@@ -1814,7 +1756,10 @@ export function ElectricalOneLine({
       activePointersRef.current.delete(event.pointerId);
 
       if (activePointersRef.current.size >= 2) {
-        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const entries = Array.from(activePointersRef.current.entries()).slice(
+          0,
+          2,
+        );
         const [[firstId, first], [secondId, second]] = entries;
         const midpointX = (first.x + second.x) / 2;
         const midpointY = (first.y + second.y) / 2;
@@ -1824,7 +1769,8 @@ export function ElectricalOneLine({
           const pointerY = midpointY - rect.top;
           pinchStateRef.current = {
             pointerIds: [firstId, secondId],
-            startDistance: Math.hypot(second.x - first.x, second.y - first.y) || 1,
+            startDistance:
+              Math.hypot(second.x - first.x, second.y - first.y) || 1,
             startZoom: zoom,
             midpointX: pointerX,
             midpointY: pointerY,
@@ -1838,7 +1784,9 @@ export function ElectricalOneLine({
 
       pinchStateRef.current = null;
 
-      const remainingPointer = Array.from(activePointersRef.current.values())[0];
+      const remainingPointer = Array.from(
+        activePointersRef.current.values(),
+      )[0];
       if (remainingPointer) {
         dragStateRef.current = {
           startX: remainingPointer.x,
@@ -1875,17 +1823,33 @@ export function ElectricalOneLine({
         const viewport = viewportRef.current;
         if (!viewport || !diagramSize.width || !diagramSize.height) return;
 
-        const nextZoom = clamp(zoom - event.deltaY * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM);
+        const nextZoom = clamp(
+          zoom - event.deltaY * ZOOM_STEP,
+          MIN_ZOOM,
+          MAX_ZOOM,
+        );
         if (nextZoom === zoom) return;
 
         const rect = viewport.getBoundingClientRect();
-        zoomAroundPoint(nextZoom, event.clientX - rect.left, event.clientY - rect.top);
+        zoomAroundPoint(
+          nextZoom,
+          event.clientX - rect.left,
+          event.clientY - rect.top,
+        );
       }}
       onDoubleClick={() => {
         setZoom(1);
         setOffset({
-          x: clampOffset(0, viewportSize.width, diagramSize.width * BASE_DIAGRAM_SCALE),
-          y: clampOffset(0, viewportSize.height, diagramSize.height * BASE_DIAGRAM_SCALE),
+          x: clampOffset(
+            0,
+            viewportSize.width,
+            diagramSize.width * BASE_DIAGRAM_SCALE,
+          ),
+          y: clampOffset(
+            0,
+            viewportSize.height,
+            diagramSize.height * BASE_DIAGRAM_SCALE,
+          ),
         });
       }}
       onKeyDown={(event) => {
@@ -1905,7 +1869,11 @@ export function ElectricalOneLine({
           event.preventDefault();
           panBy(0, -PAN_STEP);
         }
-        if ((event.key === "+" || event.key === "=") && !event.metaKey && !event.ctrlKey) {
+        if (
+          (event.key === "+" || event.key === "=") &&
+          !event.metaKey &&
+          !event.ctrlKey
+        ) {
           event.preventDefault();
           zoomByStep(KEYBOARD_ZOOM_STEP);
         }
@@ -1926,7 +1894,9 @@ export function ElectricalOneLine({
           >
             −
           </button>
-          <span className="min-w-14 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="min-w-14 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             type="button"
             aria-label="Zoom in"
@@ -1942,8 +1912,14 @@ export function ElectricalOneLine({
         <div
           className="pt-1 pb-8 pl-6 pr-10"
           style={{
-            width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined,
-            height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined,
+            width:
+              diagramSize.width > 0
+                ? diagramSize.width * BASE_DIAGRAM_SCALE
+                : undefined,
+            height:
+              diagramSize.height > 0
+                ? diagramSize.height * BASE_DIAGRAM_SCALE
+                : undefined,
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
             transformOrigin: "top left",
             willChange: "transform",
@@ -1957,197 +1933,174 @@ export function ElectricalOneLine({
               transformOrigin: "top left",
             }}
           >
-          <div className="flex items-center gap-0">
-            <div
-              className="relative shrink-0"
-              style={{
-                width: UTILITY_BUS_GEOMETRY.width,
-                height: UTILITY_BUS_GEOMETRY.height,
-              }}
-            >
-              <UtilityBusBackground utilityActive={state.supplyLive} />
-              <UtilityBusAnnotations
-                utilityActive={state.supplyLive}
-                streetLabel={t.street}
-                conductorMetrics={conductorMetrics}
-              />
+            <div className="flex items-center gap-0">
               <div
-                className="absolute left-0 flex items-start"
+                className="relative shrink-0"
                 style={{
-                  zIndex: 1,
-                  top: UTILITY_BUS_GEOMETRY.lineTop - 98,
-                  gap: UTILITY_SUPPLEMENTARY_CARD_GAP,
+                  width: UTILITY_BUS_GEOMETRY.width,
+                  height: UTILITY_BUS_GEOMETRY.height,
                 }}
               >
-                {supplementaryUtilityNodes.map((node) => (
-                  <NodeCard key={node.tag} node={node} />
-                ))}
-                <NodeCard node={utilityNode} />
+                <UtilityBusBackground utilityActive={state.supplyLive} />
+                <UtilityBusAnnotations
+                  utilityActive={state.supplyLive}
+                  streetLabel={t.street}
+                  conductorMetrics={conductorMetrics}
+                />
+                <div
+                  className="absolute left-0 flex items-start"
+                  style={{
+                    zIndex: 1,
+                    top: UTILITY_BUS_GEOMETRY.lineTop - 98,
+                    gap: UTILITY_SUPPLEMENTARY_CARD_GAP,
+                  }}
+                >
+                  {supplementaryUtilityNodes.map((node) => (
+                    <NodeCard key={node.tag} node={node} />
+                  ))}
+                  <NodeCard node={utilityNode} />
+                </div>
+              </div>
+
+              <div
+                className="relative flex shrink-0 items-center"
+                style={{ marginLeft: UTILITY_TO_RISER_GAP }}
+              >
+                <UtilityCardInterconnect
+                  active={state.supplyLive}
+                  cardCount={3}
+                  leadInWidth={UTILITY_TO_RISER_GAP}
+                />
+
+                <div className="relative z-[1]">
+                  <NodeCard
+                    node={{
+                      kind: "equipment",
+                      tag: "POLE-0326",
+                      title: t.riserPole,
+                      subtitle: t.structureLabel,
+                      status: t.riserPoleStatus,
+                      active: state.supplyLive,
+                      accent: "cyan",
+                      width: 340,
+                      statusDot: true,
+                      miniStatuses: [
+                        {
+                          label: t.surgeArresters,
+                          tag: "LA-UTIL",
+                          status: "Normal",
+                          active: state.supplyLive,
+                        },
+                        {
+                          label: t.fusedCutouts,
+                          tag: "FCO-UTIL",
+                          status: state.supplyLive ? "Closed" : "Open",
+                          active: state.supplyLive,
+                        },
+                        {
+                          label: t.overheadUndergroundTransition,
+                          tag: t.overheadUndergroundTransition,
+                          status: state.supplyLive
+                            ? "Connected"
+                            : "Disconnected",
+                          active: state.supplyLive,
+                        },
+                      ],
+                    }}
+                  />
+                </div>
+
+                <div
+                  className="relative z-[1] flex items-center"
+                  style={{ marginLeft: UTILITY_CARD_GAP }}
+                >
+                  <NodeCard
+                    node={{
+                      kind: "equipment",
+                      tag: "SWGR-3W",
+                      title: t.padMountedSwitchgear,
+                      status: state.supplyLive
+                        ? t.switchgear3WayStatus
+                        : t.noFeed,
+                      active: state.supplyLive,
+                      accent: "cyan",
+                      icon: (
+                        <StatusIcon
+                          icon="zap"
+                          active={state.supplyLive}
+                          activeColor="text-[#00dcff]"
+                        />
+                      ),
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div ref={atsRef} className="shrink-0">
+                <BusNodeView node={busNode} />
               </div>
             </div>
 
-            <div
-              className="relative flex shrink-0 items-center"
-              style={{ marginLeft: UTILITY_TO_RISER_GAP }}
-            >
-              <UtilityCardInterconnect
-                active={state.supplyLive}
-                cardCount={3}
-                leadInWidth={UTILITY_TO_RISER_GAP}
-              />
-
+            <div className="flex items-start" style={{ height: 28 }}>
               <div
-                className="relative z-[1]"
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "POLE-0326",
-                    title: t.riserPole,
-                    subtitle: t.structureLabel,
-                    status: t.riserPoleStatus,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    width: 340,
-                    statusDot: true,
-                    miniStatuses: [
-                      {
-                        label: t.surgeArresters,
-                        tag: "LA-UTIL",
-                        status: "Normal",
-                        active: state.supplyLive,
-                      },
-                      {
-                        label: t.fusedCutouts,
-                        tag: "FCO-UTIL",
-                        status: state.supplyLive ? "Closed" : "Open",
-                        active: state.supplyLive,
-                      },
-                      {
-                        label: t.overheadUndergroundTransition,
-                        tag: t.overheadUndergroundTransition,
-                        status: state.supplyLive ? "Connected" : "Disconnected",
-                        active: state.supplyLive,
-                      },
-                    ],
-                  }}
-                />
+                style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
+              />
+            </div>
+
+            <div className="flex items-start gap-0">
+              <div className="w-[486px] shrink-0" />
+
+              <VerticalDivider height={campusDividerHeight} label={t.campus} />
+
+              <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
+                {generatorUnits.map((generator) => (
+                  <NodeCard
+                    key={generator.tag}
+                    node={{
+                      kind: "source",
+                      tag: generator.tag,
+                      title: generator.title,
+                      status: generator.status,
+                      active: generator.active,
+                      accent: "amber",
+                      width: generator.width,
+                      details: generator.details,
+                      icon: <Zap className="h-4 w-4 text-[#475569]" />,
+                    }}
+                  />
+                ))}
               </div>
 
               <div
-                className="relative z-[1] flex items-center"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
+                className="flex shrink-0 items-center"
+                style={{
+                  width: generatorBranchWireWidth,
+                  minHeight: generatorUnits.length * 74 - 12,
+                }}
               >
+                <div className="flex flex-1 flex-col justify-center gap-[58px]"></div>
+              </div>
+
+              <div className="flex shrink-0 items-center">
                 <NodeCard
                   node={{
                     kind: "equipment",
-                    tag: "SWGR-3W",
-                    title: t.padMountedSwitchgear,
-                    status: state.supplyLive
-                      ? t.switchgear3WayStatus
-                      : t.noFeed,
-                    active: state.supplyLive,
-                    accent: "cyan",
+                    tag: "CB-GEN",
+                    title: t.mainPanelGen,
+                    status: state.genBrkLive ? t.closed : t.openStandby,
+                    active: state.genBrkLive,
+                    accent: "amber",
                     icon: (
                       <StatusIcon
-                        icon="zap"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
+                        icon="shield"
+                        active={state.genBrkLive}
+                        activeColor="text-[#ffb347]"
                       />
                     ),
                   }}
                 />
               </div>
             </div>
-
-            <div ref={atsRef} className="shrink-0">
-              <BusNodeView node={busNode} />
-            </div>
-
-            <div className="flex shrink-0 flex-col items-center">
-              <NodeCard
-                node={{
-                  kind: "equipment",
-                  tag: "SCADA-01",
-                  title: t.scadaMonitor,
-                  status: state.busLive ? t.monitoring : t.genStateOffline,
-                  active: state.busLive,
-                  accent: "violet",
-                  icon: (
-                    <StatusIcon
-                      icon="monitor"
-                      active={state.busLive}
-                      activeColor="text-[#a78bfa]"
-                    />
-                  ),
-                }}
-              />
-            </div>
-
-            <LoopFeederSection feeders={feederLoops} powered={state.busLive} />
-          </div>
-
-          <div className="flex items-start" style={{ height: 28 }}>
-            <div
-              style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }}
-            />
-          </div>
-
-          <div className="flex items-start gap-0">
-            <div className="w-[486px] shrink-0" />
-
-            <VerticalDivider height={campusDividerHeight} label={t.campus} />
-
-            <div className="flex w-[142px] shrink-0 flex-col items-start gap-3">
-              {generatorUnits.map((generator) => (
-                <NodeCard
-                  key={generator.tag}
-                  node={{
-                    kind: "source",
-                    tag: generator.tag,
-                    title: generator.title,
-                    status: generator.status,
-                    active: generator.active,
-                    accent: "amber",
-                    width: generator.width,
-                    details: generator.details,
-                    icon: <Zap className="h-4 w-4 text-[#475569]" />,
-                  }}
-                />
-              ))}
-            </div>
-
-            <div
-              className="flex shrink-0 items-center"
-              style={{
-                width: generatorBranchWireWidth,
-                minHeight: generatorUnits.length * 74 - 12,
-              }}
-            >
-              <div className="flex flex-1 flex-col justify-center gap-[58px]">
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center">
-              <NodeCard
-                node={{
-                  kind: "equipment",
-                  tag: "CB-GEN",
-                  title: t.mainPanelGen,
-                  status: state.genBrkLive ? t.closed : t.openStandby,
-                  active: state.genBrkLive,
-                  accent: "amber",
-                  icon: (
-                    <StatusIcon
-                      icon="shield"
-                      active={state.genBrkLive}
-                      activeColor="text-[#ffb347]"
-                    />
-                  ),
-                }}
-              />
-            </div>
-          </div>
           </div>
         </div>
       </div>

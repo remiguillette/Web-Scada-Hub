@@ -34,7 +34,6 @@ Represent protective and control devices:
 - Pad-Mounted Switchgear (SWGR-3W)
 - Transformers
 - Meters and Main Panels
-- SCADA Monitor (SCADA-01)
 
 #### 3. **ATS Cards** (`kind: "ats"`)
 Automatic Transfer Switches that manage power source selection:
@@ -108,18 +107,6 @@ CONDUCTORS = [
               │
               └──► Main Bus Bar (BUS BAR)
                    │
-                   ├──► SCADA Monitor (SCADA-01)
-                   │    └──► Real-time system monitoring
-                   │
-                   ├──► Feeder A (Residential Circuit)
-                   │    ├──► Underground Feeder (UG-FDR-A)
-                   │    ├──► Loop-Feed Transformer (XFMR-RES)
-                   │    └──► Residential Load
-                   │
-                   └──► Feeder B (Commercial Circuit)
-                        ├──► Underground Feeder (UG-FDR-B)
-                        ├──► Loop-Feed Transformer (XFMR-COM)
-                        └──► Commercial Load
 ```
 
 ### Backup Power Path
@@ -153,30 +140,6 @@ CONDUCTORS = [
 - Spacing: 150px between major cards
 - Spread: 8px vertical separation for conductor visualization
 - Breakout pattern: Conductors fan out then converge at connection points
-
-### Feeder Loop Connections
-
-Each feeder is a **duplex loop** that provides redundancy:
-
-#### Feeder A (Residential)
-- **Tag**: `UG-FDR-A`
-- **Transformer**: `XFMR-RES` (Loop-Feed Transformer)
-- **Status**: "Underground Loop Feed" when active
-- **Load**: Residential services
-- **Path**: BUS BAR → Feeder → Transformer → Load
-
-#### Feeder B (Commercial)
-- **Tag**: `UG-FDR-B`
-- **Transformer**: `XFMR-COM` (Loop-Feed Transformer)
-- **Status**: "Underground Loop Feed" when active
-- **Load**: Commercial services
-- **Path**: BUS BAR → Feeder → Transformer → Load
-
-**Loop Configuration Benefits:**
-- Redundancy: Power flows from both directions
-- Automatic switchover on fault
-- Independent operation possible
-- Load balancing capability
 
 ---
 
@@ -292,11 +255,8 @@ Motor:         MTR-001 (600V, 2.2A, 0.88 PF)
 | Utility Service | UTILITY | Source | 13.8kV | Connected/Disconnected |
 | Switchgear | SWGR-3W | Equipment | 13.8kV | Utility Isolation / 3-Way Loop Feed |
 | **Main Bus Bar** | BUS BAR | Bus | 13.8kV | Live/Dead |
-| Feeder A (Residential) | UG-FDR-A | Feeder | 13.8kV | Loop Feed/Standby |
-| Feeder B (Commercial) | UG-FDR-B | Feeder | 13.8kV | Loop Feed/Standby |
 | Generators | GEN-001/002/003 | Source | 13.8kV | Running/Standby/Off |
 | Generator Breaker | CB-GEN | Equipment | 13.8kV | Closed/Open |
-| SCADA Monitor | SCADA-01 | Equipment | 13.8kV | Monitoring/Offline |
 
 ---
 
@@ -308,18 +268,6 @@ Motor:         MTR-001 (600V, 2.2A, 0.88 PF)
 │                      [LA] [CB] [SWGR]                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                        MAIN BUS BAR (BUS)                        │
-│         |                    |                    |              │
-│      [SCADA-01]           [FEEDER A]           [FEEDER B]        │
-│    (Monitoring)        (Residential Loop)   (Commercial Loop)    │
-│                           |                      |               │
-│                    ┌──────┴────────┐     ┌────────┴──────┐       │
-│                    │                │     │               │       │
-│              [XFMR-RES]        [XFMR-COM]                │       │
-│                    │                │     │               │       │
-│            ┌───────┴────────┐ ┌────┴─────┴──────┐         │       │
-│            │                │ │                 │         │       │
-│       [Residential]    [Commercial]                         │       │
-│         Load A           Load B                            │       │
 │                                                             │       │
 │  BACKUP POWER:                                             │       │
 │  [GEN-001] [GEN-002] [GEN-003] ──► [CB-GEN] ──► BUS        │       │
