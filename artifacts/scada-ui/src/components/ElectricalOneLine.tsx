@@ -132,7 +132,7 @@ const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_CARD_GAP;
 const PAN_STEP = 120;
 const BASE_DIAGRAM_SCALE = 3;
-const MIN_ZOOM = 0.150;
+const MIN_ZOOM = 0.15;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.0015;
 const KEYBOARD_ZOOM_STEP = 0.1;
@@ -458,10 +458,12 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
 function BeaverWoodsMtCard({
   active,
   frequency,
+  conductorMetrics,
   generatorLiveStates,
 }: {
   active: boolean;
   frequency: number;
+  conductorMetrics: StreetBusMetric[];
   generatorLiveStates?: GeneratorLiveStatus[];
 }) {
   const { t } = useTranslation();
@@ -545,13 +547,17 @@ function BeaverWoodsMtCard({
                 {card.originLabel ? (
                   <div>
                     <div className="text-[#7f93ab]">{card.originLabel}</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.originValue}</div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {card.originValue}
+                    </div>
                   </div>
                 ) : null}
                 {card.networkLabel ? (
                   <div>
                     <div className="text-[#7f93ab]">{card.networkLabel}</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.networkValue}</div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {card.networkValue}
+                    </div>
                   </div>
                 ) : null}
                 {card.voltageLabel ? (
@@ -596,6 +602,41 @@ function BeaverWoodsMtCard({
                     </div>
                     <div className="mt-1 text-[#dce7f3]">
                       {card.detailSecondaryValue}
+                    </div>
+                  </div>
+                ) : null}
+                {index === 0 ? (
+                  <div className="col-span-2 mt-1 rounded-lg border border-white/8 bg-[#041017] px-2 py-2">
+                    <div className="mb-2 text-[7px] uppercase tracking-[0.22em] text-[#7f93ab]">
+                      Network entry · live conductors
+                    </div>
+                    <div className="grid grid-cols-5 gap-1">
+                      {conductorMetrics.map((conductor) => (
+                        <div
+                          key={`${card.cardLabel}-${conductor.label}`}
+                          className="rounded-md border px-1 py-1 text-center"
+                          style={{
+                            borderColor: `${conductor.color}55`,
+                            color: conductor.color,
+                            background: `${conductor.glow.replace(/0\.1\d\)/, "0.18)")}`,
+                          }}
+                        >
+                          {conductor.lines.map((line, lineIndex) => (
+                            <div
+                              key={`${conductor.label}-${lineIndex}`}
+                              className={cn(
+                                lineIndex === 0
+                                  ? "text-[7px] font-semibold tracking-[0.14em]"
+                                  : lineIndex === 1
+                                    ? "text-[6px] tracking-[0.08em]"
+                                    : "text-[6px] tracking-[0.08em] opacity-75",
+                              )}
+                            >
+                              {line}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ) : null}
@@ -2182,6 +2223,7 @@ export function ElectricalOneLine({
                     <BeaverWoodsMtCard
                       active={state.supplyLive}
                       frequency={frequency}
+                      conductorMetrics={conductorMetrics}
                       generatorLiveStates={generatorLiveStates}
                     />
                   </div>
