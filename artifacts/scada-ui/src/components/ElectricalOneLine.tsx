@@ -65,12 +65,9 @@ type CompactCardProps = {
   icon?: ReactNode;
   onClick?: () => void;
   width?: number;
-  footprintWidth?: number;
   details?: DetailRow[];
   statusDot?: boolean;
   miniStatuses?: MiniStatus[];
-  borderColor?: string;
-  borderStyle?: CSSProperties["borderStyle"];
 };
 
 type BaseNode = CompactCardProps & {
@@ -206,16 +203,6 @@ function formatBusCurrent(value: number) {
   return `${Math.max(0, Math.round(value))} A`;
 }
 
-function buildBeaverWoodsMtStatus(t: Translations) {
-  return [
-    `${t.identifier}: Beaver Woods MT`,
-    `${t.location}: ${t.beaverWoodsMtLocation}`,
-    `${t.voltage}: 13.8kV`,
-    `${t.service}: ${t.beaverWoodsMtService}`,
-    t.beaverWoodsMtType,
-  ].join("\n");
-}
-
 const UTILITY_BUS_GEOMETRY = {
   width: UTILITY_LEFT_CLUSTER_WIDTH + CARD_W + 240,
   height: 500,
@@ -273,12 +260,9 @@ function CompactCard({
   icon,
   onClick,
   width = CARD_W,
-  footprintWidth,
   details,
   statusDot = false,
   miniStatuses,
-  borderColor,
-  borderStyle,
 }: CompactCardProps) {
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -348,10 +332,7 @@ function CompactCard({
   );
 
   const cardBody = (
-    <div
-      className={cardClasses}
-      style={{ width, borderColor, borderStyle }}
-    >
+    <div className={cardClasses} style={{ width: CARD_W }}>
       {content}
     </div>
   );
@@ -441,10 +422,7 @@ function CompactCard({
 
   if (!onClick) {
     return (
-      <div
-        className="relative shrink-0"
-        style={{ width: footprintWidth ?? width }}
-      >
+      <div className="relative shrink-0" style={{ width: CARD_W }}>
         {cardBody}
         {detailOverlay}
       </div>
@@ -452,10 +430,7 @@ function CompactCard({
   }
 
   return (
-    <div
-      className="relative shrink-0"
-      style={{ width: footprintWidth ?? width }}
-    >
+    <div className="relative shrink-0" style={{ width: CARD_W }}>
       <button
         type="button"
         onClick={onClick}
@@ -2042,17 +2017,13 @@ export function ElectricalOneLine({
                   <NodeCard
                     node={{
                       kind: "equipment",
-                      tag: t.beaverWoodsMt,
-                      title: t.beaverWoodsMt,
+                      tag: "SWGR-3W",
+                      title: t.padMountedSwitchgear,
                       status: state.supplyLive
-                        ? buildBeaverWoodsMtStatus(t)
+                        ? t.switchgear3WayStatus
                         : t.noFeed,
                       active: state.supplyLive,
                       accent: "cyan",
-                      width: 228,
-                      footprintWidth: CARD_W,
-                      borderColor: "orange",
-                      borderStyle: "dotted",
                       icon: (
                         <StatusIcon
                           icon="zap"
