@@ -124,7 +124,7 @@ const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
-const ISOLATED_SWITCHGEAR_CARD_WIDTH = CARD_W;
+const ISOLATED_SWITCHGEAR_CARD_WIDTH = 198;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_COUNT * CARD_W +
@@ -448,6 +448,72 @@ function CompactCard({
 
 function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
   return <CompactCard {...node} />;
+}
+
+function BeaverWoodsMtCard({ active }: { active: boolean }) {
+  const { t } = useTranslation();
+  const cardClasses = cn(
+    "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
+    active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
+  );
+
+  const fields = [
+    { label: "Identifier", value: "Beaver Woods MT" },
+    { label: "Location", value: "Niagara Falls, ON" },
+    { label: "Voltage", value: "13.8kV" },
+    { label: "Service", value: "Urban Distribution" },
+  ];
+
+  return (
+    <div className="relative shrink-0" style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}>
+      <div
+        className={cardClasses}
+        style={{
+          width: ISOLATED_SWITCHGEAR_CARD_WIDTH,
+          borderColor: "orange",
+          borderStyle: "dotted",
+        }}
+      >
+        <div className="mb-1 flex items-start justify-between gap-1">
+          <div className="min-w-0">
+            <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
+              Beaver Woods MT
+            </div>
+            <div className="font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
+              Beaver Woods MT
+            </div>
+          </div>
+          <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+            <StatusIcon
+              icon="zap"
+              active={active}
+              activeColor="text-[#00dcff]"
+            />
+          </div>
+        </div>
+
+        <div className="whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
+          {active ? t.switchgear3WayStatus : t.noFeed}
+        </div>
+
+        <div className="mt-2 border-t border-white/10 pt-2 font-mono text-[8px] tracking-[0.12em]">
+          <div className="mb-1 text-[#8ecae6]">Suggested Value</div>
+          <div className="space-y-1.5">
+            {fields.map((field) => (
+              <div
+                key={field.label}
+                className="grid grid-cols-[64px_minmax(0,1fr)] gap-2"
+              >
+                <div className="text-[#70839f]">{field.label}</div>
+                <div className="text-[#dce7f3]">{field.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 text-[#9fb3c8]">Medium Voltage (MV) substation</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function BusNodeView({ node }: { node: BusNode }) {
@@ -2021,51 +2087,7 @@ export function ElectricalOneLine({
                   }}
                 >
                   <div className="absolute inset-0 flex items-center">
-                    <NodeCard
-                      node={{
-                        kind: "equipment",
-                        tag: "Beaver Woods MT",
-                        title: "Beaver Woods MT",
-                        status: state.supplyLive
-                          ? t.switchgear3WayStatus
-                          : t.noFeed,
-                        active: state.supplyLive,
-                        accent: "cyan",
-                        details: [
-                          {
-                            parameter: "Identifier",
-                            value: "Beaver Woods MT",
-                            description: "Medium Voltage (MV) substation",
-                          },
-                          {
-                            parameter: "Location",
-                            value: "Niagara Falls, ON",
-                            description: "Urban Distribution",
-                          },
-                          {
-                            parameter: "Voltage",
-                            value: "13.8kV",
-                            description: "Nominal service voltage",
-                          },
-                          {
-                            parameter: "Service",
-                            value: "Urban Distribution",
-                            description: "Medium Voltage (MV) substation",
-                          },
-                        ],
-                        cardStyle: {
-                          borderColor: "orange",
-                          borderStyle: "dotted",
-                        },
-                        icon: (
-                          <StatusIcon
-                            icon="zap"
-                            active={state.supplyLive}
-                            activeColor="text-[#00dcff]"
-                          />
-                        ),
-                      }}
-                    />
+                    <BeaverWoodsMtCard active={state.supplyLive} />
                   </div>
                 </div>
               </div>
