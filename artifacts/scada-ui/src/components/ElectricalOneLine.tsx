@@ -1979,36 +1979,12 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={3}
+                cardCount={2}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
               <div
                 className="relative z-[1]"
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "FCO-UTIL",
-                    title: t.fusedCutouts,
-                    status: state.supplyLive ? t.fusedCutoutStatus : t.openStandby,
-                    active: state.supplyLive,
-                    accent: "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#ffb347]"
-                        inactiveColor="text-[#94a3b8]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
               >
                 <NodeCard
                   node={{
