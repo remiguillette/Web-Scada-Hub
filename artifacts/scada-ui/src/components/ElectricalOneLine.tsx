@@ -550,7 +550,6 @@ function BeaverWoodsMtCard({
               className="rounded-xl border bg-[#071219]/95 px-3 py-3"
               style={{
                 borderColor: `${accentColors[index] ?? "#22d3ee"}59`,
-                boxShadow: `0 0 22px ${accentColors[index] ?? "#22d3ee"}1f`,
               }}
             >
               <div className="flex items-start justify-between gap-3">
@@ -892,7 +891,6 @@ function UtilityBusAnnotations({
           top: UTILITY_BUS_GEOMETRY.titleY - 12,
           left: busCenterX,
           color: utilityActive ? "#4ade80" : "#4b5563",
-          textShadow: utilityActive ? "0 0 10px rgba(74,222,128,0.28)" : "none",
         }}
       >
         <span>{streetLabel}</span>
@@ -906,7 +904,6 @@ function UtilityBusAnnotations({
         style={{
           top: UTILITY_BUS_GEOMETRY.feederLabelY,
           left: feederLabelX,
-          textShadow: utilityActive ? "0 0 10px rgba(148,163,184,0.2)" : "none",
         }}
       >
         {feederLabel}
