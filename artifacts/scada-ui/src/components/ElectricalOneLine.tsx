@@ -147,34 +147,6 @@ const CONDUCTORS = [
   { label: "GND", color: "#5b8f6b", glow: "rgba(91,143,107,0.16)" },
 ] as const;
 
-const STREET_BUS_CONDUCTORS = [
-  {
-    label: "L1",
-    color: "#5a82b5",
-    glow: "rgba(90,130,181,0.14)",
-  },
-  {
-    label: "L2",
-    color: "#c96a6a",
-    glow: "rgba(201,106,106,0.14)",
-  },
-  {
-    label: "L3",
-    color: "#c48e3b",
-    glow: "rgba(196,142,59,0.14)",
-  },
-  {
-    label: "N",
-    color: "#8f8f8f",
-    glow: "rgba(143,143,143,0.08)",
-  },
-  {
-    label: "GND",
-    color: "#5b8f6b",
-    glow: "rgba(91,143,107,0.14)",
-  },
-] as const;
-
 type StreetBusMetric = {
   label: string;
   lines: string[];
@@ -626,7 +598,7 @@ function BeaverWoodsMtCard({
                     />
                   ) : (
                     <div className="mt-1 flex flex-nowrap gap-1 overflow-x-auto whitespace-nowrap">
-                      {STREET_BUS_CONDUCTORS.map((phase) => (
+                      {CONDUCTORS.map((phase) => (
                         <span
                           key={`${card.sourceLabel}-${phase.label}`}
                           className="rounded border px-1.5 py-0.5 text-[7px] whitespace-nowrap"
@@ -748,7 +720,7 @@ function ConductorBundle({
 function getUtilityBusLayout() {
   const width = UTILITY_BUS_GEOMETRY.width;
   const height = UTILITY_BUS_GEOMETRY.height;
-  const count = STREET_BUS_CONDUCTORS.length;
+  const count = CONDUCTORS.length;
   const totalHSpan = (count - 1) * UTILITY_BUS_GEOMETRY.hSpacing;
   const firstCX = UTILITY_LEFT_CLUSTER_WIDTH + CARD_W / 2 - totalHSpan / 2;
   const busCenterX = firstCX + totalHSpan / 2;
@@ -794,7 +766,7 @@ function UtilityBusBackground({ utilityActive }: { utilityActive: boolean }) {
       aria-label="Utility street power bus"
       style={{ zIndex: 0, overflow: "visible" }}
     >
-      {STREET_BUS_CONDUCTORS.map((conductor, index) => {
+      {CONDUCTORS.map((conductor, index) => {
         const cx = firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
         const tapY = centerY + (index - (count - 1) / 2) * 12;
         const animDelay = `${index * 0.12}s`;
@@ -1420,8 +1392,8 @@ export function ElectricalOneLine({
           formatBusVoltage(liveVoltage),
           formatBusCurrent(liveCurrent),
         ],
-        color: STREET_BUS_CONDUCTORS[index].color,
-        glow: STREET_BUS_CONDUCTORS[index].glow,
+        color: CONDUCTORS[index].color,
+        glow: CONDUCTORS[index].glow,
       };
     });
 
@@ -1455,14 +1427,14 @@ export function ElectricalOneLine({
           `${neutralVoltage.toFixed(1)} V`,
           formatBusCurrent(neutralCurrent),
         ],
-        color: STREET_BUS_CONDUCTORS[3].color,
-        glow: STREET_BUS_CONDUCTORS[3].glow,
+        color: CONDUCTORS[3].color,
+        glow: CONDUCTORS[3].glow,
       },
       {
         label: "GND",
-        lines: ["GND", `${groundVoltage.toFixed(1)} V`],
-        color: STREET_BUS_CONDUCTORS[4].color,
-        glow: STREET_BUS_CONDUCTORS[4].glow,
+        lines: ["GND", `${groundVoltage.toFixed(1)} V`, "—"],
+        color: CONDUCTORS[4].color,
+        glow: CONDUCTORS[4].glow,
       },
     ];
   }, [voltage, current, motorPowered, utilityActive, busSample]);
