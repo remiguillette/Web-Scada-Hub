@@ -492,6 +492,9 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
             <div className="mt-4 whitespace-pre-line font-mono text-[8px] leading-[1.18] tracking-[0.12em] text-[#9aa6b2]">
               {active ? t.switchgear3WayStatus : t.noFeed}
             </div>
+            <div className="mt-1 whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
+              {active ? t.switchgear3WayStatus : t.noFeed}
+            </div>
           </div>
 
           <div className="min-w-0 flex-1">
