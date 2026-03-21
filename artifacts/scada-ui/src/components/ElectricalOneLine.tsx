@@ -48,6 +48,13 @@ type DetailRow = {
   description: string;
 };
 
+type MiniStatus = {
+  label: string;
+  tag: string;
+  status: string;
+  active: boolean;
+};
+
 type CompactCardProps = {
   tag: string;
   title: string;
@@ -55,10 +62,12 @@ type CompactCardProps = {
   status: string;
   active: boolean;
   accent: Accent;
-  icon: ReactNode;
+  icon?: ReactNode;
   onClick?: () => void;
   width?: number;
   details?: DetailRow[];
+  statusDot?: boolean;
+  miniStatuses?: MiniStatus[];
 };
 
 type BaseNode = CompactCardProps & {
@@ -303,6 +312,8 @@ function CompactCard({
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const hasDetails = Boolean(details?.length);
+  const hasMiniStatuses = Boolean(miniStatuses?.length);
+  const hasExpandableContent = hasDetails || hasMiniStatuses;
   const content = (
     <>
       <div className="mb-1 flex items-start justify-between gap-1">
@@ -319,12 +330,23 @@ function CompactCard({
             </div>
           ) : null}
         </div>
-        <div className="mt-0.5 shrink-0">{icon}</div>
+        <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+          {statusDot ? (
+            <span
+              className={cn(
+                "h-2.5 w-2.5 rounded-full border border-white/30",
+                active ? "bg-[#00f7a1]" : "bg-[#ef4444]",
+              )}
+              aria-hidden="true"
+            />
+          ) : null}
+          {icon ? <div>{icon}</div> : null}
+        </div>
       </div>
-      <div className="font-mono text-[8px] leading-tight tracking-[0.12em]">
+      <div className="whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
         {status}
       </div>
-      {hasDetails ? (
+      {hasExpandableContent ? (
         <div className="mt-2 border-t border-white/10 pt-2">
           <button
             type="button"
@@ -356,39 +378,65 @@ function CompactCard({
           >
             <div className="overflow-hidden">
               <div className="overflow-hidden rounded-lg border border-white/10 bg-black/20 bg-none">
-                <table className="w-full border-collapse text-left font-mono text-[8px]">
-                  <thead className="bg-white/5 text-[#9fb3c8]">
-                    <tr>
-                      <th className="px-2 py-1 font-medium">
-                        {t.utility.details.table.parameter}
-                      </th>
-                      <th className="px-2 py-1 font-medium">
-                        {t.utility.details.table.unit}
-                      </th>
-                      <th className="px-2 py-1 font-medium">
-                        {t.utility.details.table.description}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {details?.map((detail) => (
-                      <tr
-                        key={detail.parameter}
-                        className="border-t border-white/10 align-top"
-                      >
-                        <td className="px-2 py-1.5 text-[#dce7f3]">
-                          {detail.parameter}
-                        </td>
-                        <td className="px-2 py-1.5 text-[#8ecae6]">
-                          {detail.value}
-                        </td>
-                        <td className="px-2 py-1.5 text-[#9fb3c8]">
-                          {detail.description}
-                        </td>
+                {hasDetails ? (
+                  <table className="w-full border-collapse text-left font-mono text-[8px]">
+                    <thead className="bg-white/5 text-[#9fb3c8]">
+                      <tr>
+                        <th className="px-2 py-1 font-medium">
+                          {t.utility.details.table.parameter}
+                        </th>
+                        <th className="px-2 py-1 font-medium">
+                          {t.utility.details.table.unit}
+                        </th>
+                        <th className="px-2 py-1 font-medium">
+                          {t.utility.details.table.description}
+                        </th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {details?.map((detail) => (
+                        <tr
+                          key={detail.parameter}
+                          className="border-t border-white/10 align-top"
+                        >
+                          <td className="px-2 py-1.5 text-[#dce7f3]">
+                            {detail.parameter}
+                          </td>
+                          <td className="px-2 py-1.5 text-[#8ecae6]">
+                            {detail.value}
+                          </td>
+                          <td className="px-2 py-1.5 text-[#9fb3c8]">
+                            {detail.description}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : null}
+
+                {hasMiniStatuses ? (
+                  <div className="divide-y divide-white/10">
+                    {miniStatuses?.map((miniStatus) => (
+                      <div
+                        key={`${miniStatus.label}-${miniStatus.tag}`}
+                        className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-2 font-mono text-[8px] tracking-[0.12em]"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-[#dce7f3]">{miniStatus.label}</div>
+                          <div className="mt-0.5 text-[#70839f]">{miniStatus.tag}</div>
+                        </div>
+                        <div
+                          className={cn(
+                            "self-center whitespace-nowrap text-right",
+                            miniStatus.active ? "text-[#8bd6b6]" : "text-[#edb2b5]",
+                          )}
+                        >
+                          {miniStatus.status}
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -397,7 +445,7 @@ function CompactCard({
     </>
   );
 
-  const effectiveWidth = hasDetails && detailsOpen ? width : CARD_W;
+  const effectiveWidth = hasExpandableContent && detailsOpen ? width : CARD_W;
 
   const cardClasses = cn(
     "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
@@ -2061,9 +2109,47 @@ export function ElectricalOneLine({
               </div>
 
               <div
-                className="relative z-[1]"
+                className="relative z-[1] flex items-center"
                 style={{ marginLeft: UTILITY_CARD_GAP }}
               >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "POLE-0326",
+                    title: t.riserPole,
+                    subtitle: "Structure:",
+                    status: `Class 2 wood pole
+Height: 45 ft
+Load class: heavy distribution`,
+                    active: state.supplyLive,
+                    accent: "cyan",
+                    width: 340,
+                    statusDot: true,
+                    miniStatuses: [
+                      {
+                        label: "Surge arresters",
+                        tag: "LA-UTIL",
+                        status: "Normal",
+                        active: state.supplyLive,
+                      },
+                      {
+                        label: "Cutouts",
+                        tag: "FCO-UTIL",
+                        status: state.supplyLive ? "Closed" : "Open",
+                        active: state.supplyLive,
+                      },
+                      {
+                        label: "Termination",
+                        tag: "OH-UG Transition",
+                        status: state.supplyLive ? "Connected" : "Disconnected",
+                        active: state.supplyLive,
+                      },
+                    ],
+                  }}
+                />
+
+                <HWire powered={state.supplyLive} className="w-4" />
+
                 <NodeCard
                   node={{
                     kind: "equipment",
