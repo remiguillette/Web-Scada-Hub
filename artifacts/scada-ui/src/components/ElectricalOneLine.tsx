@@ -123,6 +123,7 @@ const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
+const ISOLATED_SWITCHGEAR_CARD_WIDTH = CARD_W;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_COUNT * CARD_W +
@@ -2011,28 +2012,33 @@ export function ElectricalOneLine({
                 </div>
 
                 <div
-                  className="relative z-[1] flex items-center"
-                  style={{ marginLeft: UTILITY_CARD_GAP }}
+                  className="relative z-[1] shrink-0"
+                  style={{
+                    marginLeft: UTILITY_CARD_GAP,
+                    width: ISOLATED_SWITCHGEAR_CARD_WIDTH,
+                  }}
                 >
-                  <NodeCard
-                    node={{
-                      kind: "equipment",
-                      tag: "SWGR-3W",
-                      title: t.padMountedSwitchgear,
-                      status: state.supplyLive
-                        ? t.switchgear3WayStatus
-                        : t.noFeed,
-                      active: state.supplyLive,
-                      accent: "cyan",
-                      icon: (
-                        <StatusIcon
-                          icon="zap"
-                          active={state.supplyLive}
-                          activeColor="text-[#00dcff]"
-                        />
-                      ),
-                    }}
-                  />
+                  <div className="absolute inset-0 flex items-center">
+                    <NodeCard
+                      node={{
+                        kind: "equipment",
+                        tag: "SWGR-3W",
+                        title: t.padMountedSwitchgear,
+                        status: state.supplyLive
+                          ? t.switchgear3WayStatus
+                          : t.noFeed,
+                        active: state.supplyLive,
+                        accent: "cyan",
+                        icon: (
+                          <StatusIcon
+                            icon="zap"
+                            active={state.supplyLive}
+                            activeColor="text-[#00dcff]"
+                          />
+                        ),
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
