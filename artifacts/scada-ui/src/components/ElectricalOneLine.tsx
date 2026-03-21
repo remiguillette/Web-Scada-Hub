@@ -614,8 +614,10 @@ function BeaverWoodsMtCard({
                     </div>
                   </div>
                 ) : null}
-                <div>
-                  <div className="text-[#7f93ab]">{card.phaseLabel}</div>
+                <div className="flex flex-col items-center">
+                  <div className="w-full max-w-[260px] text-[#7f93ab]">
+                    {card.phaseLabel}
+                  </div>
                   {index < 2 ? (
                     <PhaseMetricPanel
                       metrics={conductorMetrics}
