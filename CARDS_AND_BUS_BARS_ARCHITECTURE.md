@@ -11,8 +11,8 @@ The SCADA system uses a modular card-based architecture to represent electrical 
 ### What Are Cards?
 
 Cards are the fundamental UI components that represent electrical equipment and devices. Each card displays:
-- **Tag**: Unique identifier (e.g., `SWGR-3W`, `CB-GEN`)
-- **Title**: Equipment description (e.g., "Pad-Mounted Switchgear", "Circuit Breaker")
+- **Tag**: Unique identifier (e.g., `Beaver Woods MT`, `CB-GEN`)
+- **Title**: Equipment description (e.g., "Beaver Woods MT", "Circuit Breaker")
 - **Status**: Current operational state (e.g., "Closed", "Open", "Monitoring")
 - **Visual Indicator**: Active/inactive state with color coding
 - **Icon**: Visual representation of the device type
@@ -30,8 +30,8 @@ Represent power generation sources:
 
 #### 2. **Equipment Cards** (`kind: "equipment"`)
 Represent protective and control devices:
-- Circuit breakers and switchgear (CB-GEN, SWGR-3W)
-- Pad-Mounted Switchgear (SWGR-3W)
+- Circuit breakers and switchgear (CB-GEN, Beaver Woods MT)
+- Medium-voltage utility panels (Beaver Woods MT)
 - Transformers
 - Meters and Main Panels
 
@@ -47,10 +47,12 @@ Cards use **accent colors** to indicate equipment type and status:
 | Accent | Color | Use Case |
 |--------|-------|----------|
 | **green** | `#8bd6b6` | Active/Normal operation |
-| **cyan** | `#5bc2db` | Protection equipment, switchgear |
+| **cyan** | `#5bc2db` | Protection equipment and utility gear |
 | **red** | `#d55e68` | Fault/Error state |
 | **amber** | `#d89a5a` | Warning/Standby state |
 | **violet** | `#9b87c4` | Monitoring/Control systems |
+
+Specialized panels can override the default accent border styling. The Beaver Woods MT utility panel uses an **orange dotted border** so the enlarged medium-voltage substation callout stands out without changing the rest of the current line spacing.
 
 ---
 
@@ -102,8 +104,8 @@ CONDUCTORS = [
               ├──► Riser Pole (POLE-0326)
               │    └──► Overhead-to-underground transition
               │
-              ├──► Pad-Mounted Switchgear (SWGR-3W)
-              │    └──► Utility isolation & 3-way loop feed distribution
+              ├──► Beaver Woods MT
+              │    └──► 13.8kV urban distribution MV substation panel
               │
               └──► Main Bus Bar (BUS BAR)
                    │
@@ -133,7 +135,7 @@ CONDUCTORS = [
 1. Utility Service (`UTILITY`)
 2. Supplementary Utility Cards (configuration monitoring)
 3. Riser Pole (`POLE-0326`)
-4. Pad-Mounted Switchgear (`SWGR-3W`)
+4. Beaver Woods MT (`Beaver Woods MT`)
 5. **Main Bus Bar** (`BUS BAR`)
 
 **Connection Method**: SVG conductor paths with animated flow when active
@@ -253,7 +255,7 @@ Motor:         MTR-001 (600V, 2.2A, 0.88 PF)
 | Component | Tag | Type | Voltage | Status Display |
 |-----------|-----|------|---------|-----------------|
 | Utility Service | UTILITY | Source | 13.8kV | Connected/Disconnected |
-| Switchgear | SWGR-3W | Equipment | 13.8kV | Utility Isolation / 3-Way Loop Feed |
+| Utility MV Panel | Beaver Woods MT | Equipment | 13.8kV | Niagara Falls, ON / Urban Distribution / MV substation |
 | **Main Bus Bar** | BUS BAR | Bus | 13.8kV | Live/Dead |
 | Generators | GEN-001/002/003 | Source | 13.8kV | Running/Standby/Off |
 | Generator Breaker | CB-GEN | Equipment | 13.8kV | Closed/Open |
