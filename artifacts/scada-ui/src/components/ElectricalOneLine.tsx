@@ -570,11 +570,6 @@ function BeaverWoodsMtCard({
                 ) : null}
                 <div>
                   <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  {card.phaseSubtitle ? (
-                    <div className="mt-0.5 text-[6px] tracking-[0.1em] text-[#5f7188]">
-                      {card.phaseSubtitle}
-                    </div>
-                  ) : null}
                   <div className="mt-1 flex flex-wrap gap-1">
                     {phaseLabels.map((phase, phaseIndex) => (
                       <span
