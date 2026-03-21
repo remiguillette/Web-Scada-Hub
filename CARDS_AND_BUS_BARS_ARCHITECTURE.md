@@ -11,8 +11,8 @@ The SCADA system uses a modular card-based architecture to represent electrical 
 ### What Are Cards?
 
 Cards are the fundamental UI components that represent electrical equipment and devices. Each card displays:
-- **Tag**: Unique identifier (e.g., `LA-UTIL`, `CB-GEN`)
-- **Title**: Equipment description (e.g., "Lightning Arresters", "Circuit Breaker")
+- **Tag**: Unique identifier (e.g., `FCO-UTIL`, `CB-GEN`)
+- **Title**: Equipment description (e.g., "Fused Cutouts", "Circuit Breaker")
 - **Status**: Current operational state (e.g., "Closed", "Open", "Monitoring")
 - **Visual Indicator**: Active/inactive state with color coding
 - **Icon**: Visual representation of the device type
@@ -30,7 +30,6 @@ Represent power generation sources:
 
 #### 2. **Equipment Cards** (`kind: "equipment"`)
 Represent protective and control devices:
-- Lightning Arresters (LA-UTIL)
 - Fused Cutouts (FCO-UTIL)
 - Circuit Breakers/Reclosers (CB-UTIL, CB-GEN)
 - Pad-Mounted Switchgear (SWGR-3W)
@@ -102,9 +101,6 @@ CONDUCTORS = [
 │          13,800V / 60Hz 3Φ              │
 └─────────────┬───────────────────────────┘
               │
-              ├──► Lightning Arresters (LA-UTIL)
-              │    └──► Protective grounding
-              │
               ├──► Fused Cutouts (FCO-UTIL)
               │    └──► Fault current limiting
               │
@@ -153,11 +149,10 @@ CONDUCTORS = [
 **Cards in sequence:**
 1. Utility Service (`UTILITY`)
 2. Supplementary Utility Cards (configuration monitoring)
-3. Lightning Arresters (`LA-UTIL`)
-4. Fused Cutouts (`FCO-UTIL`)
-5. Breaker/Recloser (`CB-UTIL`)
-6. Riser Pole & Switchgear (`POLE-0326`, `SWGR-3W`)
-7. **Main Bus Bar** (`BUS BAR`)
+3. Fused Cutouts (`FCO-UTIL`)
+4. Breaker/Recloser (`CB-UTIL`)
+5. Riser Pole & Switchgear (`POLE-0326`, `SWGR-3W`)
+6. **Main Bus Bar** (`BUS BAR`)
 
 **Connection Method**: SVG conductor paths with animated flow when active
 - Spacing: 150px between major cards
@@ -300,7 +295,6 @@ Motor:         MTR-001 (600V, 2.2A, 0.88 PF)
 | Component | Tag | Type | Voltage | Status Display |
 |-----------|-----|------|---------|-----------------|
 | Utility Service | UTILITY | Source | 13.8kV | Connected/Disconnected |
-| Lightning Arresters | LA-UTIL | Equipment | 13.8kV | Normal/Fault |
 | Fused Cutouts | FCO-UTIL | Equipment | 13.8kV | Closed/Open |
 | Breaker/Recloser | CB-UTIL | Equipment | 13.8kV | Closed/Open/Tripped |
 | Switchgear | SWGR-3W | Equipment | 13.8kV | 3-Way Loop Feed |
