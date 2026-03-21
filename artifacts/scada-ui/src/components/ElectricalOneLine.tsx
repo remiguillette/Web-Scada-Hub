@@ -225,14 +225,14 @@ function PhaseMetricPanel({
     <div
       className={cn(
         "grid grid-cols-5 gap-1 font-mono text-center",
-        compact ? "max-w-[210px]" : "",
+        compact ? "max-w-[260px]" : "",
         className,
       )}
     >
       {metrics.map((metric) => (
         <div
           key={`phase-panel-${metric.label}`}
-          className="flex min-w-0 flex-col items-center"
+          className="flex min-w-[48px] flex-col items-center"
           style={{
             color: metric.color,
             textShadow: "none",
@@ -241,10 +241,10 @@ function PhaseMetricPanel({
           {metric.lines.map((line, lineIndex) => {
             const lineClassName =
               lineIndex === 0
-                ? "text-[8px] font-semibold tracking-[0.14em]"
+                ? "text-[8px] font-semibold tracking-[0.14em] whitespace-nowrap"
                 : lineIndex === 1
-                  ? "text-[7px] tracking-[0.08em]"
-                  : "text-[6px] tracking-[0.08em] opacity-70";
+                  ? "text-[7px] tracking-[0.08em] whitespace-nowrap"
+                  : "text-[6px] tracking-[0.08em] opacity-70 whitespace-nowrap";
 
             return (
               <span
@@ -623,11 +623,11 @@ function BeaverWoodsMtCard({
                       className="mt-1"
                     />
                   ) : (
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <div className="mt-1 flex flex-nowrap gap-1 overflow-x-auto whitespace-nowrap">
                       {STREET_BUS_CONDUCTORS.map((phase) => (
                         <span
                           key={`${card.sourceLabel}-${phase.label}`}
-                          className="rounded border px-1.5 py-0.5 text-[7px]"
+                          className="rounded border px-1.5 py-0.5 text-[7px] whitespace-nowrap"
                           style={{
                             borderColor: `${phase.color}55`,
                             color: phase.color,
