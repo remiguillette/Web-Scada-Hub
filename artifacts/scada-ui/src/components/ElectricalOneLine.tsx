@@ -2004,30 +2004,28 @@ export function ElectricalOneLine({
                     kind: "equipment",
                     tag: "POLE-0326",
                     title: t.riserPole,
-                    subtitle: "Structure:",
-                    status: `Class 2 wood pole
-Height: 45 ft
-Load class: heavy distribution`,
+                    subtitle: t.structureLabel,
+                    status: t.riserPoleStatus,
                     active: state.supplyLive,
                     accent: "cyan",
                     width: 340,
                     statusDot: true,
                     miniStatuses: [
                       {
-                        label: "Surge arresters",
+                        label: t.surgeArresters,
                         tag: "LA-UTIL",
                         status: "Normal",
                         active: state.supplyLive,
                       },
                       {
-                        label: "Cutouts",
+                        label: t.fusedCutouts,
                         tag: "FCO-UTIL",
                         status: state.supplyLive ? "Closed" : "Open",
                         active: state.supplyLive,
                       },
                       {
-                        label: "Termination",
-                        tag: "OH-UG Transition",
+                        label: t.overheadUndergroundTransition,
+                        tag: t.overheadUndergroundTransition,
                         status: state.supplyLive ? "Connected" : "Disconnected",
                         active: state.supplyLive,
                       },
