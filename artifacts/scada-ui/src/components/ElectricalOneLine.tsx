@@ -464,6 +464,13 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     { label: "Service", value: "Urban Distribution" },
   ];
 
+  const incomingLineFields = [
+    { label: "POWER IN", value: active ? "13.8 kV" : "0.0 kV" },
+    { label: "POWER BY PHASE", value: active ? "A/B/C NORMAL" : "A/B/C LOSS" },
+    { label: "Hz", value: active ? "60.0" : "0.0" },
+    { label: "status", value: active ? "ENERGIZED" : "DE-ENERGIZED" },
+  ];
+
   return (
     <div className="relative shrink-0" style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}>
       <div
@@ -474,29 +481,63 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
           borderStyle: "dotted",
         }}
       >
-        <div className="mb-1 flex items-start justify-between gap-1">
-          <div className="min-w-0">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 w-[54px] pt-1">
             <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
               Beaver Woods MT
             </div>
-            <div className="font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
-              Beaver Woods MT
+            <div className="mt-1 font-display text-[10px] font-semibold uppercase leading-[1.05] tracking-[0.07em] text-[#c7d2e2]">
+              BEAVER WOODS MT
+            </div>
+            <div className="mt-4 whitespace-pre-line font-mono text-[8px] leading-[1.18] tracking-[0.12em] text-[#9aa6b2]">
+              {active ? t.switchgear3WayStatus : t.noFeed}
             </div>
           </div>
-          <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
-            <StatusIcon
-              icon="zap"
-              active={active}
-              activeColor="text-[#00dcff]"
-            />
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex justify-end">
+              <StatusIcon
+                icon="zap"
+                active={active}
+                activeColor="text-[#00dcff]"
+              />
+            </div>
+
+            <div className="rounded-[22px] border-2 border-[#b67b14] bg-[#071219]/95 px-4 pb-4 pt-3 shadow-[0_0_22px_rgba(245,158,11,0.12)]">
+              <div className="max-w-[170px] font-display text-[8px] font-semibold uppercase leading-[1.4] tracking-[0.22em] text-[#f8c15c]">
+                UTILITY INCOMING LINE NPE
+              </div>
+              <div className="mt-4 space-y-2 font-mono text-[7px] leading-tight tracking-[0.14em]">
+                {incomingLineFields.map((field) => (
+                  <div
+                    key={field.label}
+                    className="grid grid-cols-[72px_minmax(0,1fr)] gap-2"
+                  >
+                    <div className="text-[#7f93ab]">{field.label}:</div>
+                    <div className="text-right text-[#dce7f3]">{field.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="min-w-[68px] rounded-lg border-2 border-[#f97316]/80 bg-[#2a1208] px-2.5 py-1 font-mono text-[7px] tracking-[0.18em] text-[#fdba74]"
+                >
+                  ALARM
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex min-w-[88px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#22d3ee]/70 bg-[#06202a] px-2.5 py-1 font-mono text-[7px] tracking-[0.18em] text-[#67e8f9]"
+                >
+                  <Power className="h-3 w-3" />
+                  POWER
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
-          {active ? t.switchgear3WayStatus : t.noFeed}
-        </div>
-
-        <div className="mt-2 border-t border-white/10 pt-2 font-mono text-[8px] tracking-[0.12em]">
+        <div className="mt-4 border-t border-white/10 pt-3 font-mono text-[8px] tracking-[0.12em]">
           <div className="mb-1 text-[#8ecae6]">Suggested Value</div>
           <div className="space-y-1.5">
             {fields.map((field) => (
