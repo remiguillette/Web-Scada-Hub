@@ -456,23 +456,18 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     "rounded-2xl border px-3 py-3 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
-
-  const cleanColumnCards = [
-    {
-      title: "UTILITY Critical",
-      status: active ? t.switchgear3WayStatus : t.noFeed,
-      detailLabel: "Priority",
-      detailValue: "Critical Load",
-      accent: "#f59e0b",
-    },
-    {
-      title: "GENERATOR",
-      status: active ? t.generatorActive : "Standby",
-      detailLabel: "Mode",
-      detailValue: active ? "Ready" : "Offline",
-      accent: "#8b5cf6",
-    },
-  ];
+  const accentColors = ["#22d3ee", "#f59e0b", "#8b5cf6"];
+  const beaverCards = t.beaverWoodsMt.cards.map((card) => ({
+    originLabel: "",
+    originValue: "",
+    networkLabel: "",
+    networkValue: "",
+    voltageLabel: "",
+    voltageValue: "",
+    detailSecondaryLabel: "",
+    detailSecondaryValue: "",
+    ...card,
+  }));
 
   return (
     <div
@@ -490,63 +485,86 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
         <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2">
           <div>
             <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#70839f]">
-              Utility incoming source
+              {t.beaverWoodsMt.incomingSource}
             </div>
             <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[#dce7f3]">
-              Beaver Woods MT
+              {t.beaverWoodsMt.title}
             </div>
           </div>
           <StatusIcon icon="zap" active={active} activeColor="text-[#00dcff]" />
         </div>
 
         <div className="mt-3 flex flex-col gap-2">
-          <div className="rounded-xl border border-[#22d3ee]/35 bg-[#071219]/95 px-3 py-3 shadow-[0_0_22px_rgba(34,211,238,0.1)]">
-            <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
-              Card 01
-            </div>
-            <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-              Utility Incoming Line NPE
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
-              <div>
-                <div className="text-[#7f93ab]">Feed</div>
-                <div className="mt-1 text-[#dce7f3]">
-                  {active ? "Normal" : "Loss"}
-                </div>
-              </div>
-              <div>
-                <div className="text-[#7f93ab]">Voltage</div>
-                <div className="mt-1 text-[#dce7f3]">
-                  {active ? "13.8 kV" : "0.0 kV"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {cleanColumnCards.map((card, index) => (
+          {beaverCards.map((card, index) => (
             <div
-              key={card.title}
+              key={card.cardLabel}
               className="rounded-xl border bg-[#071219]/95 px-3 py-3"
               style={{
-                borderColor: `${card.accent}59`,
-                boxShadow: `0 0 22px ${card.accent}1f`,
+                borderColor: `${accentColors[index] ?? "#22d3ee"}59`,
+                boxShadow: `0 0 22px ${accentColors[index] ?? "#22d3ee"}1f`,
               }}
             >
-              <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
-                Card 0{index + 2}
-              </div>
-              <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-                {card.title}
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[#7f93ab]">Status</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.status}</div>
+                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
+                    {card.cardLabel}
+                  </div>
+                  <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+                    {card.sourceLabel}
+                  </div>
+                  <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
+                    {card.title}
+                  </div>
+                </div>
+                <StatusIcon
+                  icon="zap"
+                  active={active}
+                  activeColor="text-[#00dcff]"
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 font-mono text-[7px] tracking-[0.14em]">
+                {card.originLabel ? (
+                  <div>
+                    <div className="text-[#7f93ab]">{card.originLabel}</div>
+                    <div className="mt-1 text-[#dce7f3]">{card.originValue}</div>
+                  </div>
+                ) : null}
+                {card.networkLabel ? (
+                  <div>
+                    <div className="text-[#7f93ab]">{card.networkLabel}</div>
+                    <div className="mt-1 text-[#dce7f3]">{card.networkValue}</div>
+                  </div>
+                ) : null}
+                {card.voltageLabel ? (
+                  <div>
+                    <div className="text-[#7f93ab]">{card.voltageLabel}</div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {active ? card.voltageValue : "0.0 kV"}
+                    </div>
+                  </div>
+                ) : null}
+                <div>
+                  <div className="text-[#7f93ab]">{card.phaseLabel}</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.phaseValue}</div>
+                </div>
+                <div>
+                  <div className="text-[#7f93ab]">{card.hzLabel}</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.hzValue || "—"}</div>
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.detailLabel}</div>
                   <div className="mt-1 text-[#dce7f3]">{card.detailValue}</div>
                 </div>
+                {card.detailSecondaryLabel ? (
+                  <div className="col-span-2">
+                    <div className="text-[#7f93ab]">
+                      {card.detailSecondaryLabel}
+                    </div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {card.detailSecondaryValue}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           ))}
