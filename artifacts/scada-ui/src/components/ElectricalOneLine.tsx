@@ -1979,35 +1979,12 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={4}
+                cardCount={3}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
-              <div className="relative z-[1]">
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "LA-UTIL",
-                    title: t.lightningArresters,
-                    status: state.supplyLive
-                      ? t.lightningArresterStatus
-                      : t.noFeed,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
               <div
                 className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
               >
                 <NodeCard
                   node={{
