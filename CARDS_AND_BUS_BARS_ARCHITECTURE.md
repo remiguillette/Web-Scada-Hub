@@ -11,8 +11,8 @@ The SCADA system uses a modular card-based architecture to represent electrical 
 ### What Are Cards?
 
 Cards are the fundamental UI components that represent electrical equipment and devices. Each card displays:
-- **Tag**: Unique identifier (e.g., `CB-UTIL`, `CB-GEN`)
-- **Title**: Equipment description (e.g., "Breaker/Recloser", "Circuit Breaker")
+- **Tag**: Unique identifier (e.g., `SWGR-3W`, `CB-GEN`)
+- **Title**: Equipment description (e.g., "Pad-Mounted Switchgear", "Circuit Breaker")
 - **Status**: Current operational state (e.g., "Closed", "Open", "Monitoring")
 - **Visual Indicator**: Active/inactive state with color coding
 - **Icon**: Visual representation of the device type
@@ -30,7 +30,7 @@ Represent power generation sources:
 
 #### 2. **Equipment Cards** (`kind: "equipment"`)
 Represent protective and control devices:
-- Circuit Breakers/Reclosers (CB-UTIL, CB-GEN)
+- Circuit breakers and switchgear (CB-GEN, SWGR-3W)
 - Pad-Mounted Switchgear (SWGR-3W)
 - Transformers
 - Meters and Main Panels
@@ -103,11 +103,8 @@ CONDUCTORS = [
               ├──► Riser Pole (POLE-0326)
               │    └──► Overhead-to-underground transition
               │
-              ├──► Breaker/Recloser (CB-UTIL)
-              │    └──► Isolation & fault detection
-              │
               ├──► Pad-Mounted Switchgear (SWGR-3W)
-              │    └──► 3-way loop feed distribution
+              │    └──► Utility isolation & 3-way loop feed distribution
               │
               └──► Main Bus Bar (BUS BAR)
                    │
@@ -149,9 +146,8 @@ CONDUCTORS = [
 1. Utility Service (`UTILITY`)
 2. Supplementary Utility Cards (configuration monitoring)
 3. Riser Pole (`POLE-0326`)
-4. Breaker/Recloser (`CB-UTIL`)
-5. Pad-Mounted Switchgear (`SWGR-3W`)
-6. **Main Bus Bar** (`BUS BAR`)
+4. Pad-Mounted Switchgear (`SWGR-3W`)
+5. **Main Bus Bar** (`BUS BAR`)
 
 **Connection Method**: SVG conductor paths with animated flow when active
 - Spacing: 150px between major cards
@@ -294,8 +290,7 @@ Motor:         MTR-001 (600V, 2.2A, 0.88 PF)
 | Component | Tag | Type | Voltage | Status Display |
 |-----------|-----|------|---------|-----------------|
 | Utility Service | UTILITY | Source | 13.8kV | Connected/Disconnected |
-| Breaker/Recloser | CB-UTIL | Equipment | 13.8kV | Closed/Open/Tripped |
-| Switchgear | SWGR-3W | Equipment | 13.8kV | 3-Way Loop Feed |
+| Switchgear | SWGR-3W | Equipment | 13.8kV | Utility Isolation / 3-Way Loop Feed |
 | **Main Bus Bar** | BUS BAR | Bus | 13.8kV | Live/Dead |
 | Feeder A (Residential) | UG-FDR-A | Feeder | 13.8kV | Loop Feed/Standby |
 | Feeder B (Commercial) | UG-FDR-B | Feeder | 13.8kV | Loop Feed/Standby |

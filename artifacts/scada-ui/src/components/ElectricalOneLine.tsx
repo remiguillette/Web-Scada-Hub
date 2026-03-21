@@ -2036,27 +2036,8 @@ export function ElectricalOneLine({
 
               <div
                 className="relative z-[1] flex items-center"
-                style={{ marginLeft: UTILITY_CARD_GAP, gap: UTILITY_CARD_GAP }}
+                style={{ marginLeft: UTILITY_CARD_GAP }}
               >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "CB-UTIL",
-                    title: t.breakerRecloser,
-                    status: state.supplyLive ? t.closed : t.openStandby,
-                    active: state.supplyLive,
-                    accent: state.supplyLive ? "green" : "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00f7a1]"
-                        inactiveColor="text-[#ffb347]"
-                      />
-                    ),
-                  }}
-                />
-
                 <NodeCard
                   node={{
                     kind: "equipment",
