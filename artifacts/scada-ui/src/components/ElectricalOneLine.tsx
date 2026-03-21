@@ -457,13 +457,6 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
 
-  const primaryCardFields = [
-    { label: "Card Code", value: "Utility Incoming Line NPE" },
-    { label: "Location", value: "Niagara Falls, ON" },
-    { label: "Voltage", value: active ? "13.8 kV" : "0.0 kV" },
-    { label: "Status", value: active ? "Energized" : "De-energized" },
-  ];
-
   const cleanColumnCards = [
     {
       title: "UTILITY Critical",
@@ -482,7 +475,10 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
   ];
 
   return (
-    <div className="relative shrink-0" style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}>
+    <div
+      className="relative shrink-0"
+      style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}
+    >
       <div
         className={cardClasses}
         style={{
@@ -503,93 +499,57 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
           <StatusIcon icon="zap" active={active} activeColor="text-[#00dcff]" />
         </div>
 
-        <div className="mt-3 grid grid-cols-[148px_minmax(0,1fr)] gap-3">
-          <div className="rounded-xl border border-white/10 bg-[#071219]/70 px-3 py-3">
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="rounded-xl border border-[#22d3ee]/35 bg-[#071219]/95 px-3 py-3 shadow-[0_0_22px_rgba(34,211,238,0.1)]">
             <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
-              Title
+              Card 01
             </div>
-            <div className="mt-1 font-display text-[11px] font-semibold uppercase leading-tight tracking-[0.08em] text-[#f8fbff]">
+            <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
               Utility Incoming Line NPE
             </div>
-
-            <div className="mt-3 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
-              Info
-            </div>
-            <div className="mt-2 space-y-1.5 font-mono text-[7px] tracking-[0.14em]">
-              {primaryCardFields.map((field) => (
-                <div
-                  key={field.label}
-                  className="grid grid-cols-[58px_minmax(0,1fr)] gap-2"
-                >
-                  <div className="text-[#7f93ab]">{field.label}</div>
-                  <div className="text-right text-[#dce7f3]">{field.value}</div>
+            <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
+              <div>
+                <div className="text-[#7f93ab]">Feed</div>
+                <div className="mt-1 text-[#dce7f3]">
+                  {active ? "Normal" : "Loss"}
                 </div>
-              ))}
-            </div>
-
-            <div className="mt-3 flex justify-end gap-2 border-t border-white/10 pt-3">
-              <button
-                type="button"
-                className="inline-flex min-w-[72px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#f97316]/80 bg-[#2a1208] px-2 py-1 font-mono text-[7px] tracking-[0.18em] text-[#fdba74]"
-              >
-                <ShieldAlert className="h-3 w-3" />
-                Alarm
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-w-[80px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#22d3ee]/70 bg-[#06202a] px-2 py-1 font-mono text-[7px] tracking-[0.18em] text-[#67e8f9]"
-              >
-                <Power className="h-3 w-3" />
-                Power
-              </button>
+              </div>
+              <div>
+                <div className="text-[#7f93ab]">Voltage</div>
+                <div className="mt-1 text-[#dce7f3]">
+                  {active ? "13.8 kV" : "0.0 kV"}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="rounded-xl border border-[#22d3ee]/35 bg-[#071219]/95 px-3 py-3 shadow-[0_0_22px_rgba(34,211,238,0.1)]">
-              <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
-                Card 01
+          {cleanColumnCards.map((card, index) => (
+            <div
+              key={card.title}
+              className="rounded-xl border bg-[#071219]/95 px-3 py-3"
+              style={{
+                borderColor: `${card.accent}59`,
+                boxShadow: `0 0 22px ${card.accent}1f`,
+              }}
+            >
+              <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
+                Card 0{index + 2}
               </div>
               <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-                Utility Incoming Line NPE
+                {card.title}
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
                 <div>
-                  <div className="text-[#7f93ab]">Feed</div>
-                  <div className="mt-1 text-[#dce7f3]">{active ? "Normal" : "Loss"}</div>
+                  <div className="text-[#7f93ab]">Status</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.status}</div>
                 </div>
                 <div>
-                  <div className="text-[#7f93ab]">Voltage</div>
-                  <div className="mt-1 text-[#dce7f3]">{active ? "13.8 kV" : "0.0 kV"}</div>
+                  <div className="text-[#7f93ab]">{card.detailLabel}</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.detailValue}</div>
                 </div>
               </div>
             </div>
-
-            {cleanColumnCards.map((card, index) => (
-              <div
-                key={card.title}
-                className="rounded-xl border bg-[#071219]/95 px-3 py-3"
-                style={{ borderColor: `${card.accent}59`, boxShadow: `0 0 22px ${card.accent}1f` }}
-              >
-                <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
-                  Card 0{index + 2}
-                </div>
-                <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-                  {card.title}
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
-                  <div>
-                    <div className="text-[#7f93ab]">Status</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.status}</div>
-                  </div>
-                  <div>
-                    <div className="text-[#7f93ab]">{card.detailLabel}</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.detailValue}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </div>
