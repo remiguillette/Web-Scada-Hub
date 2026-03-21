@@ -586,18 +586,19 @@ function BeaverWoodsMtCard({
                     </div>
                   </div>
                 ) : null}
-                <div className="flex flex-col items-center">
-                  <div className="w-full max-w-[260px] text-[#7f93ab]">
-                    {card.phaseLabel}
-                  </div>
+                <div>
+                  <div className="text-[#7f93ab]">{card.hzLabel}</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.hzValue}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-[#7f93ab]">{card.phaseLabel}</div>
                   {index < 2 ? (
                     <PhaseMetricPanel
                       metrics={conductorMetrics}
-                      compact
-                      className="mt-1"
+                      className="mt-1 w-full"
                     />
                   ) : (
-                    <div className="mt-1 flex flex-nowrap gap-1 overflow-x-auto whitespace-nowrap">
+                    <div className="mt-1 flex flex-nowrap gap-1 whitespace-nowrap">
                       {CONDUCTORS.map((phase) => (
                         <span
                           key={`${card.sourceLabel}-${phase.label}`}
@@ -614,15 +615,11 @@ function BeaverWoodsMtCard({
                   )}
                 </div>
                 <div>
-                  <div className="text-[#7f93ab]">{card.hzLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.hzValue}</div>
-                </div>
-                <div>
                   <div className="text-[#7f93ab]">{card.detailLabel}</div>
                   <div className="mt-1 text-[#dce7f3]">{card.detailValue}</div>
                 </div>
                 {card.detailSecondaryLabel ? (
-                  <div className="col-span-2">
+                  <div>
                     <div className="text-[#7f93ab]">
                       {card.detailSecondaryLabel}
                     </div>
