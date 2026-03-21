@@ -306,6 +306,8 @@ function CompactCard({
   onClick,
   width = CARD_W,
   details,
+  statusDot = false,
+  miniStatuses,
 }: CompactCardProps) {
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
