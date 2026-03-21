@@ -132,11 +132,12 @@ const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_CARD_GAP;
 const PAN_STEP = 120;
 const BASE_DIAGRAM_SCALE = 3;
-const MIN_ZOOM = 0.45;
+const MIN_ZOOM = 0.150;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.0015;
 const KEYBOARD_ZOOM_STEP = 0.1;
 const BUTTON_ZOOM_STEP = 0.15;
+const PAN_OVERSCROLL = 280; // allow a small overscroll so top/bottom cards can be fully reached
 
 const CONDUCTORS = [
   { label: "L1", color: "#5a82b5", glow: "rgba(90,130,181,0.18)" },
@@ -194,7 +195,11 @@ function clampOffset(
     return (viewportSize - contentSize) / 2;
   }
 
-  return clamp(offset, viewportSize - contentSize, 0);
+  return clamp(
+    offset,
+    viewportSize - contentSize - PAN_OVERSCROLL,
+    PAN_OVERSCROLL,
+  );
 }
 
 function formatBusVoltage(value: number) {
