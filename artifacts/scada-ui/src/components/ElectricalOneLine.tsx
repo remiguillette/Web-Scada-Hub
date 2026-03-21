@@ -1979,36 +1979,12 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={2}
+                cardCount={3}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
               <div
                 className="relative z-[1]"
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "CB-UTIL",
-                    title: t.breakerRecloser,
-                    status: state.supplyLive ? t.closed : t.openStandby,
-                    active: state.supplyLive,
-                    accent: state.supplyLive ? "green" : "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00f7a1]"
-                        inactiveColor="text-[#ffb347]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1] flex items-center"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
               >
                 <NodeCard
                   node={{
@@ -2043,6 +2019,30 @@ Load class: heavy distribution`,
                         active: state.supplyLive,
                       },
                     ],
+                  }}
+                />
+              </div>
+
+              <div
+                className="relative z-[1] flex items-center"
+                style={{ marginLeft: UTILITY_CARD_GAP }}
+              >
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "CB-UTIL",
+                    title: t.breakerRecloser,
+                    status: state.supplyLive ? t.closed : t.openStandby,
+                    active: state.supplyLive,
+                    accent: state.supplyLive ? "green" : "amber",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#00f7a1]"
+                        inactiveColor="text-[#ffb347]"
+                      />
+                    ),
                   }}
                 />
 

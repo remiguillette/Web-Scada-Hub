@@ -100,6 +100,9 @@ CONDUCTORS = [
 │          13,800V / 60Hz 3Φ              │
 └─────────────┬───────────────────────────┘
               │
+              ├──► Riser Pole (POLE-0326)
+              │    └──► Overhead-to-underground transition
+              │
               ├──► Breaker/Recloser (CB-UTIL)
               │    └──► Isolation & fault detection
               │
@@ -145,9 +148,10 @@ CONDUCTORS = [
 **Cards in sequence:**
 1. Utility Service (`UTILITY`)
 2. Supplementary Utility Cards (configuration monitoring)
-3. Breaker/Recloser (`CB-UTIL`)
-4. Riser Pole & Switchgear (`POLE-0326`, `SWGR-3W`)
-5. **Main Bus Bar** (`BUS BAR`)
+3. Riser Pole (`POLE-0326`)
+4. Breaker/Recloser (`CB-UTIL`)
+5. Pad-Mounted Switchgear (`SWGR-3W`)
+6. **Main Bus Bar** (`BUS BAR`)
 
 **Connection Method**: SVG conductor paths with animated flow when active
 - Spacing: 150px between major cards
