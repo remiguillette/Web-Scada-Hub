@@ -68,6 +68,8 @@ type CompactCardProps = {
   details?: DetailRow[];
   statusDot?: boolean;
   miniStatuses?: MiniStatus[];
+  cardClassName?: string;
+  cardStyle?: CSSProperties;
 };
 
 type BaseNode = CompactCardProps & {
@@ -263,6 +265,8 @@ function CompactCard({
   details,
   statusDot = false,
   miniStatuses,
+  cardClassName,
+  cardStyle,
 }: CompactCardProps) {
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -329,10 +333,11 @@ function CompactCard({
   const cardClasses = cn(
     "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
+    cardClassName,
   );
 
   const cardBody = (
-    <div className={cardClasses} style={{ width: CARD_W }}>
+    <div className={cardClasses} style={{ ...cardStyle }}>
       {content}
     </div>
   );
@@ -2017,18 +2022,51 @@ export function ElectricalOneLine({
                   <NodeCard
                     node={{
                       kind: "equipment",
-                      tag: "SWGR-3W",
-                      title: t.padMountedSwitchgear,
+                      tag: "Beaver Woods MT",
+                      title: "Beaver Woods MT",
+                      subtitle: "Niagara Falls, ON",
                       status: state.supplyLive
-                        ? t.switchgear3WayStatus
+                        ? "13.8kV • Urban Distribution"
                         : t.noFeed,
                       active: state.supplyLive,
-                      accent: "cyan",
+                      accent: "amber",
+                      details: [
+                        {
+                          parameter: "Identifier",
+                          value: "Beaver Woods MT",
+                          description: "Suggested Value",
+                        },
+                        {
+                          parameter: "Location",
+                          value: "Niagara Falls, ON",
+                          description: "Suggested Value",
+                        },
+                        {
+                          parameter: "Voltage",
+                          value: "13.8kV",
+                          description: "Suggested Value",
+                        },
+                        {
+                          parameter: "Service",
+                          value: "Urban Distribution",
+                          description: "Suggested Value",
+                        },
+                        {
+                          parameter: "Class",
+                          value: "Medium Voltage (MV) substation",
+                          description: "Suggested Value",
+                        },
+                      ],
+                      cardClassName: "border-orange-500 border-dotted",
+                      cardStyle: {
+                        borderColor: "orange",
+                        borderStyle: "dotted",
+                      },
                       icon: (
                         <StatusIcon
                           icon="zap"
                           active={state.supplyLive}
-                          activeColor="text-[#00dcff]"
+                          activeColor="text-[#f59e0b]"
                         />
                       ),
                     }}
