@@ -455,14 +455,26 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
   return <CompactCard {...node} />;
 }
 
-function BeaverWoodsMtCard({ active }: { active: boolean }) {
+function BeaverWoodsMtCard({
+  active,
+  frequency,
+  generatorLiveStates,
+}: {
+  active: boolean;
+  frequency: number;
+  generatorLiveStates?: GeneratorLiveStatus[];
+}) {
   const { t } = useTranslation();
   const cardClasses = cn(
     "rounded-2xl border px-3 py-3 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
   const accentColors = ["#22d3ee", "#f59e0b", "#8b5cf6"];
-  const beaverCards = t.beaverWoodsMt.cards.map((card) => ({
+  const phaseLabels = STREET_BUS_CONDUCTORS.map((conductor) => conductor.label);
+  const activeGenerator = generatorLiveStates?.find(
+    (generator) => generator.state !== "OFFLINE",
+  );
+  const beaverCards = t.beaverWoodsMt.cards.map((card, index) => ({
     originLabel: "",
     originValue: "",
     networkLabel: "",
@@ -472,6 +484,14 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     detailSecondaryLabel: "",
     detailSecondaryValue: "",
     ...card,
+    hzValue:
+      index < 2
+        ? active
+          ? frequency.toFixed(2)
+          : "0.00"
+        : activeGenerator
+          ? activeGenerator.frequency.toFixed(2)
+          : "0.00",
   }));
 
   return (
@@ -511,14 +531,8 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
-                    {card.cardLabel}
-                  </div>
-                  <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
                     {card.sourceLabel}
-                  </div>
-                  <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-                    {card.title}
                   </div>
                 </div>
                 <StatusIcon
@@ -550,11 +564,26 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
                 ) : null}
                 <div>
                   <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.phaseValue}</div>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {phaseLabels.map((phase, phaseIndex) => (
+                      <span
+                        key={`${card.sourceLabel}-${phase}`}
+                        className="rounded border px-1.5 py-0.5 text-[7px]"
+                        style={{
+                          borderColor: `${STREET_BUS_CONDUCTORS[phaseIndex]?.color ?? "#22d3ee"}55`,
+                          color:
+                            STREET_BUS_CONDUCTORS[phaseIndex]?.color ??
+                            "#dce7f3",
+                        }}
+                      >
+                        {phase}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.hzLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.hzValue || "—"}</div>
+                  <div className="mt-1 text-[#dce7f3]">{card.hzValue}</div>
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.detailLabel}</div>
@@ -2150,7 +2179,11 @@ export function ElectricalOneLine({
                   }}
                 >
                   <div className="absolute inset-0 flex items-center">
-                    <BeaverWoodsMtCard active={state.supplyLive} />
+                    <BeaverWoodsMtCard
+                      active={state.supplyLive}
+                      frequency={frequency}
+                      generatorLiveStates={generatorLiveStates}
+                    />
                   </div>
                 </div>
               </div>
