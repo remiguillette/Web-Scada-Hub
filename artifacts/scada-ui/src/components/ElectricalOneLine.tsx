@@ -124,7 +124,7 @@ const SOURCE_COL_W = 142;
 const UTILITY_CARD_GAP = 150;
 const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
-const ISOLATED_SWITCHGEAR_CARD_WIDTH = 198;
+const ISOLATED_SWITCHGEAR_CARD_WIDTH = 352;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
 const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_COUNT * CARD_W +
@@ -453,23 +453,25 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
 function BeaverWoodsMtCard({ active }: { active: boolean }) {
   const { t } = useTranslation();
   const cardClasses = cn(
-    "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
+    "rounded-2xl border px-3 py-3 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
 
   const fields = [
-    { label: "Identifier", value: "Beaver Woods MT" },
+    { label: "Card Code", value: "Beaver Woods MT" },
     { label: "Location", value: "Niagara Falls, ON" },
-    { label: "Voltage", value: "13.8kV" },
+    { label: "Voltage", value: "13.8 kV" },
     { label: "Service", value: "Urban Distribution" },
   ];
 
   const incomingLineFields = [
-    { label: "POWER IN", value: active ? "13.8 kV" : "0.0 kV" },
-    { label: "POWER BY PHASE", value: active ? "A/B/C NORMAL" : "A/B/C LOSS" },
-    { label: "Hz", value: active ? "60.0" : "0.0" },
-    { label: "status", value: active ? "ENERGIZED" : "DE-ENERGIZED" },
+    { label: "Power In", value: active ? "13.8 kV" : "0.0 kV" },
+    { label: "Power by Phase", value: active ? "A / B / C Normal" : "A / B / C Loss" },
+    { label: "Frequency", value: active ? "60.0 Hz" : "0.0 Hz" },
+    { label: "Status", value: active ? "Energized" : "De-energized" },
   ];
+
+  const futureCardColumns = ["Utility", "Critical", "Generator"];
 
   return (
     <div className="relative shrink-0" style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}>
@@ -477,83 +479,119 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
         className={cardClasses}
         style={{
           width: ISOLATED_SWITCHGEAR_CARD_WIDTH,
-          borderColor: "orange",
+          borderColor: "rgba(249,115,22,0.7)",
           borderStyle: "dotted",
         }}
       >
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 w-[54px] pt-1">
-            <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
+        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2">
+          <div>
+            <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#70839f]">
+              Utility incoming source
+            </div>
+            <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[#dce7f3]">
               Beaver Woods MT
             </div>
-            <div className="mt-1 font-display text-[10px] font-semibold uppercase leading-[1.05] tracking-[0.07em] text-[#c7d2e2]">
-              BEAVER WOODS MT
-            </div>
-            <div className="mt-4 whitespace-pre-line font-mono text-[8px] leading-[1.18] tracking-[0.12em] text-[#9aa6b2]">
-              {active ? t.switchgear3WayStatus : t.noFeed}
-            </div>
-            <div className="mt-1 whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
-              {active ? t.switchgear3WayStatus : t.noFeed}
-            </div>
           </div>
+          <StatusIcon icon="zap" active={active} activeColor="text-[#00dcff]" />
+        </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="mb-2 flex justify-end">
-              <StatusIcon
-                icon="zap"
-                active={active}
-                activeColor="text-[#00dcff]"
-              />
+        <div className="mt-3 grid grid-cols-[132px_minmax(0,1fr)] gap-3">
+          <div className="rounded-xl border border-white/10 bg-[#071219]/70 px-3 py-3">
+            <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+              Title
+            </div>
+            <div className="mt-1 font-display text-[11px] font-semibold uppercase leading-tight tracking-[0.08em] text-[#f8fbff]">
+              Utility Incoming Line NPE
             </div>
 
-            <div className="rounded-[22px] border-2 border-[#b67b14] bg-[#071219]/95 px-4 pb-4 pt-3 shadow-[0_0_22px_rgba(245,158,11,0.12)]">
-              <div className="max-w-[170px] font-display text-[8px] font-semibold uppercase leading-[1.4] tracking-[0.22em] text-[#f8c15c]">
-                UTILITY INCOMING LINE NPE
+            <div className="mt-3 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+              Info
+            </div>
+            <div className="mt-2 space-y-1.5 font-mono text-[7px] tracking-[0.14em]">
+              {incomingLineFields.map((field) => (
+                <div
+                  key={field.label}
+                  className="grid grid-cols-[58px_minmax(0,1fr)] gap-2"
+                >
+                  <div className="text-[#7f93ab]">{field.label}</div>
+                  <div className="text-right text-[#dce7f3]">{field.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+                Suggested Value
               </div>
-              <div className="mt-4 space-y-2 font-mono text-[7px] leading-tight tracking-[0.14em]">
-                {incomingLineFields.map((field) => (
+              <div className="mt-2 space-y-1.5 font-mono text-[7px] tracking-[0.14em]">
+                {fields.map((field) => (
                   <div
                     key={field.label}
-                    className="grid grid-cols-[72px_minmax(0,1fr)] gap-2"
+                    className="grid grid-cols-[58px_minmax(0,1fr)] gap-2"
                   >
-                    <div className="text-[#7f93ab]">{field.label}:</div>
+                    <div className="text-[#70839f]">{field.label}</div>
                     <div className="text-right text-[#dce7f3]">{field.value}</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex justify-end gap-2">
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#b67b14] bg-[#071219]/95 px-3 py-3 shadow-[0_0_22px_rgba(245,158,11,0.12)]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#f8c15c]">
+                Right Layout · Future Cards
+              </div>
+              <div className="font-mono text-[7px] uppercase tracking-[0.18em] text-[#9fb3c8]">
+                3 card columns
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {futureCardColumns.map((column) => (
+                <div
+                  key={column}
+                  className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5 text-center font-mono text-[7px] uppercase tracking-[0.18em] text-[#cbd5e1]"
+                >
+                  {column}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 rounded-xl border border-[#f59e0b]/35 bg-[#0a1620] px-3 py-3">
+              <div className="font-display text-[9px] font-semibold uppercase tracking-[0.18em] text-[#f8c15c]">
+                Example
+              </div>
+              <div className="mt-1 font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-[#f8fbff]">
+                Utility Incoming Line NPE
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-[7px] tracking-[0.14em]">
+                <div className="rounded-lg border border-white/10 bg-black/20 px-2 py-2">
+                  <div className="text-[#7f93ab]">Status</div>
+                  <div className="mt-1 text-[#dce7f3]">{active ? t.switchgear3WayStatus : t.noFeed}</div>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/20 px-2 py-2">
+                  <div className="text-[#7f93ab]">Use</div>
+                  <div className="mt-1 text-[#dce7f3]">Future card slot</div>
+                </div>
+              </div>
+              <div className="mt-3 flex justify-end gap-2">
                 <button
                   type="button"
-                  className="min-w-[68px] rounded-lg border-2 border-[#f97316]/80 bg-[#2a1208] px-2.5 py-1 font-mono text-[7px] tracking-[0.18em] text-[#fdba74]"
+                  className="min-w-[64px] rounded-lg border-2 border-[#f97316]/80 bg-[#2a1208] px-2 py-1 font-mono text-[7px] tracking-[0.18em] text-[#fdba74]"
                 >
-                  ALARM
+                  Alarm
                 </button>
                 <button
                   type="button"
-                  className="inline-flex min-w-[88px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#22d3ee]/70 bg-[#06202a] px-2.5 py-1 font-mono text-[7px] tracking-[0.18em] text-[#67e8f9]"
+                  className="inline-flex min-w-[80px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#22d3ee]/70 bg-[#06202a] px-2 py-1 font-mono text-[7px] tracking-[0.18em] text-[#67e8f9]"
                 >
                   <Power className="h-3 w-3" />
-                  POWER
+                  Power
                 </button>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-4 border-t border-white/10 pt-3 font-mono text-[8px] tracking-[0.12em]">
-          <div className="mb-1 text-[#8ecae6]">Suggested Value</div>
-          <div className="space-y-1.5">
-            {fields.map((field) => (
-              <div
-                key={field.label}
-                className="grid grid-cols-[64px_minmax(0,1fr)] gap-2"
-              >
-                <div className="text-[#70839f]">{field.label}</div>
-                <div className="text-[#dce7f3]">{field.value}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 text-[#9fb3c8]">Medium Voltage (MV) substation</div>
         </div>
       </div>
     </div>
