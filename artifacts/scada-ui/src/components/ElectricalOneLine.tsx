@@ -2011,34 +2011,11 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={5}
+                cardCount={4}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
               <div className="relative z-[1]">
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "POLE-001",
-                    title: t.riserPole,
-                    status: state.supplyLive ? "4.8 KV" : t.dead,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="power"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
                 <NodeCard
                   node={{
                     kind: "equipment",
