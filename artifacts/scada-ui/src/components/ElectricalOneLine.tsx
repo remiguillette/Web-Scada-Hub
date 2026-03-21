@@ -472,6 +472,7 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     detailSecondaryLabel: "",
     detailSecondaryValue: "",
     ...card,
+    phaseDisplay: ["L1", "L2", "L3", "N", "GND"],
   }));
 
   return (
@@ -487,22 +488,10 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
           borderStyle: "dotted",
         }}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2">
-          <div>
-            <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#70839f]">
-              {t.beaverWoodsMt.incomingSource}
-            </div>
-            <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[#dce7f3]">
-              {t.beaverWoodsMt.title}
-            </div>
-          </div>
-          <StatusIcon icon="zap" active={active} activeColor="text-[#00dcff]" />
-        </div>
-
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           {beaverCards.map((card, index) => (
             <div
-              key={card.cardLabel}
+              key={`${card.sourceLabel}-${index}`}
               className="rounded-xl border bg-[#071219]/95 px-3 py-3"
               style={{
                 borderColor: `${accentColors[index] ?? "#22d3ee"}59`,
@@ -511,14 +500,8 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
-                    {card.cardLabel}
-                  </div>
-                  <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
                     {card.sourceLabel}
-                  </div>
-                  <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
-                    {card.title}
                   </div>
                 </div>
                 <StatusIcon
@@ -548,14 +531,24 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
                     </div>
                   </div>
                 ) : null}
-                <div>
-                  <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.phaseValue}</div>
+                <div className="col-span-2">
+                  <div className="mt-1 flex flex-wrap gap-1 text-[#dce7f3]">
+                    {card.phaseDisplay.map((phase) => (
+                      <span
+                        key={phase}
+                        className="rounded border border-[#284657] bg-[#0b1b24] px-1.5 py-0.5 text-[7px] tracking-[0.14em]"
+                      >
+                        {phase}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[#7f93ab]">{card.hzLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.hzValue || "—"}</div>
-                </div>
+                {card.hzValue ? (
+                  <div>
+                    <div className="text-[#7f93ab]">{card.hzLabel}</div>
+                    <div className="mt-1 text-[#dce7f3]">{card.hzValue}</div>
+                  </div>
+                ) : null}
                 <div>
                   <div className="text-[#7f93ab]">{card.detailLabel}</div>
                   <div className="mt-1 text-[#dce7f3]">{card.detailValue}</div>
