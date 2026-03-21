@@ -464,6 +464,13 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
     { label: "Service", value: "Urban Distribution" },
   ];
 
+  const incomingLineFields = [
+    { label: "POWER IN", value: active ? "13.8 kV" : "0.0 kV" },
+    { label: "POWER BY PHASE", value: active ? "A/B/C NORMAL" : "A/B/C LOSS" },
+    { label: "Hz", value: active ? "60.0" : "0.0" },
+    { label: "status", value: active ? "ENERGIZED" : "DE-ENERGIZED" },
+  ];
+
   return (
     <div className="relative shrink-0" style={{ width: ISOLATED_SWITCHGEAR_CARD_WIDTH }}>
       <div
@@ -474,26 +481,60 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
           borderStyle: "dotted",
         }}
       >
-        <div className="mb-1 flex items-start justify-between gap-1">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
             <div className="truncate font-mono text-[8px] tracking-[0.22em] text-[#70839f]">
               Beaver Woods MT
             </div>
             <div className="font-display text-[10px] font-semibold uppercase leading-tight tracking-[0.07em]">
               Beaver Woods MT
             </div>
+            <div className="mt-1 whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
+              {active ? t.switchgear3WayStatus : t.noFeed}
+            </div>
           </div>
-          <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
-            <StatusIcon
-              icon="zap"
-              active={active}
-              activeColor="text-[#00dcff]"
-            />
-          </div>
-        </div>
 
-        <div className="whitespace-pre-line font-mono text-[8px] leading-tight tracking-[0.12em]">
-          {active ? t.switchgear3WayStatus : t.noFeed}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <StatusIcon
+                icon="zap"
+                active={active}
+                activeColor="text-[#00dcff]"
+              />
+            </div>
+
+            <div className="w-[150px] rounded-lg border border-[#f59e0b]/60 bg-[#071219]/95 p-2 shadow-[0_0_18px_rgba(245,158,11,0.12)]">
+              <div className="font-display text-[8px] font-semibold uppercase tracking-[0.18em] text-[#f8c15c]">
+                UTILITY INCOMING LINE NPE
+              </div>
+              <div className="mt-2 space-y-1 font-mono text-[7px] leading-tight tracking-[0.12em]">
+                {incomingLineFields.map((field) => (
+                  <div
+                    key={field.label}
+                    className="grid grid-cols-[58px_minmax(0,1fr)] gap-1"
+                  >
+                    <div className="text-[#7f93ab]">{field.label}:</div>
+                    <div className="text-right text-[#dce7f3]">{field.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 flex justify-end gap-1">
+                <button
+                  type="button"
+                  className="rounded border border-[#f97316]/70 bg-[#2a1208] px-2 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#fdba74]"
+                >
+                  ALARM
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded border border-[#22d3ee]/60 bg-[#06202a] px-2 py-0.5 font-mono text-[7px] tracking-[0.16em] text-[#67e8f9]"
+                >
+                  <Power className="h-2.5 w-2.5" />
+                  POWER
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="mt-2 border-t border-white/10 pt-2 font-mono text-[8px] tracking-[0.12em]">
