@@ -68,6 +68,7 @@ type CompactCardProps = {
   details?: DetailRow[];
   statusDot?: boolean;
   miniStatuses?: MiniStatus[];
+  cardStyle?: CSSProperties;
 };
 
 type BaseNode = CompactCardProps & {
@@ -264,6 +265,7 @@ function CompactCard({
   details,
   statusDot = false,
   miniStatuses,
+  cardStyle,
 }: CompactCardProps) {
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -333,7 +335,7 @@ function CompactCard({
   );
 
   const cardBody = (
-    <div className={cardClasses} style={{ width: CARD_W }}>
+    <div className={cardClasses} style={{ width: CARD_W, ...cardStyle }}>
       {content}
     </div>
   );
@@ -2022,13 +2024,39 @@ export function ElectricalOneLine({
                     <NodeCard
                       node={{
                         kind: "equipment",
-                        tag: "SWGR-3W",
-                        title: t.padMountedSwitchgear,
+                        tag: "Beaver Woods MT",
+                        title: "Beaver Woods MT",
                         status: state.supplyLive
                           ? t.switchgear3WayStatus
                           : t.noFeed,
                         active: state.supplyLive,
                         accent: "cyan",
+                        details: [
+                          {
+                            parameter: "Identifier",
+                            value: "Beaver Woods MT",
+                            description: "Medium Voltage (MV) substation",
+                          },
+                          {
+                            parameter: "Location",
+                            value: "Niagara Falls, ON",
+                            description: "Urban Distribution",
+                          },
+                          {
+                            parameter: "Voltage",
+                            value: "13.8kV",
+                            description: "Nominal service voltage",
+                          },
+                          {
+                            parameter: "Service",
+                            value: "Urban Distribution",
+                            description: "Medium Voltage (MV) substation",
+                          },
+                        ],
+                        cardStyle: {
+                          borderColor: "orange",
+                          borderStyle: "dotted",
+                        },
                         icon: (
                           <StatusIcon
                             icon="zap"
