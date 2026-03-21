@@ -2015,99 +2015,6 @@ export function ElectricalOneLine({
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
-              <div className="relative z-[1]">
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "POLE-001",
-                    title: t.riserPole,
-                    status: state.supplyLive ? "4.8 KV" : t.dead,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="power"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "LA-UTIL",
-                    title: t.lightningArresters,
-                    status: state.supplyLive
-                      ? t.lightningArresterStatus
-                      : t.noFeed,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "FCO-UTIL",
-                    title: t.fusedCutouts,
-                    status: state.supplyLive ? t.fusedCutoutStatus : t.openStandby,
-                    active: state.supplyLive,
-                    accent: "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#ffb347]"
-                        inactiveColor="text-[#94a3b8]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "CB-UTIL",
-                    title: t.breakerRecloser,
-                    status: state.supplyLive ? t.closed : t.openStandby,
-                    active: state.supplyLive,
-                    accent: state.supplyLive ? "green" : "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00f7a1]"
-                        inactiveColor="text-[#ffb347]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
               <div
                 className="relative z-[1] flex items-center"
                 style={{ marginLeft: UTILITY_CARD_GAP }}
@@ -2145,6 +2052,27 @@ Load class: heavy distribution`,
                         active: state.supplyLive,
                       },
                     ],
+                  }}
+                />
+
+                <HWire powered={state.supplyLive} className="w-4" />
+
+                <NodeCard
+                  node={{
+                    kind: "equipment",
+                    tag: "CB-UTIL",
+                    title: t.breakerRecloser,
+                    status: state.supplyLive ? t.closed : t.openStandby,
+                    active: state.supplyLive,
+                    accent: state.supplyLive ? "green" : "amber",
+                    icon: (
+                      <StatusIcon
+                        icon="shield"
+                        active={state.supplyLive}
+                        activeColor="text-[#00f7a1]"
+                        inactiveColor="text-[#ffb347]"
+                      />
+                    ),
                   }}
                 />
 
