@@ -427,7 +427,7 @@ function CompactCard({
 
   if (!onClick) {
     return (
-      <div className="relative shrink-0" style={{ width: CARD_W }}>
+      <div className="relative shrink-0" style={{ width }}>
         {cardBody}
         {detailOverlay}
       </div>
@@ -435,7 +435,7 @@ function CompactCard({
   }
 
   return (
-    <div className="relative shrink-0" style={{ width: CARD_W }}>
+    <div className="relative shrink-0" style={{ width }}>
       <button
         type="button"
         onClick={onClick}
