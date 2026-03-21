@@ -48,6 +48,13 @@ type DetailRow = {
   description: string;
 };
 
+type MiniStatus = {
+  label: string;
+  tag: string;
+  value: string;
+  active: boolean;
+};
+
 type CompactCardProps = {
   tag: string;
   title: string;
@@ -59,6 +66,8 @@ type CompactCardProps = {
   onClick?: () => void;
   width?: number;
   details?: DetailRow[];
+  statusDot?: boolean;
+  miniStatuses?: MiniStatus[];
 };
 
 type BaseNode = CompactCardProps & {
@@ -317,11 +326,64 @@ function CompactCard({
             </div>
           ) : null}
         </div>
-        <div className="mt-0.5 shrink-0">{icon}</div>
+        <div className="mt-0.5 flex shrink-0 items-center gap-1.5">
+          {statusDot ? (
+            <span
+              className={cn(
+                "relative inline-flex h-2.5 w-2.5 shrink-0 rounded-full",
+                active ? "bg-[#00f7a1]" : "bg-[#ff5f56]",
+              )}
+              aria-label={active ? "Status online" : "Status offline"}
+            >
+              <span
+                className={cn(
+                  "absolute inset-0 rounded-full animate-ping opacity-70",
+                  active ? "bg-[#00f7a1]" : "bg-[#ff5f56]",
+                )}
+              />
+            </span>
+          ) : null}
+          <div className="mt-0.5 shrink-0">{icon}</div>
+        </div>
       </div>
       <div className="font-mono text-[8px] leading-tight tracking-[0.12em]">
         {status}
       </div>
+      {miniStatuses?.length ? (
+        <div className="mt-2 space-y-1.5 border-t border-white/10 pt-2">
+          {miniStatuses.map((miniStatus, index) => (
+            <div
+              key={`${miniStatus.tag}-${index}`}
+              className="flex items-center justify-between gap-2 rounded-lg border border-white/8 bg-black/20 px-2 py-1.5 transition-all duration-300 hover:border-white/15 hover:bg-black/30"
+            >
+              <div className="min-w-0">
+                <div className="truncate font-display text-[8px] font-semibold uppercase tracking-[0.1em] text-[#dce7f3]">
+                  {miniStatus.label}
+                </div>
+                <div className="truncate font-mono text-[7px] tracking-[0.16em] text-[#70839f]">
+                  {miniStatus.tag}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-right font-mono text-[8px] tracking-[0.12em]">
+                <span
+                  className={cn(
+                    "relative inline-flex h-2 w-2 shrink-0 rounded-full",
+                    miniStatus.active ? "bg-[#00f7a1]" : "bg-[#ffb347]",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-0 rounded-full animate-pulse",
+                      miniStatus.active ? "bg-[#00f7a1]/60" : "bg-[#ffb347]/60",
+                    )}
+                  />
+                </span>
+                <span className={miniStatus.active ? "text-[#d9fff2]" : "text-[#ffe0b2]"}>{miniStatus.value}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
       {hasDetails ? (
         <div className="mt-2 border-t border-white/10 pt-2">
           <button
@@ -333,7 +395,12 @@ function CompactCard({
             className="group inline-flex items-center gap-1.5 rounded-full border border-[#1f3b4d] bg-[#08131a] bg-none px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-[#8ecae6] transition-all duration-200 hover:scale-[1.02] hover:border-[#2a6078] hover:text-[#d9f7ff]"
             aria-expanded={detailsOpen}
           >
-            <span className="text-[10px] font-semibold leading-none transition-transform duration-200 group-data-[state=open]:rotate-90">
+            <span
+              className={cn(
+                "text-[10px] font-semibold leading-none transition-transform duration-200",
+                detailsOpen && "rotate-180",
+              )}
+            >
               {detailsOpen ? "−" : "+"}
             </span>
             <span>
@@ -395,7 +462,7 @@ function CompactCard({
     </>
   );
 
-  const effectiveWidth = hasDetails && detailsOpen ? width : CARD_W;
+  const effectiveWidth = hasDetails && detailsOpen ? width : miniStatuses?.length || statusDot ? width : CARD_W;
 
   const cardClasses = cn(
     "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
@@ -1400,6 +1467,63 @@ export function ElectricalOneLine({
     ),
   };
 
+  const riserPoleNode: EquipmentNode = {
+    kind: "equipment",
+    tag: "POLE-0326",
+    title: t.riserPole,
+    subtitle: "Main Card",
+    status: "Structure: Class 2 wood pole",
+    active: state.supplyLive,
+    accent: state.supplyLive ? "green" : "red",
+    width: 360,
+    statusDot: true,
+    miniStatuses: [
+      {
+        label: "Surge protectors",
+        tag: "LA-UTIL",
+        value: "Normal",
+        active: state.supplyLive,
+      },
+      {
+        label: "Cutouts",
+        tag: "FCO-UTIL",
+        value: state.supplyLive ? "Closed" : "Open",
+        active: state.supplyLive,
+      },
+      {
+        label: "Termination",
+        tag: "OH-UG Transition",
+        value: state.supplyLive ? "Connected" : "Disconnected",
+        active: state.supplyLive,
+      },
+    ],
+    details: [
+      {
+        parameter: "Structure",
+        value: "Class 2",
+        description: "Wood pole",
+      },
+      {
+        parameter: "Height",
+        value: "45 ft",
+        description: "Pole height",
+      },
+      {
+        parameter: "Load class",
+        value: "Heavy",
+        description: "Distribution",
+      },
+    ],
+    icon: (
+      <StatusIcon
+        icon="power"
+        active={state.supplyLive}
+        activeColor="text-[#00f7a1]"
+        inactiveColor="text-[#ff5f56]"
+      />
+    ),
+  };
+
   const supplementaryUtilityNodes: EquipmentNode[] = [
     {
       kind: "equipment",
@@ -1961,126 +2085,12 @@ export function ElectricalOneLine({
             >
               <UtilityCardInterconnect
                 active={state.supplyLive}
-                cardCount={5}
+                cardCount={1}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
               <div className="relative z-[1]">
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "POLE-001",
-                    title: t.riserPole,
-                    status: state.supplyLive ? "4.8 KV" : t.dead,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="power"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "LA-UTIL",
-                    title: t.lightningArresters,
-                    status: state.supplyLive
-                      ? t.lightningArresterStatus
-                      : t.noFeed,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "FCO-UTIL",
-                    title: t.fusedCutouts,
-                    status: state.supplyLive ? t.fusedCutoutStatus : t.openStandby,
-                    active: state.supplyLive,
-                    accent: "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#ffb347]"
-                        inactiveColor="text-[#94a3b8]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "CB-UTIL",
-                    title: t.breakerRecloser,
-                    status: state.supplyLive ? t.closed : t.openStandby,
-                    active: state.supplyLive,
-                    accent: state.supplyLive ? "green" : "amber",
-                    icon: (
-                      <StatusIcon
-                        icon="shield"
-                        active={state.supplyLive}
-                        activeColor="text-[#00f7a1]"
-                        inactiveColor="text-[#ffb347]"
-                      />
-                    ),
-                  }}
-                />
-              </div>
-
-              <div
-                className="relative z-[1]"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
-              >
-                <NodeCard
-                  node={{
-                    kind: "equipment",
-                    tag: "SWGR-3W",
-                    title: t.padMountedSwitchgear,
-                    status: state.supplyLive
-                      ? t.switchgear3WayStatus
-                      : t.noFeed,
-                    active: state.supplyLive,
-                    accent: "cyan",
-                    icon: (
-                      <StatusIcon
-                        icon="zap"
-                        active={state.supplyLive}
-                        activeColor="text-[#00dcff]"
-                      />
-                    ),
-                  }}
-                />
+                <NodeCard node={riserPoleNode} />
               </div>
             </div>
 
