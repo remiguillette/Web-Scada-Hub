@@ -68,6 +68,7 @@ type CompactCardProps = {
   details?: DetailRow[];
   statusDot?: boolean;
   miniStatuses?: MiniStatus[];
+  cardStyle?: CSSProperties;
 };
 
 type BaseNode = CompactCardProps & {
@@ -264,6 +265,7 @@ function CompactCard({
   details,
   statusDot = false,
   miniStatuses,
+  cardStyle,
 }: CompactCardProps) {
   const { t } = useTranslation();
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -333,7 +335,7 @@ function CompactCard({
   );
 
   const cardBody = (
-    <div className={cardClasses} style={{ width: CARD_W }}>
+    <div className={cardClasses} style={{ width: CARD_W, ...cardStyle }}>
       {content}
     </div>
   );
