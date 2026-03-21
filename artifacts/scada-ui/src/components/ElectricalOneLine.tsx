@@ -132,7 +132,7 @@ const UTILITY_LEFT_CLUSTER_WIDTH =
   UTILITY_SUPPLEMENTARY_CARD_GAP;
 const PAN_STEP = 120;
 const BASE_DIAGRAM_SCALE = 3;
-const MIN_ZOOM = 0.150;
+const MIN_ZOOM = 0.15;
 const MAX_ZOOM = 2.6;
 const ZOOM_STEP = 0.0015;
 const KEYBOARD_ZOOM_STEP = 0.1;
@@ -455,24 +455,136 @@ function NodeCard({ node }: { node: SourceNode | EquipmentNode | ATSNode }) {
   return <CompactCard {...node} />;
 }
 
-function BeaverWoodsMtCard({ active }: { active: boolean }) {
+type BeaverWoodsMtCardProps = {
+  active: boolean;
+  frequency: number;
+  conductorMetrics: StreetBusMetric[];
+  current: number;
+  apparentPower: number;
+  activePower: number;
+  reactivePower: number;
+  powerFactor: number;
+  generatorLiveStates?: GeneratorLiveStatus[];
+};
+
+type BeaverWoodsMtDisplayCard = {
+  cardLabel: string;
+  sourceLabel: string;
+  title: string;
+  originLabel: string;
+  originValue: string;
+  networkLabel: string;
+  networkValue: string;
+  voltageLabel: string;
+  voltageValue: string;
+  phaseLabel: string;
+  phaseValue: string;
+  hzLabel: string;
+  hzValue: string;
+  detailLabel: string;
+  detailValue: string;
+  detailSecondaryLabel?: string;
+  detailSecondaryValue?: string;
+};
+
+function BeaverWoodsMtCard({
+  active,
+  frequency,
+  conductorMetrics,
+  current,
+  apparentPower,
+  activePower,
+  reactivePower,
+  powerFactor,
+  generatorLiveStates,
+}: BeaverWoodsMtCardProps) {
   const { t } = useTranslation();
   const cardClasses = cn(
     "rounded-2xl border px-3 py-3 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
   const accentColors = ["#22d3ee", "#f59e0b", "#8b5cf6"];
-  const beaverCards = t.beaverWoodsMt.cards.map((card) => ({
-    originLabel: "",
-    originValue: "",
-    networkLabel: "",
-    networkValue: "",
-    voltageLabel: "",
-    voltageValue: "",
-    detailSecondaryLabel: "",
-    detailSecondaryValue: "",
-    ...card,
-  }));
+  const utilitySnapshot = buildUtilitySnapshot({
+    energized: active,
+    frequency,
+    current,
+    activePower,
+    apparentPower,
+    reactivePower,
+    powerFactor,
+  });
+  const liveGeneratorCount =
+    generatorLiveStates?.filter(
+      (state) =>
+        state.state === "READY" ||
+        state.state === "LOADED" ||
+        state.state === "STABILIZING" ||
+        (state.state === "STARTING" && state.voltage > 100),
+    ).length ?? 0;
+  const phaseSummary = conductorMetrics
+    .map((phase) => phase.lines.join(" · "))
+    .join(" | ");
+  const generatorVoltage =
+    generatorLiveStates?.reduce(
+      (maxVoltage, state) => Math.max(maxVoltage, state.voltage),
+      0,
+    ) ?? 0;
+  const beaverCards: BeaverWoodsMtDisplayCard[] = t.beaverWoodsMt.cards.map(
+    (card, index) => {
+      const displayCard = card as Partial<BeaverWoodsMtDisplayCard> &
+        Pick<
+          BeaverWoodsMtDisplayCard,
+          | "cardLabel"
+          | "sourceLabel"
+          | "title"
+          | "phaseLabel"
+          | "phaseValue"
+          | "hzLabel"
+          | "hzValue"
+          | "detailLabel"
+          | "detailValue"
+        >;
+
+      return {
+        ...displayCard,
+        originLabel: displayCard.originLabel ?? "",
+        sourceLabel:
+          index < 2
+            ? utilitySnapshot.source
+            : t.beaverWoodsMt.siteGenerationSource,
+        originValue:
+          index === 0
+            ? t.beaverWoodsMt.primaryOrigin
+            : index === 1
+              ? t.beaverWoodsMt.secondaryOrigin
+              : t.beaverWoodsMt.campusOrigin,
+        networkLabel: displayCard.networkLabel ?? "",
+        networkValue:
+          index < 2
+            ? `${active ? t.beaverWoodsMt.networkConnected : t.beaverWoodsMt.networkDisconnected} • ${utilitySnapshot.utilityType}`
+            : `${liveGeneratorCount} ${liveGeneratorCount === 1 ? t.beaverWoodsMt.unitOnline : t.beaverWoodsMt.unitsOnline}`,
+        voltageLabel: displayCard.voltageLabel ?? "",
+        voltageValue:
+          index < 2
+            ? `${(SYSTEM.utility.nominalVoltage / 1000).toFixed(1)} kV`
+            : `${(generatorVoltage / 1000).toFixed(1)} kV`,
+        hzValue: active ? `${frequency.toFixed(2)} Hz` : "0.00 Hz",
+        detailValue:
+          index === 0
+            ? `${utilitySnapshot.activePowerKw.toFixed(1)} kW`
+            : index === 1
+              ? `${utilitySnapshot.totalServiceCurrent.toFixed(1)} A`
+              : active || liveGeneratorCount > 0
+                ? t.beaverWoodsMt.generatorSupportLive
+                : t.beaverWoodsMt.generatorSupportStandby,
+        detailSecondaryLabel: displayCard.detailSecondaryLabel,
+        detailSecondaryValue:
+          index === 2
+            ? `${liveGeneratorCount}/${SYSTEM.generators.length} ${t.beaverWoodsMt.available}`
+            : phaseSummary,
+      };
+    },
+  );
 
   return (
     <div
@@ -487,19 +599,7 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
           borderStyle: "dotted",
         }}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2">
-          <div>
-            <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#70839f]">
-              {t.beaverWoodsMt.incomingSource}
-            </div>
-            <div className="mt-1 font-display text-[11px] font-semibold uppercase tracking-[0.08em] text-[#dce7f3]">
-              {t.beaverWoodsMt.title}
-            </div>
-          </div>
-          <StatusIcon icon="zap" active={active} activeColor="text-[#00dcff]" />
-        </div>
-
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           {beaverCards.map((card, index) => (
             <div
               key={card.cardLabel}
@@ -511,10 +611,7 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#9fb3c8]">
-                    {card.cardLabel}
-                  </div>
-                  <div className="mt-1 font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
+                  <div className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#8ecae6]">
                     {card.sourceLabel}
                   </div>
                   <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f8fbff]">
@@ -531,30 +628,36 @@ function BeaverWoodsMtCard({ active }: { active: boolean }) {
                 {card.originLabel ? (
                   <div>
                     <div className="text-[#7f93ab]">{card.originLabel}</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.originValue}</div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {card.originValue}
+                    </div>
                   </div>
                 ) : null}
                 {card.networkLabel ? (
                   <div>
                     <div className="text-[#7f93ab]">{card.networkLabel}</div>
-                    <div className="mt-1 text-[#dce7f3]">{card.networkValue}</div>
+                    <div className="mt-1 text-[#dce7f3]">
+                      {card.networkValue}
+                    </div>
                   </div>
                 ) : null}
                 {card.voltageLabel ? (
                   <div>
                     <div className="text-[#7f93ab]">{card.voltageLabel}</div>
                     <div className="mt-1 text-[#dce7f3]">
-                      {active ? card.voltageValue : "0.0 kV"}
+                      {active || index === 2 ? card.voltageValue : "0.0 kV"}
                     </div>
                   </div>
                 ) : null}
                 <div>
                   <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.phaseValue}</div>
+                  <div className="mt-1 text-[#dce7f3]">{phaseSummary}</div>
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.hzLabel}</div>
-                  <div className="mt-1 text-[#dce7f3]">{card.hzValue || "—"}</div>
+                  <div className="mt-1 text-[#dce7f3]">
+                    {card.hzValue || "—"}
+                  </div>
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.detailLabel}</div>
@@ -2150,7 +2253,17 @@ export function ElectricalOneLine({
                   }}
                 >
                   <div className="absolute inset-0 flex items-center">
-                    <BeaverWoodsMtCard active={state.supplyLive} />
+                    <BeaverWoodsMtCard
+                      active={state.supplyLive}
+                      frequency={frequency}
+                      conductorMetrics={conductorMetrics}
+                      current={current}
+                      apparentPower={apparentPower}
+                      activePower={activePower}
+                      reactivePower={reactivePower}
+                      powerFactor={powerFactor}
+                      generatorLiveStates={generatorLiveStates}
+                    />
                   </div>
                 </div>
               </div>
