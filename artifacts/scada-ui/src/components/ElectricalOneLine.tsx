@@ -1968,7 +1968,7 @@ export function ElectricalOneLine({
               >
                 <UtilityCardInterconnect
                   active={state.supplyLive}
-                  cardCount={3}
+                  cardCount={2}
                   leadInWidth={UTILITY_TO_RISER_GAP}
                 />
 
