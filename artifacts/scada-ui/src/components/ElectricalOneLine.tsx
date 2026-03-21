@@ -137,7 +137,7 @@ type PinchState = {
 
 const CARD_W = 130;
 const SOURCE_COL_W = 142;
-const UTILITY_CARD_GAP = 150;
+const UTILITY_CARD_GAP = 220;
 const UTILITY_TO_RISER_GAP = 0;
 const UTILITY_SUPPLEMENTARY_CARD_GAP = 26;
 const UTILITY_SUPPLEMENTARY_COUNT = 4;
@@ -417,7 +417,7 @@ function CompactCard({
     </>
   );
 
-  const effectiveWidth = hasExpandableContent && detailsOpen ? width : CARD_W;
+  const effectiveWidth = width;
 
   const cardClasses = cn(
     "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
@@ -848,12 +848,20 @@ function UtilityCardInterconnect({
   active,
   cardCount,
   leadInWidth = 0,
+  cardWidths,
 }: {
   active: boolean;
   cardCount: number;
   leadInWidth?: number;
+  cardWidths?: number[];
 }) {
-  const cardSpanWidth = CARD_W * cardCount + UTILITY_CARD_GAP * (cardCount - 1);
+  const resolvedCardWidths =
+    cardWidths && cardWidths.length === cardCount
+      ? cardWidths
+      : Array.from({ length: cardCount }, () => CARD_W);
+  const cardSpanWidth =
+    resolvedCardWidths.reduce((sum, cardWidth) => sum + cardWidth, 0) +
+    UTILITY_CARD_GAP * Math.max(cardCount - 1, 0);
   const svgHeight = 92;
   const anchorY = svgHeight / 2;
   const conductorSpread = 8;
@@ -861,9 +869,12 @@ function UtilityCardInterconnect({
   const convergeLength = 22;
   const totalWidth = cardSpanWidth + leadInWidth;
 
-  const cards = Array.from({ length: cardCount }, (_, index) => {
-    const left = leadInWidth + index * (CARD_W + UTILITY_CARD_GAP);
-    return { left, right: left + CARD_W };
+  let currentLeft = leadInWidth;
+  const cards = resolvedCardWidths.map((cardWidth) => {
+    const left = currentLeft;
+    const right = left + cardWidth;
+    currentLeft = right + UTILITY_CARD_GAP;
+    return { left, right, width: cardWidth };
   });
 
   const firstCard = cards[0];
@@ -1980,6 +1991,7 @@ export function ElectricalOneLine({
               <UtilityCardInterconnect
                 active={state.supplyLive}
                 cardCount={3}
+                cardWidths={[340, CARD_W, CARD_W]}
                 leadInWidth={UTILITY_TO_RISER_GAP}
               />
 
