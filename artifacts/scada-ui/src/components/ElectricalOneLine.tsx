@@ -2025,7 +2025,7 @@ Load class: heavy distribution`,
 
               <div
                 className="relative z-[1] flex items-center"
-                style={{ marginLeft: UTILITY_CARD_GAP }}
+                style={{ marginLeft: UTILITY_CARD_GAP, gap: UTILITY_CARD_GAP }}
               >
                 <NodeCard
                   node={{
