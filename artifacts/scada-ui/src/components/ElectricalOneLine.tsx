@@ -338,110 +338,123 @@ function CompactCard({
                 : t.utility.details.button.open}
             </span>
           </button>
-
-          <div
-            data-state={detailsOpen ? "open" : "closed"}
-            className={cn(
-              "grid transition-all duration-300 ease-out",
-              detailsOpen
-                ? "mt-2 grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0",
-            )}
-          >
-            <div className="overflow-hidden">
-              <div className="overflow-hidden rounded-lg border border-white/10 bg-black/20 bg-none">
-                {hasDetails ? (
-                  <table className="w-full border-collapse text-left font-mono text-[8px]">
-                    <thead className="bg-white/5 text-[#9fb3c8]">
-                      <tr>
-                        <th className="px-2 py-1 font-medium">
-                          {t.utility.details.table.parameter}
-                        </th>
-                        <th className="px-2 py-1 font-medium">
-                          {t.utility.details.table.unit}
-                        </th>
-                        <th className="px-2 py-1 font-medium">
-                          {t.utility.details.table.description}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {details?.map((detail) => (
-                        <tr
-                          key={detail.parameter}
-                          className="border-t border-white/10 align-top"
-                        >
-                          <td className="px-2 py-1.5 text-[#dce7f3]">
-                            {detail.parameter}
-                          </td>
-                          <td className="px-2 py-1.5 text-[#8ecae6]">
-                            {detail.value}
-                          </td>
-                          <td className="px-2 py-1.5 text-[#9fb3c8]">
-                            {detail.description}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : null}
-
-                {hasMiniStatuses ? (
-                  <div className="divide-y divide-white/10">
-                    {miniStatuses?.map((miniStatus) => (
-                      <div
-                        key={`${miniStatus.label}-${miniStatus.tag}`}
-                        className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-2 font-mono text-[8px] tracking-[0.12em]"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-[#dce7f3]">{miniStatus.label}</div>
-                          <div className="mt-0.5 text-[#70839f]">{miniStatus.tag}</div>
-                        </div>
-                        <div
-                          className={cn(
-                            "self-center whitespace-nowrap text-right",
-                            miniStatus.active ? "text-[#8bd6b6]" : "text-[#edb2b5]",
-                          )}
-                        >
-                          {miniStatus.status}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
         </div>
       ) : null}
     </>
   );
-
-  const effectiveWidth = hasExpandableContent && detailsOpen ? width : CARD_W;
 
   const cardClasses = cn(
     "rounded-xl border bg-none px-2.5 py-2 transition-all duration-300 shrink-0",
     active ? ACCENT_STYLES[accent].active : ACCENT_STYLES[accent].inactive,
   );
 
+  const cardBody = (
+    <div className={cardClasses} style={{ width: CARD_W }}>
+      {content}
+    </div>
+  );
+
+  const detailOverlay = hasExpandableContent ? (
+    <div
+      className="pointer-events-none absolute left-0 top-full z-20 pt-2"
+      style={{ width }}
+    >
+      <div
+        data-state={detailsOpen ? "open" : "closed"}
+        className={cn(
+          "origin-top-left transition-all duration-300 ease-out",
+          detailsOpen
+            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+            : "translate-y-[-4px] scale-[0.98] opacity-0",
+        )}
+      >
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#08131a]/95 shadow-[0_18px_48px_rgba(0,0,0,0.45)] backdrop-blur-md">
+          <div className="overflow-hidden rounded-[inherit] border border-black/20">
+            {hasDetails ? (
+              <table className="w-full border-collapse text-left font-mono text-[8px]">
+                <thead className="bg-white/5 text-[#9fb3c8]">
+                  <tr>
+                    <th className="px-2 py-1 font-medium">
+                      {t.utility.details.table.parameter}
+                    </th>
+                    <th className="px-2 py-1 font-medium">
+                      {t.utility.details.table.unit}
+                    </th>
+                    <th className="px-2 py-1 font-medium">
+                      {t.utility.details.table.description}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details?.map((detail) => (
+                    <tr
+                      key={detail.parameter}
+                      className="border-t border-white/10 align-top"
+                    >
+                      <td className="px-2 py-1.5 text-[#dce7f3]">
+                        {detail.parameter}
+                      </td>
+                      <td className="px-2 py-1.5 text-[#8ecae6]">
+                        {detail.value}
+                      </td>
+                      <td className="px-2 py-1.5 text-[#9fb3c8]">
+                        {detail.description}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
+
+            {hasMiniStatuses ? (
+              <div className="divide-y divide-white/10">
+                {miniStatuses?.map((miniStatus) => (
+                  <div
+                    key={`${miniStatus.label}-${miniStatus.tag}`}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-2 font-mono text-[8px] tracking-[0.12em]"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[#dce7f3]">{miniStatus.label}</div>
+                      <div className="mt-0.5 text-[#70839f]">{miniStatus.tag}</div>
+                    </div>
+                    <div
+                      className={cn(
+                        "self-center whitespace-nowrap text-right",
+                        miniStatus.active ? "text-[#8bd6b6]" : "text-[#edb2b5]",
+                      )}
+                    >
+                      {miniStatus.status}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   if (!onClick) {
     return (
-      <div className={cardClasses} style={{ width: effectiveWidth }}>
-        {content}
+      <div className="relative shrink-0" style={{ width: CARD_W }}>
+        {cardBody}
+        {detailOverlay}
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
-    >
-      <div className={cardClasses} style={{ width: effectiveWidth }}>
-        {content}
-      </div>
-    </button>
+    <div className="relative shrink-0" style={{ width: CARD_W }}>
+      <button
+        type="button"
+        onClick={onClick}
+        className="text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+      >
+        {cardBody}
+      </button>
+      {detailOverlay}
+    </div>
   );
 }
 
