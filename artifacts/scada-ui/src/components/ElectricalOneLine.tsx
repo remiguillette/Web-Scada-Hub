@@ -182,6 +182,12 @@ type StreetBusMetric = {
   glow: string;
 };
 
+type PhaseMetricPanelProps = {
+  metrics: StreetBusMetric[];
+  compact?: boolean;
+  className?: string;
+};
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
@@ -208,6 +214,51 @@ function formatBusVoltage(value: number) {
 
 function formatBusCurrent(value: number) {
   return `${Math.max(0, Math.round(value))} A`;
+}
+
+function PhaseMetricPanel({
+  metrics,
+  compact = false,
+  className,
+}: PhaseMetricPanelProps) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-5 gap-1 font-mono text-center",
+        compact ? "max-w-[210px]" : "",
+        className,
+      )}
+    >
+      {metrics.map((metric) => (
+        <div
+          key={`phase-panel-${metric.label}`}
+          className="flex min-w-0 flex-col items-center"
+          style={{
+            color: metric.color,
+            textShadow: "none",
+          }}
+        >
+          {metric.lines.map((line, lineIndex) => {
+            const lineClassName =
+              lineIndex === 0
+                ? "text-[8px] font-semibold tracking-[0.14em]"
+                : lineIndex === 1
+                  ? "text-[7px] tracking-[0.08em]"
+                  : "text-[6px] tracking-[0.08em] opacity-70";
+
+            return (
+              <span
+                key={`${metric.label}-${line}-${lineIndex}`}
+                className={lineClassName}
+              >
+                {line}
+              </span>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 const UTILITY_BUS_GEOMETRY = {
@@ -459,10 +510,12 @@ function BeaverWoodsMtCard({
   active,
   frequency,
   generatorLiveStates,
+  conductorMetrics,
 }: {
   active: boolean;
   frequency: number;
   generatorLiveStates?: GeneratorLiveStatus[];
+  conductorMetrics: StreetBusMetric[];
 }) {
   const { t } = useTranslation();
   const cardClasses = cn(
@@ -470,7 +523,6 @@ function BeaverWoodsMtCard({
     active ? ACCENT_STYLES.cyan.active : ACCENT_STYLES.cyan.inactive,
   );
   const accentColors = ["#22d3ee", "#f59e0b", "#8b5cf6"];
-  const phaseLabels = STREET_BUS_CONDUCTORS.map((conductor) => conductor.label);
   const activeGenerator = generatorLiveStates?.find(
     (generator) => generator.state !== "OFFLINE",
   );
@@ -564,22 +616,28 @@ function BeaverWoodsMtCard({
                 ) : null}
                 <div>
                   <div className="text-[#7f93ab]">{card.phaseLabel}</div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {phaseLabels.map((phase, phaseIndex) => (
-                      <span
-                        key={`${card.sourceLabel}-${phase}`}
-                        className="rounded border px-1.5 py-0.5 text-[7px]"
-                        style={{
-                          borderColor: `${STREET_BUS_CONDUCTORS[phaseIndex]?.color ?? "#22d3ee"}55`,
-                          color:
-                            STREET_BUS_CONDUCTORS[phaseIndex]?.color ??
-                            "#dce7f3",
-                        }}
-                      >
-                        {phase}
-                      </span>
-                    ))}
-                  </div>
+                  {index < 2 ? (
+                    <PhaseMetricPanel
+                      metrics={conductorMetrics}
+                      compact
+                      className="mt-1"
+                    />
+                  ) : (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {STREET_BUS_CONDUCTORS.map((phase) => (
+                        <span
+                          key={`${card.sourceLabel}-${phase.label}`}
+                          className="rounded border px-1.5 py-0.5 text-[7px]"
+                          style={{
+                            borderColor: `${phase.color}55`,
+                            color: phase.color,
+                          }}
+                        >
+                          {phase.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="text-[#7f93ab]">{card.hzLabel}</div>
@@ -902,23 +960,7 @@ function UtilityBusAnnotations({
               textShadow: "none",
             }}
           >
-            {conductor.lines.map((line, lineIndex) => {
-              const className =
-                lineIndex === 0
-                  ? "text-[8px] font-semibold tracking-[0.14em]"
-                  : lineIndex === 1
-                    ? "text-[7px] tracking-[0.08em]"
-                    : "text-[6px] tracking-[0.08em] opacity-70";
-
-              return (
-                <span
-                  key={`${conductor.label}-${line}-${lineIndex}`}
-                  className={className}
-                >
-                  {line}
-                </span>
-              );
-            })}
+            <PhaseMetricPanel metrics={[conductor]} />
           </div>
         );
       })}
@@ -2183,6 +2225,7 @@ export function ElectricalOneLine({
                       active={state.supplyLive}
                       frequency={frequency}
                       generatorLiveStates={generatorLiveStates}
+                      conductorMetrics={conductorMetrics}
                     />
                   </div>
                 </div>
