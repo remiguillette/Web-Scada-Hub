@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext } from "react";
-import { useGeneratorSimulation, type GenState, type GeneratorLiveStatus } from "@/hooks/use-generator-simulation";
+import { type GenState, type GeneratorLiveStatus } from "@/features/simulation/state";
+import { useGeneratorSimulation } from "@/hooks/use-generator-simulation";
 
 interface GeneratorSimulationContextValue {
   statuses: GeneratorLiveStatus[];

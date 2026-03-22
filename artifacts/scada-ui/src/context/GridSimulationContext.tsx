@@ -11,6 +11,7 @@ import {
   useGridSimulation,
   type GridSimulationConfig,
 } from "@/hooks/use-grid-simulation";
+import { sanitizeGridForm } from "@/features/simulation/state";
 
 export type HydroDispatchMode = "PHYSICS" | "GRID_FOLLOW";
 
@@ -40,26 +41,6 @@ const GRAVITY_M_PER_S2 = 9.81;
 const DEFAULT_SIM_TIME_MINUTES = 8 * 60;
 const DEFAULT_INFLOW_RATE = 500;
 const DEFAULT_RESERVOIR_LEVEL = 100;
-const GRID_BASE_FREQUENCY_MIN = 59.9;
-const GRID_BASE_FREQUENCY_MAX = 60.1;
-const GRID_FREQUENCY_VARIATION_MAX = 0.1;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function sanitizeGridForm(form: GridFormValues): GridFormValues {
-  return {
-    ...form,
-    baseFrequency: Number(
-      clamp(form.baseFrequency, GRID_BASE_FREQUENCY_MIN, GRID_BASE_FREQUENCY_MAX).toFixed(3),
-    ),
-    frequencyVariation: Number(
-      clamp(form.frequencyVariation, 0, GRID_FREQUENCY_VARIATION_MAX).toFixed(3),
-    ),
-  };
-}
-
 const DEFAULT_FORM: GridFormValues = {
   baseVoltage: 13800,
   baseFrequency: 60,
