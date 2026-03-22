@@ -25,7 +25,7 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 ├── tsconfig.base.json      # Shared TS configuration
 ├── tsconfig.json           # Project references
 ├── Readme.md               # Main consolidated repository documentation
-├── agent.md                # Agent-oriented repo instructions
+├── AGENT.md                # Agent-oriented repo instructions
 └── CARDS_AND_BUS_BARS_ARCHITECTURE.md  # Backup architecture reference (kept on purpose)
 ```
 
