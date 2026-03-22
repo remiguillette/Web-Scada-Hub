@@ -12,6 +12,7 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 /workspace/Web-Scada-Hub
 ├── artifacts/
 │   ├── api-server/         # Express API server artifact
+│   ├── mockup-sandbox/     # Non-package artifact workspace directory
 │   └── scada-ui/           # Main SCADA frontend application
 ├── lib/
 │   ├── api-client-react/   # Generated API client package
@@ -40,6 +41,8 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 - Shared UI library: `lib/ui`
 - Generated API artifacts: `lib/api-client-react`, `lib/api-zod`
 - Database package: `lib/db`
+- Active workspace globs: `artifacts/*`, `lib/*`, `scripts`
+- Removed stale workspace glob: `lib/integrations/*`
 
 ### Root scripts
 
