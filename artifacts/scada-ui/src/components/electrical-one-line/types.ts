@@ -58,6 +58,29 @@ export type GeneratorUnit = {
   details?: DetailRow[];
 };
 
+export type ElectricalState = {
+  supplyLive: boolean;
+  meterLive: boolean;
+  genLive: boolean;
+  atsNormal: boolean;
+  atsPowered: boolean;
+  genBrkLive: boolean;
+  mainPanelLive: boolean;
+  busLive: boolean;
+};
+
+export type UtilityNodeModel = Omit<SourceNode, 'icon'>;
+export type SupplementaryUtilityNodeModel = Omit<EquipmentNode, 'icon'>;
+export type AtsNodeModel = Omit<ATSNode, 'icon'>;
+
+export type ElectricalDiagramModel = {
+  state: ElectricalState;
+  utilityNode: UtilityNodeModel;
+  supplementaryUtilityNodes: SupplementaryUtilityNodeModel[];
+  atsNode: AtsNodeModel;
+  generatorUnits: GeneratorUnit[];
+};
+
 export type DragState = {
   startX: number;
   startY: number;
