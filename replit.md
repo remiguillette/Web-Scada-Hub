@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+pnpm workspace monorepo using TypeScript. Each package manages its own dependencies. The production frontend is `artifacts/scada-ui` (`@workspace/scada-ui`); `artifacts/scada-ui-new` was a placeholder and has been removed.
 
 ## Stack
 
@@ -82,8 +82,10 @@ Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` 
 - App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
 - Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
 - Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
+- `PORT=3000 pnpm --filter @workspace/api-server run dev` — run the API server on the standard local port
 - `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
+- `PORT=5000 pnpm --filter @workspace/scada-ui run dev` — run the canonical SCADA frontend locally
+- `pnpm --filter @workspace/scada-ui run build` — build the canonical SCADA frontend
 - Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
 
 ### `lib/db` (`@workspace/db`)
