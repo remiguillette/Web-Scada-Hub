@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@workspace/ui";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/Dashboard";
 import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
 import SimulationPage from "@/pages/SimulationPage";
 import { GridSimulationProvider } from "@/context/GridSimulationContext";
@@ -16,7 +15,7 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/" component={SimulationPage} />
       <Route path="/electrical-one-line" component={ElectricalOneLinePage} />
       <Route path="/simulation" component={SimulationPage} />
       <Route component={NotFound} />

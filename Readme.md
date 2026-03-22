@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with dashboard, electrical one-line, and simulation views.
+Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with a canonical power-source simulation page and a dedicated electrical one-line view.
 
 `CARDS_AND_BUS_BARS_ARCHITECTURE.md` is intentionally preserved as an architectural backup reference. Its concepts are useful, but several names and paths in that backup document do **not** exactly match the current implementation.
 
@@ -61,20 +61,20 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 
 ### Current routes
 
-- `/` — `Dashboard`
+- `/` — canonical power-source simulation page
+- `/simulation` — compatibility alias to the same simulation page
 - `/electrical-one-line` — full-screen electrical one-line page
-- `/simulation` — simulation page
 
 ## SCADA application domains
 
 The frontend currently combines several distinct concerns:
 
-1. **Dashboard operations**
-   - system status
-   - alarms
-   - countdown to auto-feed
+1. **Power-source simulation**
+   - source voltage and frequency state
+   - hydraulic production and dispatch
+   - utility and motor electrical details
    - PLC I/O status
-   - manual commands and safety controls
+   - alarms and events
 
 2. **Electrical one-line visualization**
    - utility supply card
