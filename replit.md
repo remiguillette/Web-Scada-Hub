@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies. The production frontend is `artifacts/scada-ui` (`@workspace/scada-ui`); `artifacts/scada-ui-new` was a placeholder and has been removed.
+pnpm workspace monorepo using TypeScript. Each package manages its own dependencies. The production frontend is `artifacts/scada-ui` (`@workspace/scada-ui`); `artifacts/scada-ui-new` is a deprecated mockup and is not part of the official app set.
 
 ## Stack
 
