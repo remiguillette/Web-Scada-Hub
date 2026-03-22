@@ -3,9 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@workspace/ui";
 import NotFound from "@/pages/not-found";
-import PowerOverviewPage from "@/pages/PowerOverviewPage";
-import PowerOneLinePage from "@/pages/PowerOneLinePage";
-import PowerSourcePage from "@/pages/PowerSourcePage";
+import Dashboard from "@/pages/Dashboard";
+import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
+import SimulationPage from "@/pages/SimulationPage";
 import { GridSimulationProvider } from "@/context/GridSimulationContext";
 import { GeneratorSimulationProvider } from "@/context/GeneratorSimulationContext";
 import { ScadaStateProvider } from "@/hooks/use-scada-state";
@@ -16,9 +16,9 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={PowerOverviewPage} />
-      <Route path="/power/one-line" component={PowerOneLinePage} />
-      <Route path="/power/source" component={PowerSourcePage} />
+      <Route path="/" component={Dashboard} />
+      <Route path="/electrical-one-line" component={ElectricalOneLinePage} />
+      <Route path="/simulation" component={SimulationPage} />
       <Route component={NotFound} />
     </Switch>
   );

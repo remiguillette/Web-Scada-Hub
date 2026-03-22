@@ -15,7 +15,6 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Panel } from "@/components/Panel";
-import { DomainNavigation } from "@/components/DomainNavigation";
 import { LED } from "@/components/LED";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
@@ -40,7 +39,7 @@ function formatSimulationTime(minutes: number) {
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
 }
 
-export default function PowerSourcePage() {
+export default function SimulationPage() {
   const {
     voltage,
     frequency,
@@ -431,14 +430,14 @@ export default function PowerSourcePage() {
               href="/"
               className="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-display text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> {t.powerOverviewNav}
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.dashboard}
             </Link>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1f8a61]/40 bg-[#161c18]">
               <Factory className="h-5 w-5 text-[#00f7a1]" />
             </div>
             <div>
               <h1 className="font-display text-xl font-semibold tracking-[0.18em] text-white">
-                {t.powerSourceTitle}
+                {t.gridSimulation}
               </h1>
               <div className="mt-0.5 font-mono text-xs tracking-[0.16em] text-[#8a9a8a]">
                 {SYSTEM.id} / {t.teacherInterface}
@@ -464,7 +463,7 @@ export default function PowerSourcePage() {
               </div>
             )}
             <Link
-              href="/power/one-line"
+              href="/electrical-one-line"
               className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
             >
               <Zap className="h-3.5 w-3.5" /> {t.electricalOneLineLink}
@@ -485,7 +484,6 @@ export default function PowerSourcePage() {
       </header>
 
       <main className="mx-auto max-w-[1600px] space-y-5 p-5">
-        <DomainNavigation currentPath="/power/source" />
         <div
           className={cn(
             "rounded-2xl border p-5 transition-all duration-500",
@@ -1240,7 +1238,7 @@ export default function PowerSourcePage() {
         <Panel
           title={`${t.generatorUnits} — ${SYSTEM.id}`}
           icon={<Droplets className="h-4 w-4" />}
-          openUrl={`${import.meta.env.BASE_URL}power/one-line`}
+          openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
         >
           <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
             <div className="flex items-center gap-2">
@@ -1252,7 +1250,7 @@ export default function PowerSourcePage() {
               </span>
             </div>
             <Link
-              href="/power/one-line"
+              href="/electrical-one-line"
               className="ml-auto flex items-center gap-1.5 font-display text-xs tracking-[0.14em] text-[#00dcff] transition hover:text-white"
             >
               <Zap className="h-3.5 w-3.5" /> {t.viewInOneLine}
