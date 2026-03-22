@@ -1,8 +1,9 @@
 import { useMemo, type FormEvent } from "react";
+import { format } from "date-fns";
 import { Link } from "wouter";
 import {
   Activity,
-  ArrowLeft,
+  CircuitBoard,
   Gauge,
   Languages,
   Zap,
@@ -13,18 +14,25 @@ import {
   Power,
   Waves,
   AlertTriangle,
+  Siren,
 } from "lucide-react";
 import { Panel } from "@/components/Panel";
 import { LED } from "@/components/LED";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
-import { useScadaState } from "@/hooks/use-scada-state";
+import { useScadaState, type Alarm } from "@/hooks/use-scada-state";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 import { buildUtilitySnapshot } from "@/lib/utility-service";
 import { ElecDataCard, GeneratorCard, MetricCard, StatusBadge, type GridFormField } from "@/features/simulation";
+
+const ALARM_STYLE: Record<Alarm["type"], string> = {
+  CRITICAL: "border-[#d5565a]/30 bg-[#2a1012] text-[#f3c5c9]",
+  WARNING: "border-[#d89a5a]/30 bg-[#2b1a0f] text-[#f6deb1]",
+  INFO: "border-[#6cc2d5]/20 bg-[#0a2228] text-[#b8dbe3]",
+};
 
 function formatVoltageDisplay(value: number) {
   if (value >= 1000) {
@@ -426,12 +434,6 @@ export default function SimulationPage() {
       <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 backdrop-blur px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-display text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> {t.dashboard}
-            </Link>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#1f8a61]/40 bg-[#161c18]">
               <Factory className="h-5 w-5 text-[#00f7a1]" />
             </div>
@@ -1156,6 +1158,48 @@ export default function SimulationPage() {
           />
         </div>
 
+        <Panel title={t.plcStatus} icon={<CircuitBoard className="h-4 w-4" />}>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
+            <div>
+              <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.controllerHealth}</div>
+              <div className="mt-1 font-mono text-sm tracking-[0.16em] text-[#cfe6f4]">{t.controllerHealthStatus}</div>
+            </div>
+            <div className="flex items-center gap-5 rounded-xl border border-[#243245] bg-[#060d16] px-4 py-3">
+              <LED on={state.systemState === "RUN"} color="green" label="RUN" />
+              <LED on={state.systemState === "STANDBY" || state.systemState === "STOP"} color="amber" label="STOP" />
+              <LED on={state.systemState === "FAULT"} color="red" label="FLT" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">{t.discreteInputs}</div>
+              <div className="space-y-3">
+                {state.digitalInputs.map((point) => (
+                  <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
+                    <LED on={point.on} color={point.id === "DI-04" && point.on ? "amber" : point.id === "DI-06" && !point.on ? "red" : "green"} />
+                    <span className="font-mono text-sm tracking-[0.14em] text-[#9fb0c7]">{point.id}</span>
+                    <span className="font-display text-sm tracking-[0.08em] text-[#d6deea]">{point.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
+              <div className="mb-4 font-display text-sm uppercase tracking-[0.16em] text-[#cfd8e3]">{t.discreteOutputs}</div>
+              <div className="space-y-3">
+                {state.digitalOutputs.map((point) => (
+                  <div key={point.id} className="flex items-center gap-3 rounded-lg border border-[#142030] bg-[#07101a] px-3 py-2">
+                    <LED on={point.on} color={point.id === "DO-04" ? "red" : point.id === "DO-03" ? "cyan" : "green"} />
+                    <span className="font-mono text-sm tracking-[0.14em] text-[#9fb0c7]">{point.id}</span>
+                    <span className="font-display text-sm tracking-[0.08em] text-[#d6deea]">{point.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Panel>
+
         <div className="grid gap-5 xl:grid-cols-[1fr_1.5fr]">
           <Panel
             title={t.simulationConfig}
@@ -1234,6 +1278,28 @@ export default function SimulationPage() {
             </div>
           </Panel>
         </div>
+
+        <Panel title={t.alarmsEvents} icon={<Siren className="h-4 w-4" />}>
+          <div className="space-y-3">
+            {state.alarms.map((alarm) => (
+              <div key={alarm.id} className={cn("rounded-2xl border p-3", ALARM_STYLE[alarm.type], alarm.active && alarm.type === "CRITICAL" ? "alarm-blink" : "")}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <LED on color={alarm.type === "CRITICAL" ? "red" : alarm.type === "WARNING" ? "amber" : "cyan"} />
+                    <div>
+                      <div className="font-display text-sm uppercase tracking-[0.12em]">{alarm.message}</div>
+                      <div className="mt-1 font-mono text-xs tracking-[0.14em] text-[#93a6bf]">{format(alarm.timestamp, "yyyy-MM-dd HH:mm:ss")}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-md border border-current/20 px-2 py-1 font-mono text-[11px] tracking-[0.18em]">{alarm.type}</span>
+                    <span className={cn("rounded-md px-2 py-1 font-mono text-[11px] tracking-[0.18em]", alarm.active ? "bg-[#ffffff14] text-white" : "bg-[#00000026] text-[#9fb0c7]")}>{alarm.active ? t.alarmActive : t.alarmEvent}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
 
         <Panel
           title={`${t.generatorUnits} — ${SYSTEM.id}`}
