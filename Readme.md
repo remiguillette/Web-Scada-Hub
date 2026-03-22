@@ -12,7 +12,6 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 /workspace/Web-Scada-Hub
 ├── artifacts/
 │   ├── api-server/         # Express API server artifact
-│   ├── mockup-sandbox/     # Separate sandbox/mockup app
 │   └── scada-ui/           # Main SCADA frontend application
 ├── lib/
 │   ├── api-client-react/   # Generated API client package
@@ -49,7 +48,7 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 
 ## Main application: `artifacts/scada-ui`
 
-The main frontend is wired in `artifacts/scada-ui/src/App.tsx`. It wraps the application with these providers before routing:
+`artifacts/scada-ui` is the repository's only frontend application. The main frontend is wired in `artifacts/scada-ui/src/App.tsx`. It wraps the application with these providers before routing:
 
 - `QueryClientProvider`
 - `TooltipProvider`
