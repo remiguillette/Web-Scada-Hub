@@ -1,7 +1,7 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@workspace/ui";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import ElectricalOneLinePage from "@/pages/ElectricalOneLinePage";
