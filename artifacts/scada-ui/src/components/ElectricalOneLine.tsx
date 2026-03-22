@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Building2, Monitor, Power, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import niagaraFallsBackground from "@/assets/Niagarafallspng1500.png";
 import { buildUtilitySnapshot } from "@/lib/utility-service";
 import { SYSTEM } from "@/config/system";
 import { useTranslation } from "@/context/LanguageContext";
@@ -2054,6 +2055,19 @@ export function ElectricalOneLine({
         }
       }}
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundColor: "#050b10",
+          backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
+          backgroundPosition: "center center",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          opacity: 0.55,
+        }}
+      />
+
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
         <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
         <div className="pointer-events-auto flex items-center gap-2">
