@@ -2,11 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Building2, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import niagaraFallsBackground from '@/assets/Niagarafallspng1500.png';
-import { buildUtilitySnapshot } from '@/lib/utility-service';
 import { SYSTEM } from '@/config/system';
 import { useTranslation } from '@/context/LanguageContext';
-import type { GeneratorLiveStatus } from '@/context/GeneratorSimulationContext';
-import type { Translations } from '@/i18n/translations';
 import { BeaverWoodsMtCard } from './BeaverWoodsMtCard';
 import {
   BASE_DIAGRAM_SCALE,
@@ -23,18 +20,10 @@ import {
 } from './constants';
 import { GeneratorBank } from './GeneratorBank';
 import { clamp, clampOffset, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
+import { buildElectricalModel } from './model';
 import { NodeCard } from './NodeCard';
 import { StatusIcon } from './StatusIcon';
-import type {
-  ATSNode,
-  DetailRow,
-  DragState,
-  ElectricalOneLineProps,
-  EquipmentNode,
-  GeneratorUnit,
-  PinchState,
-  SourceNode,
-} from './types';
+import type { ATSNode, DragState, ElectricalOneLineProps, PinchState } from './types';
 import { UtilityBusAnnotations } from './UtilityBusAnnotations';
 import { UtilityBusBackground } from './UtilityBusBackground';
 import { UtilityCardInterconnect } from './UtilityCardInterconnect';
@@ -42,82 +31,6 @@ import { useConductorMetrics } from './useConductorMetrics';
 
 const ZOOM_STEP = 0.0015;
 const UTILITY_BUS_LAYOUT = getUtilityBusLayout();
-
-function buildUtilityDetails(
-  t: Translations,
-  frequency: number,
-  voltage: number,
-  current: number,
-  activePower: number,
-  apparentPower: number,
-  reactivePower: number,
-  powerFactor: number,
-): DetailRow[] {
-  const snapshot = buildUtilitySnapshot({
-    energized: voltage > 0,
-    frequency,
-    current,
-    activePower,
-    apparentPower,
-    reactivePower,
-    powerFactor,
-  });
-
-  return [
-    { parameter: t.utility.details.serviceType.label, value: snapshot.serviceType, description: t.utility.details.serviceType.desc },
-    { parameter: t.utility.details.utilityType.label, value: snapshot.utilityType, description: t.utility.details.utilityType.desc },
-    { parameter: t.utility.details.frequency.label, value: `${frequency.toFixed(2)} Hz`, description: t.utility.details.frequency.desc },
-    { parameter: t.utility.details.voltageLL.label, value: `${snapshot.lineToLineVoltage.toFixed(1)} V`, description: t.utility.details.voltageLL.desc },
-    { parameter: t.utility.details.voltageLN.label, value: `${snapshot.lineToNeutralVoltage.toFixed(1)} V`, description: t.utility.details.voltageLN.desc },
-    { parameter: t.utility.details.current.label, value: `${snapshot.totalServiceCurrent.toFixed(1)} A`, description: t.utility.details.current.desc },
-    { parameter: t.utility.details.activePower.label, value: `${snapshot.activePowerKw.toFixed(1)} kW`, description: t.utility.details.activePower.desc },
-    { parameter: t.utility.details.apparentPower.label, value: `${snapshot.apparentPowerKva.toFixed(1)} kVA`, description: t.utility.details.apparentPower.desc },
-    { parameter: t.utility.details.reactivePower.label, value: `${snapshot.reactivePowerKvar.toFixed(1)} kVAR`, description: t.utility.details.reactivePower.desc },
-    { parameter: t.utility.details.powerFactor.label, value: `${snapshot.powerFactor.toFixed(3)} ${snapshot.powerFactorState}`, description: t.utility.details.powerFactor.desc },
-    { parameter: t.utility.details.phaseBalance.label, value: `${snapshot.voltageImbalancePct.toFixed(1)}%`, description: t.utility.details.phaseBalance.desc },
-    { parameter: t.utility.details.source.label, value: snapshot.source, description: t.utility.details.source.desc },
-  ];
-}
-
-function buildGeneratorDetails(
-  t: Translations,
-  gen: (typeof SYSTEM.generators)[number],
-  live: GeneratorLiveStatus | undefined,
-  isActive: boolean,
-): DetailRow[] {
-  return [
-    {
-      parameter: t.frequency,
-      value: live && live.state !== 'OFFLINE' ? `${live.frequency.toFixed(2)} Hz` : `${gen.nominalFrequency.toFixed(2)} Hz`,
-      description: isActive ? t.genLiveFreqDesc : t.genNominalFreqDesc,
-    },
-    {
-      parameter: t.voltage,
-      value: live && live.state !== 'OFFLINE' ? `${live.voltage.toFixed(1)} V` : `${gen.nominalVoltage} V`,
-      description: isActive ? t.genLiveVoltageDesc : t.genNominalVoltageDescOneline,
-    },
-    {
-      parameter: t.current,
-      value: live ? `${live.current.toFixed(2)} A` : '0 A',
-      description: isActive ? t.genLiveCurrentDesc : t.genOfflineCurrentDesc,
-    },
-    {
-      parameter: t.activePower,
-      value: live ? `${live.activePower.toFixed(1)} W` : '0 W',
-      description: isActive ? t.genEmergencyPowerDescOneline : t.genActivePowerRunning,
-    },
-    {
-      parameter: t.reactivePower,
-      value: live ? `${live.reactivePower.toFixed(1)} VAR` : '0 VAR',
-      description: t.genReactiveDescFull,
-    },
-    {
-      parameter: t.fuelLevel,
-      value: `${gen.fuelLevel}%`,
-      description: t.genFuelDescFull,
-    },
-  ];
-}
 
 export function ElectricalOneLineDiagram({
   disconnectClosed,
@@ -149,8 +62,6 @@ export function ElectricalOneLineDiagram({
   const conductorVoltages = useMemo(() => conductorMetrics.map((metric) => metric.lines[1]), [conductorMetrics]);
   const conductorCurrents = useMemo(() => conductorMetrics.map((metric) => metric.lines[2]), [conductorMetrics]);
   const conductorColors = useMemo(() => conductorMetrics.map((metric) => metric.color), [conductorMetrics]);
-
-  const genLive = generatorLiveStates?.some((s) => s.state === 'READY' || s.state === 'LOADED' || s.state === 'STABILIZING' || (s.state === 'STARTING' && s.voltage > 100)) ?? false;
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const atsRef = useRef<HTMLDivElement>(null);
@@ -164,49 +75,47 @@ export function ElectricalOneLineDiagram({
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  const state = useMemo(() => {
-    const supplyLive = voltage > 0;
-    const meterLive = supplyLive;
-    const atsNormal = meterLive;
-    const atsPowered = atsNormal || genLive;
-    const genBrkLive = genLive;
-    const mainPanelLive = disconnectClosed && !breakerTripped && atsPowered;
-    const busLive = mainPanelLive;
+  const { state, utilityNode, supplementaryUtilityNodes, atsNode, generatorUnits } = useMemo(
+    () =>
+      buildElectricalModel(t, {
+        voltage,
+        current,
+        frequency,
+        powerFactor,
+        activePower,
+        reactivePower,
+        apparentPower,
+        generatorLiveStates,
+        disconnectClosed,
+        breakerTripped,
+      }),
+    [t, voltage, current, frequency, powerFactor, activePower, reactivePower, apparentPower, generatorLiveStates, disconnectClosed, breakerTripped],
+  );
 
-    return { supplyLive, meterLive, genLive, atsNormal, atsPowered, genBrkLive, mainPanelLive, busLive };
-  }, [voltage, disconnectClosed, breakerTripped, genLive]);
+  const utilityDisplayNode = useMemo(
+    () => ({
+      ...utilityNode,
+      icon: <Building2 className={cn('h-4 w-4', state.supplyLive ? 'text-[#00dcff]' : 'text-[#475569]')} />,
+    }),
+    [state.supplyLive, utilityNode],
+  );
 
-  const utilityNode: SourceNode = {
-    kind: 'source',
-    tag: SYSTEM.utility.tag,
-    title: t.utilityName,
-    subtitle: SYSTEM.utility.provider,
-    status: state.supplyLive ? t.energized : t.unavailable,
-    active: state.supplyLive,
-    accent: 'cyan',
-    width: 340,
-    details: buildUtilityDetails(t, frequency, voltage, current, activePower, apparentPower, reactivePower, powerFactor),
-    icon: <Building2 className={cn('h-4 w-4', state.supplyLive ? 'text-[#00dcff]' : 'text-[#475569]')} />,
-  };
+  const supplementaryUtilityDisplayNodes = useMemo(
+    () =>
+      supplementaryUtilityNodes.map((node) => ({
+        ...node,
+        icon: <StatusIcon icon={node.tag === 'UTIL-TEL' ? 'monitor' : 'power'} active={node.active} activeColor="text-[#00dcff]" />,
+      })),
+    [supplementaryUtilityNodes],
+  );
 
-  const supplementaryUtilityNodes: EquipmentNode[] = [
-    { kind: 'equipment', tag: 'UTIL-WTR', title: 'Water', status: 'Available', active: state.supplyLive, accent: 'cyan', icon: <StatusIcon icon="power" active={state.supplyLive} activeColor="text-[#00dcff]" /> },
-    { kind: 'equipment', tag: 'UTIL-WW', title: 'Wastewater', status: 'Available', active: state.supplyLive, accent: 'cyan', icon: <StatusIcon icon="power" active={state.supplyLive} activeColor="text-[#00dcff]" /> },
-    { kind: 'equipment', tag: 'UTIL-GAS', title: 'Gas', status: 'Available', active: state.supplyLive, accent: 'cyan', icon: <StatusIcon icon="power" active={state.supplyLive} activeColor="text-[#00dcff]" /> },
-    { kind: 'equipment', tag: 'UTIL-TEL', title: 'Telecom', status: 'Available', active: state.supplyLive, accent: 'cyan', icon: <StatusIcon icon="monitor" active={state.supplyLive} activeColor="text-[#00dcff]" /> },
-  ];
-
-  const atsStatus = state.atsNormal ? t.atsOnUtility : state.genLive ? t.atsOnEmergency : t.openNoSource;
-  const atsNode: ATSNode = {
-    kind: 'ats',
-    tag: 'ATS-001',
-    title: 'ATS',
-    status: atsStatus,
-    active: state.atsPowered,
-    accent: state.atsNormal ? 'cyan' : state.genLive ? 'amber' : 'red',
-    mode: state.atsNormal ? 'utility' : state.genLive ? 'generator' : 'offline',
-    icon: <ShieldAlert className={cn('h-4 w-4', state.atsNormal ? 'text-[#00dcff]' : state.genLive ? 'text-[#ffb347]' : 'text-[#475569]')} />,
-  };
+  const atsDisplayNode: ATSNode = useMemo(
+    () => ({
+      ...atsNode,
+      icon: <ShieldAlert className={cn('h-4 w-4', state.atsNormal ? 'text-[#00dcff]' : state.genLive ? 'text-[#ffb347]' : 'text-[#475569]')} />,
+    }),
+    [atsNode, state.atsNormal, state.genLive],
+  );
 
   const measureAtsCenter = useCallback(() => {
     const diagram = diagramRef.current;
@@ -257,19 +166,6 @@ export function ElectricalOneLineDiagram({
       y: clampOffset(current.y + deltaY, viewportSize.height, contentMetrics.height),
     }));
   }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
-
-  const generatorUnits: GeneratorUnit[] = SYSTEM.generators.map((gen, idx) => {
-    const live = generatorLiveStates?.[idx];
-    const isActive = live?.state === 'READY' || live?.state === 'LOADED' || live?.state === 'STABILIZING' || live?.state === 'STARTING';
-    return {
-      tag: gen.tag,
-      title: gen.name,
-      status: live && live.state !== 'OFFLINE' ? live.phaseLabel : t.standbyOffline,
-      active: isActive ?? false,
-      width: 340,
-      details: buildGeneratorDetails(t, gen, live, isActive ?? false),
-    };
-  });
 
   const generatorBranchWireWidth = Math.max(0, (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2);
   const campusDividerHeight = generatorUnits.length * 74 + 24;
@@ -449,8 +345,8 @@ export function ElectricalOneLineDiagram({
                 <UtilityBusBackground utilityActive={state.supplyLive} />
                 <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} feederLabel="NPE-FDR-13.8-01" conductorLabels={conductorLabels} conductorVoltages={conductorVoltages} conductorCurrents={conductorCurrents} conductorColors={conductorColors} titleY={UTILITY_BUS_GEOMETRY.titleY} feederLabelY={UTILITY_BUS_GEOMETRY.feederLabelY} conductorLabelY={UTILITY_BUS_GEOMETRY.conductorLabelY} annotationWidth={UTILITY_BUS_GEOMETRY.annotationWidth} firstCX={UTILITY_BUS_LAYOUT.firstCX} hSpacing={UTILITY_BUS_GEOMETRY.hSpacing} busCenterX={UTILITY_BUS_LAYOUT.busCenterX} feederLabelX={UTILITY_BUS_LAYOUT.feederLabelX} />
                 <div className="absolute left-0 flex items-start" style={{ zIndex: 1, top: UTILITY_BUS_GEOMETRY.lineTop - 98, gap: UTILITY_SUPPLEMENTARY_CARD_GAP }}>
-                  {supplementaryUtilityNodes.map((node) => <NodeCard key={node.tag} node={node} />)}
-                  <NodeCard node={utilityNode} />
+                  {supplementaryUtilityDisplayNodes.map((node) => <NodeCard key={node.tag} node={node} />)}
+                  <NodeCard node={utilityDisplayNode} />
                 </div>
               </div>
               <div className="relative flex shrink-0 items-center" style={{ marginLeft: UTILITY_TO_RISER_GAP }}>
@@ -467,7 +363,7 @@ export function ElectricalOneLineDiagram({
                 </div>
               </div>
               <div ref={atsRef} className="shrink-0">
-                <NodeCard node={atsNode} />
+                <NodeCard node={atsDisplayNode} />
               </div>
             </div>
             <div className="flex items-start" style={{ height: 28 }}><div style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }} /></div>
