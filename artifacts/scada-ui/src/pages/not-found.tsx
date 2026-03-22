@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@workspace/ui";
 import { AlertCircle } from "lucide-react";
 import { useTranslation } from "@/context/LanguageContext";
 
