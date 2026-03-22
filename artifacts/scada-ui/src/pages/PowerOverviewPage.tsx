@@ -1,27 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
 import { format } from "date-fns";
 import {
-  Activity,
   AlertTriangle,
   Cat,
   CircuitBoard,
   Clock3,
-  Database,
-  Gauge,
   Languages,
   Power,
-  Radio,
   ShieldAlert,
   Siren,
-  Zap,
 } from "lucide-react";
-import { ElectricalOneLine } from "@/components/ElectricalOneLine";
+import { DomainNavigation } from "@/components/DomainNavigation";
 import { LED } from "@/components/LED";
 import { Panel } from "@/components/Panel";
-import { useGridSimulationContext } from "@/context/GridSimulationContext";
-import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
-import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useScadaState, type Alarm, type SystemState } from "@/hooks/use-scada-state";
 import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
@@ -47,41 +38,8 @@ function formatUptime(totalSeconds: number) {
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatVoltageDisplay(value: number) {
-  return value >= 1000 ? `${(value / 1000).toFixed(2)} kV` : `${value.toFixed(1)} V`;
-}
-
-function ValueCard({ title, value, unit, icon, accent = "cyan" }: { title: string; value: string; unit?: string; icon: React.ReactNode; accent?: "cyan" | "green" | "amber" | "red"; }) {
-  const accents = {
-    cyan: "border-[#2a3a3a] from-[#141a1a] to-[#1a2222] text-[#dff8ff]",
-    green: "border-[#1a3a28] from-[#0e160e] to-[#121a12] text-[#e8fff4]",
-    amber: "border-[#3a2a10] from-[#181208] to-[#1c160a] text-[#fff1d6]",
-    red: "border-[#3a1a20] from-[#16090d] to-[#1c0c11] text-[#ffe0e4]",
-  };
-
-  return (
-    <div className={cn("rounded-2xl border bg-gradient-to-br p-4", accents[accent])}>
-      <div className="mb-5 flex items-center justify-between">
-        <div className="font-display text-xs uppercase tracking-[0.18em] text-[#8ca5bf]">{title}</div>
-        <div className="text-[#00f7a1]">{icon}</div>
-      </div>
-      <div className="flex items-end gap-2">
-        <div className="font-mono text-4xl font-semibold tracking-[0.08em]">{value}</div>
-        {unit ? <div className="pb-1 font-mono text-sm text-[#8ca5bf]">{unit}</div> : null}
-      </div>
-    </div>
-  );
-}
-
-export default function Dashboard() {
+export default function PowerOverviewPage() {
   const { state, actions } = useScadaState();
-  const { voltage: simulatedVoltage, frequency, requestGridConnection } = useGridSimulationContext();
-  const { statuses: generatorLiveStates } = useGeneratorSimulationContext();
-  const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
-    simulatedVoltage,
-    state.current,
-    state.motorPowered,
-  );
   const { t, locale, toggleLocale } = useTranslation();
   const [now, setNow] = useState(new Date());
 
@@ -94,17 +52,9 @@ export default function Dashboard() {
   const countdownMs = Math.max(0, state.nextFeedingTime.getTime() - now.getTime());
   const countdown = `${String(Math.floor(countdownMs / 60000)).padStart(2, "0")}:${String(Math.floor((countdownMs % 60000) / 1000)).padStart(2, "0")}`;
 
-  const synopsis = state.isFault
-    ? t.synopsisFault
-    : state.feedActive
-      ? t.synopsisFeedActive
-      : state.isPowered
-        ? t.synopsisPowered
-        : t.synopsisUnpowered;
-
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
-      <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 backdrop-blur px-6 py-4">
+      <header className="sticky top-0 z-20 border-b border-[#2a2a2a] bg-[#0d0d0d]/95 px-6 py-4 backdrop-blur">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#4f8f6f]/40 bg-[#1b2320]">
@@ -112,8 +62,13 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">{SYSTEM.id}</h1>
-                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">{t.systemDescription}</span>
+                <h1 className="font-display text-3xl font-semibold tracking-[0.18em] text-white">{t.scadaOverviewTitle}</h1>
+                <span className="rounded-md border border-[#333333] bg-[#1e1e1e] px-3 py-1 font-mono text-xs tracking-[0.18em] text-[#9aaa9a]">
+                  {SYSTEM.id} · {t.powerDomainLabel}
+                </span>
+              </div>
+              <div className="mt-2 max-w-3xl font-mono text-sm leading-6 tracking-[0.08em] text-[#8a9a8a]">
+                {t.scadaOverviewDesc}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm tracking-[0.16em] text-[#8a9a8a]">
                 <span>{t.uptime}: {formatUptime(state.uptime)}</span>
@@ -152,7 +107,7 @@ export default function Dashboard() {
               type="button"
               onClick={toggleLocale}
               aria-label={locale === "en" ? "Passer au français" : "Switch to English"}
-              className="flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1] shrink-0"
+              className="shrink-0 flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
             >
               <Languages className="h-4 w-4" />
               <span>{locale === "en" ? "FR" : "EN"}</span>
@@ -161,45 +116,13 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1700px] grid-cols-1 gap-5 p-5 2xl:grid-cols-[1.15fr_1.45fr]">
+      <main className="mx-auto grid max-w-[1700px] grid-cols-1 gap-5 p-5 2xl:grid-cols-[1.05fr_1.35fr]">
         <div className="space-y-5 min-w-0">
-          <Panel
-            title={t.electricalOneLine}
-            icon={<Zap className="h-4 w-4" />}
-            openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
-          >
-            <ElectricalOneLine
-              disconnectClosed={state.disconnectClosed}
-              breakerTripped={state.breakerTripped}
-              feederContactor={state.feederContactor}
-              solenoidContactor={state.solenoidContactor}
-              motorPowered={state.motorPowered}
-              gateOpen={state.gateOpen}
-              voltage={simulatedVoltage}
-              current={state.current}
-              frequency={frequency}
-              powerFactor={powerFactor}
-              activePower={activePower}
-              reactivePower={reactivePower}
-              apparentPower={apparentPower}
-              generatorLiveStates={generatorLiveStates}
-              onToggleDisconnect={() => {
-                const nextDisconnect = !state.disconnectClosed;
-                actions.toggleDisconnect();
-                if (!nextDisconnect) {
-                  requestGridConnection(false);
-                } else if (!state.breakerTripped) {
-                  requestGridConnection(true);
-                }
-              }}
-              onToggleBreaker={() => {
-                if (state.breakerTripped) {
-                  actions.resetBreaker();
-                } else {
-                  actions.tripBreaker();
-                }
-              }}
-            />
+          <Panel title={t.domainNavigationTitle} icon={<Power className="h-4 w-4" />}>
+            <div className="space-y-4">
+              <div className="font-mono text-sm leading-6 tracking-[0.08em] text-[#a8bdd4]">{t.domainNavigationDesc}</div>
+              <DomainNavigation currentPath="/" />
+            </div>
           </Panel>
 
           <Panel title={t.commandSafetyControls} icon={<Power className="h-4 w-4" />}>
@@ -268,42 +191,6 @@ export default function Dashboard() {
             </div>
           </Panel>
 
-          <Panel title={t.realTimeProcess} icon={<Database className="h-4 w-4" />}
-            openUrl={`${import.meta.env.BASE_URL}simulation`}>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <ValueCard title={t.sourceVoltage} value={state.isPowered ? formatVoltageDisplay(simulatedVoltage) : "0.00 kV"} icon={<Zap className="h-5 w-5" />} accent={state.isPowered ? "cyan" : "red"} />
-              <ValueCard title={t.gridFrequency} value={frequency.toFixed(3)} unit="Hz" icon={<Gauge className="h-5 w-5" />} accent={state.isPowered ? "green" : "red"} />
-              <ValueCard title={t.motorCurrent} value={state.current.toFixed(2)} unit="A" icon={<Activity className="h-5 w-5" />} accent={state.motorPowered ? "green" : "cyan"} />
-              <ValueCard title={t.hopperLevel} value={state.hopperLevel.toFixed(1)} unit="%" icon={<Gauge className="h-5 w-5" />} accent={state.hopperLow ? "amber" : "green"} />
-              <ValueCard title={t.bowlLevelPortion} value={state.bowlLevel.toFixed(1)} unit="%" icon={<Database className="h-5 w-5" />} accent={state.bowlLevel <= 20 ? "amber" : "cyan"} />
-              <ValueCard title={t.todaysFeeds} value={String(state.feedCount)} icon={<Clock3 className="h-5 w-5" />} accent="cyan" />
-              <ValueCard title={t.systemMode} value={state.systemMode} icon={<ShieldAlert className="h-5 w-5" />} accent={state.systemMode === "LOCKOUT" ? "red" : state.systemMode === "AUTO" ? "green" : "amber"} />
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.lastFeedTime}</div>
-                <div className="font-mono text-lg tracking-[0.14em] text-[#e7edf6]">{state.lastFeedTime ? format(state.lastFeedTime, "yyyy-MM-dd HH:mm:ss") : "--"}</div>
-              </div>
-              <div className="rounded-2xl border border-[#1c2c40] bg-[#09111d] p-4">
-                <div className="mb-2 font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.processSynopsis}</div>
-                <div className="font-mono text-sm leading-6 tracking-[0.08em] text-[#b8c6d9]">
-                  {synopsis}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Link
-                href="/simulation"
-                className="flex items-center gap-2 rounded-xl border border-[#00dcff]/30 bg-[#062032] px-4 py-2.5 font-display text-xs tracking-[0.16em] text-[#00dcff] transition hover:bg-[#0b2c45] w-fit"
-              >
-                <Radio className="h-3.5 w-3.5" />
-                {t.openGridSimulation}
-              </Link>
-            </div>
-          </Panel>
-
           <Panel title={t.alarmsEvents} icon={<Siren className="h-4 w-4" />}>
             <div className="space-y-3">
               {state.alarms.map((alarm) => (
@@ -323,6 +210,23 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </Panel>
+
+          <Panel title={t.powerOverviewSummaryTitle} icon={<Clock3 className="h-4 w-4" />}>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-[#243245] bg-[#09111d] p-4">
+                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.powerOneLineNav}</div>
+                <div className="mt-2 font-mono text-sm leading-6 text-[#cfe6f4]">{t.powerOverviewOneLineSummary}</div>
+              </div>
+              <div className="rounded-2xl border border-[#243245] bg-[#09111d] p-4">
+                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.powerSourceNav}</div>
+                <div className="mt-2 font-mono text-sm leading-6 text-[#cfe6f4]">{t.powerOverviewSourceSummary}</div>
+              </div>
+              <div className="rounded-2xl border border-[#243245] bg-[#09111d] p-4">
+                <div className="font-display text-xs uppercase tracking-[0.18em] text-[#7f93ac]">{t.plcStatus}</div>
+                <div className="mt-2 font-mono text-sm leading-6 text-[#cfe6f4]">{t.powerOverviewPlcSummary}</div>
+              </div>
             </div>
           </Panel>
         </div>
