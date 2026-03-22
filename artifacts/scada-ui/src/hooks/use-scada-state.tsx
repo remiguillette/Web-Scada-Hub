@@ -1,55 +1,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
-
-export type SystemState = "RUN" | "STANDBY" | "STOP" | "FAULT";
-export type AlarmType = "CRITICAL" | "WARNING" | "INFO";
-export type SystemMode = "AUTO" | "MANUAL" | "LOCKOUT";
-
-export interface Alarm {
-  id: string;
-  timestamp: Date;
-  message: string;
-  active: boolean;
-  type: AlarmType;
-}
-
-export interface IoPoint {
-  id: string;
-  label: string;
-  on: boolean;
-}
-
-export interface ScadaState {
-  disconnectClosed: boolean;
-  breakerTripped: boolean;
-  estopPressed: boolean;
-  hopperLevel: number;
-  bowlLevel: number;
-  bowlDetected: boolean;
-  feedActive: boolean;
-  feedCount: number;
-  uptime: number;
-  voltage: number;
-  current: number;
-  lastFeedTime: Date | null;
-  nextFeedingTime: Date;
-  alarms: Alarm[];
-  feederContactor: boolean;
-  solenoidContactor: boolean;
-  motorPowered: boolean;
-  gateOpen: boolean;
-  hopperLow: boolean;
-  hopperHigh: boolean;
-  hopperEmpty: boolean;
-  estopHealthy: boolean;
-  bowlDemand: boolean;
-  isFault: boolean;
-  systemState: SystemState;
-  systemMode: SystemMode;
-  isPowered: boolean;
-  digitalInputs: IoPoint[];
-  digitalOutputs: IoPoint[];
-}
+import {
+  activateAlarm,
+  buildDigitalInputs,
+  buildDigitalOutputs,
+  clearAlarmMessage,
+  deriveScadaState,
+  pushAlarmEvent,
+  type Alarm,
+  type AlarmType,
+  type IoPoint,
+  type ScadaState,
+} from "@/features/simulation/state";
 
 export interface ScadaActions {
   toggleDisconnect: () => void;
@@ -93,88 +55,40 @@ function useScadaStateValue(): ScadaStateContextValue {
   const cycleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleBowlRef = useRef(0);
 
-  const isPowered = disconnectClosed && !breakerTripped;
-  const feederContactor = isPowered && !estopPressed && feedActive;
-  const solenoidContactor = isPowered && !estopPressed && feedActive;
-  const motorPowered = feederContactor;
-  const gateOpen = solenoidContactor;
-  const hopperLow = hopperLevel <= 25;
-  const hopperHigh = hopperLevel >= 55;
-  const hopperEmpty = hopperLevel <= 0;
-  const estopHealthy = !estopPressed;
-  const bowlDemand = bowlLevel <= 35;
-  const isFault = breakerTripped || estopPressed || hopperEmpty;
-
-  const systemState: SystemState = isFault
-    ? "FAULT"
-    : feedActive
-      ? "RUN"
-      : isPowered
-        ? "STANDBY"
-        : "STOP";
-
-  const systemMode: SystemMode = isFault ? "LOCKOUT" : disconnectClosed ? "AUTO" : "MANUAL";
+  const {
+    isPowered,
+    feederContactor,
+    solenoidContactor,
+    motorPowered,
+    gateOpen,
+    hopperLow,
+    hopperHigh,
+    hopperEmpty,
+    estopHealthy,
+    bowlDemand,
+    isFault,
+    systemState,
+    systemMode,
+  } = deriveScadaState({
+    disconnectClosed,
+    breakerTripped,
+    estopPressed,
+    hopperLevel,
+    bowlLevel,
+    bowlDetected,
+    feedActive,
+  });
 
   const pushEvent = useCallback((message: string, type: AlarmType = "INFO", active = false) => {
-    setAlarms((prev) => {
-      const duplicate = prev.find((alarm) => alarm.message === message && alarm.active === active);
-      if (duplicate) {
-        return prev;
-      }
-
-      return [
-        {
-          id: Math.random().toString(36).slice(2, 10),
-          timestamp: new Date(),
-          message,
-          active,
-          type,
-        },
-        ...prev,
-      ].slice(0, 14);
-    });
+    setAlarms((prev) => pushAlarmEvent(prev, message, type, active));
   }, []);
 
   const setAlarmActive = useCallback((message: string, type: AlarmType) => {
-    setAlarms((prev) => {
-      const existingIndex = prev.findIndex((alarm) => alarm.message === message);
-
-      if (existingIndex >= 0) {
-        const existing = prev[existingIndex];
-        if (existing.active) {
-          return prev;
-        }
-
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...existing,
-          active: true,
-          type,
-          timestamp: new Date(),
-        };
-        return updated;
-      }
-
-      return [
-        {
-          id: Math.random().toString(36).slice(2, 10),
-          timestamp: new Date(),
-          message,
-          active: true,
-          type,
-        },
-        ...prev,
-      ].slice(0, 14);
-    });
+    setAlarms((prev) => activateAlarm(prev, message, type));
   }, []);
 
   const clearAlarm = useCallback((message: string, clearMessage?: string) => {
-    setAlarms((prev) => {
-      const next = prev.map((alarm) =>
-        alarm.message === message && alarm.active ? { ...alarm, active: false, timestamp: new Date() } : alarm,
-      );
-      return next;
-    });
+    setAlarms((prev) => clearAlarmMessage(prev, message));
 
     if (clearMessage) {
       pushEvent(clearMessage, "INFO", false);
@@ -292,24 +206,12 @@ function useScadaStateValue(): ScadaStateContextValue {
   }, []);
 
   const digitalInputs: IoPoint[] = useMemo(
-    () => [
-      { id: "DI-01", label: "MDS-001 ON", on: disconnectClosed },
-      { id: "DI-02", label: "CB-001 OK", on: !breakerTripped },
-      { id: "DI-03", label: "HOPPER HIGH", on: hopperHigh },
-      { id: "DI-04", label: "HOPPER LOW", on: hopperLow },
-      { id: "DI-05", label: "BOWL DETECT", on: bowlDetected },
-      { id: "DI-06", label: "ESTOP NC", on: estopHealthy },
-    ],
+    () => buildDigitalInputs({ disconnectClosed, breakerTripped, hopperHigh, hopperLow, bowlDetected, estopHealthy }),
     [bowlDetected, breakerTripped, disconnectClosed, estopHealthy, hopperHigh, hopperLow],
   );
 
   const digitalOutputs: IoPoint[] = useMemo(
-    () => [
-      { id: "DO-01", label: "FEEDER CTR", on: feederContactor },
-      { id: "DO-02", label: "HOPPER SOL", on: solenoidContactor },
-      { id: "DO-03", label: "BEACON GRN", on: systemState === "RUN" || systemState === "STANDBY" },
-      { id: "DO-04", label: "BEACON RED", on: systemState === "FAULT" },
-    ],
+    () => buildDigitalOutputs({ feederContactor, solenoidContactor, systemState }),
     [feederContactor, solenoidContactor, systemState],
   );
 
@@ -378,3 +280,5 @@ export function useScadaState() {
   }
   return ctx;
 }
+
+export type { Alarm, AlarmType, IoPoint, ScadaState, SystemMode, SystemState } from "@/features/simulation/state";
