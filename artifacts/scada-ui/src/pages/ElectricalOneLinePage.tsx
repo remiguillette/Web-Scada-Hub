@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Languages, Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
-import { DomainNavigation } from "@/components/DomainNavigation";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
@@ -9,7 +8,7 @@ import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
 
-export default function PowerOneLinePage() {
+export default function ElectricalOneLinePage() {
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -35,33 +34,28 @@ export default function PowerOneLinePage() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0d0d0d] text-[#d6deea]">
-      <div className="shrink-0 border-b border-[#2a2a2a] bg-[#0a0a0a]">
-        <div className="flex items-center gap-3 px-5 py-3">
-          <div className="h-5 w-[3px] rounded-sm bg-[#00f7a1]" />
-          <Zap className="h-4 w-4 text-[#00f7a1] opacity-80" />
-          <h1 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00f7a1]">
-            {t.powerOneLineTitle}
-          </h1>
-          <span className="ml-2 font-mono text-[10px] tracking-widest text-[#4a6a5a]">
-            {SYSTEM.id} / {t.powerDomainLabel}
-          </span>
-          <div className="ml-auto">
-            <button
-              type="button"
-              onClick={toggleLocale}
-              aria-label={locale === "en" ? "Passer au français" : "Switch to English"}
-              className="flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-1.5 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
-            >
-              <Languages className="h-3.5 w-3.5" />
-              <span>{locale === "en" ? "FR" : "EN"}</span>
-            </button>
-          </div>
-        </div>
-        <div className="px-5 pb-4">
-          <DomainNavigation currentPath="/power/one-line" />
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-[#2a2a2a] bg-[#0a0a0a] shrink-0">
+        <div className="w-[3px] h-5 rounded-sm bg-[#00f7a1]" />
+        <Zap className="h-4 w-4 text-[#00f7a1] opacity-80" />
+        <h1 className="font-display text-[11px] font-semibold tracking-[0.2em] text-[#00f7a1]">
+          {t.electricalOneLineHeader}
+        </h1>
+        <span className="ml-2 font-mono text-[10px] tracking-widest text-[#4a6a5a]">
+          {SYSTEM.id} / {SYSTEM.mcc}
+        </span>
+        <div className="ml-auto">
+          <button
+            type="button"
+            onClick={toggleLocale}
+            aria-label={locale === "en" ? "Passer au français" : "Switch to English"}
+            className="flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-1.5 font-mono text-xs tracking-[0.16em] text-[#7f93ac] transition hover:border-[#00f7a1]/30 hover:text-[#00f7a1]"
+          >
+            <Languages className="h-3.5 w-3.5" />
+            <span>{locale === "en" ? "FR" : "EN"}</span>
+          </button>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden p-4">
+      <div className="flex-1 min-h-0 overflow-hidden p-4">
         <ElectricalOneLine
           disconnectClosed={state.disconnectClosed}
           breakerTripped={state.breakerTripped}

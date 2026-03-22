@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with a domain-based power overview, power one-line, and power source views.
+Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with dashboard, electrical one-line, and simulation views.
 
 `CARDS_AND_BUS_BARS_ARCHITECTURE.md` is intentionally preserved as an architectural backup reference. Its concepts are useful, but several names and paths in that backup document do **not** exactly match the current implementation.
 
@@ -61,23 +61,22 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 
 ### Current routes
 
-- `/` — `PowerOverviewPage` (main SCADA entry point for the power domain)
-- `/power/one-line` — full-screen electrical one-line page for the power domain
-- `/power/source` — source/generation operations page for the power domain
+- `/` — `Dashboard`
+- `/electrical-one-line` — full-screen electrical one-line page
+- `/simulation` — simulation page
 
 ## SCADA application domains
 
 The frontend currently combines several distinct concerns:
 
-1. **Power overview operations**
+1. **Dashboard operations**
    - system status
    - alarms
    - countdown to auto-feed
    - PLC I/O status
    - manual commands and safety controls
-   - domain-based navigation entry point
 
-2. **Power one-line visualization**
+2. **Electrical one-line visualization**
    - utility supply card
    - supplementary utility service cards
    - ATS card
@@ -85,7 +84,7 @@ The frontend currently combines several distinct concerns:
    - feeder/street-bus conductor metrics
    - isolated Beaver Woods MT card cluster
 
-3. **Power source contexts**
+3. **Simulation contexts**
    - grid simulation values
    - generator live states
    - SCADA process state

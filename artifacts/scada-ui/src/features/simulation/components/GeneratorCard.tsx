@@ -107,7 +107,7 @@ export function GeneratorCard({ genIdx, status, onStart, onStop, t }: { genIdx: 
         </table>
       </div>
 
-      {isAvailable ? <div className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/20 bg-[#00f7a1]/5 px-3 py-2"><Zap className="h-3.5 w-3.5 shrink-0 text-[#00f7a1]" /><span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">{t.liveValuesReflected}</span><Link href="/power/one-line" className="ml-auto shrink-0 font-display text-[10px] tracking-[0.14em] text-[#00f7a1] underline underline-offset-2 transition hover:text-white">{t.viewDiagram}</Link></div> : null}
+      {isAvailable ? <div className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/20 bg-[#00f7a1]/5 px-3 py-2"><Zap className="h-3.5 w-3.5 shrink-0 text-[#00f7a1]" /><span className="font-mono text-[10px] tracking-[0.1em] text-[#00f7a1]/80">{t.liveValuesReflected}</span><Link href="/electrical-one-line" className="ml-auto shrink-0 font-display text-[10px] tracking-[0.14em] text-[#00f7a1] underline underline-offset-2 transition hover:text-white">{t.viewDiagram}</Link></div> : null}
     </div>
   );
 }
