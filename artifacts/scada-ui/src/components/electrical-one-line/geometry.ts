@@ -1,5 +1,19 @@
-import { CARD_W, PAN_OVERSCROLL, UTILITY_LEFT_CLUSTER_WIDTH } from './constants';
+import {
+  CARD_W,
+  ISOLATED_SWITCHGEAR_CARD_WIDTH,
+  PAN_OVERSCROLL,
+  UTILITY_CARD_GAP,
+  UTILITY_LEFT_CLUSTER_WIDTH,
+  UTILITY_TO_RISER_GAP,
+} from './constants';
 import { CONDUCTORS } from './metrics';
+
+export type DiagramBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
@@ -50,5 +64,34 @@ export function getUtilityBusLayout() {
     riserX,
     riserTapX,
     feederLabelX,
+  };
+}
+
+const TOP_ROW_FOCUS_WIDTH =
+  UTILITY_BUS_GEOMETRY.width +
+  UTILITY_TO_RISER_GAP +
+  CARD_W +
+  UTILITY_CARD_GAP +
+  ISOLATED_SWITCHGEAR_CARD_WIDTH +
+  CARD_W;
+
+const TOP_ROW_FOCUS_HEIGHT = UTILITY_BUS_GEOMETRY.lineTop - 98 + CARD_W;
+const GENERATOR_BRANCH_ROW_GAP = 28;
+const GENERATOR_SECTION_FOCUS_HEIGHT = 4 * 74 + 24;
+
+export function getUsefulDiagramBounds(): DiagramBounds {
+  const x = 0;
+  const y = 0;
+  const width = TOP_ROW_FOCUS_WIDTH;
+  const height = Math.max(
+    TOP_ROW_FOCUS_HEIGHT,
+    TOP_ROW_FOCUS_HEIGHT + GENERATOR_BRANCH_ROW_GAP + GENERATOR_SECTION_FOCUS_HEIGHT,
+  );
+
+  return {
+    x,
+    y,
+    width,
+    height,
   };
 }

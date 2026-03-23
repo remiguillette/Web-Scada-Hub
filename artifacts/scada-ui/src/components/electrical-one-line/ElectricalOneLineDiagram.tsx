@@ -19,7 +19,7 @@ import {
   UTILITY_TO_RISER_GAP,
 } from './constants';
 import { GeneratorBank } from './GeneratorBank';
-import { clamp, clampOffset, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
+import { clamp, clampOffset, getUsefulDiagramBounds, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
 import { buildElectricalModel } from './model';
 import { NodeCard } from './NodeCard';
 import { StatusIcon } from './StatusIcon';
@@ -31,6 +31,7 @@ import { useConductorMetrics } from './useConductorMetrics';
 
 const ZOOM_STEP = 0.0015;
 const UTILITY_BUS_LAYOUT = getUtilityBusLayout();
+const USEFUL_DIAGRAM_BOUNDS = getUsefulDiagramBounds();
 
 export function ElectricalOneLineDiagram({
   disconnectClosed,
@@ -68,6 +69,7 @@ export function ElectricalOneLineDiagram({
   const dragStateRef = useRef<DragState | null>(null);
   const pinchStateRef = useRef<PinchState | null>(null);
   const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const hasInitializedViewportRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
   const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
@@ -154,6 +156,22 @@ export function ElectricalOneLineDiagram({
   }, [measureAtsCenter]);
 
   const contentMetrics = useMemo(() => ({ width: diagramSize.width * BASE_DIAGRAM_SCALE * zoom, height: diagramSize.height * BASE_DIAGRAM_SCALE * zoom }), [diagramSize.height, diagramSize.width, zoom]);
+
+  useEffect(() => {
+    if (hasInitializedViewportRef.current) return;
+    if (!viewportSize.width || !viewportSize.height || !diagramSize.width || !diagramSize.height) return;
+
+    const usefulCenterX = (USEFUL_DIAGRAM_BOUNDS.x + USEFUL_DIAGRAM_BOUNDS.width / 2) * BASE_DIAGRAM_SCALE;
+    const usefulCenterY = (USEFUL_DIAGRAM_BOUNDS.y + USEFUL_DIAGRAM_BOUNDS.height / 2) * BASE_DIAGRAM_SCALE;
+    const initialOffsetX = viewportSize.width / 2 - usefulCenterX;
+    const initialOffsetY = viewportSize.height / 2 - usefulCenterY;
+
+    setOffset({
+      x: clampOffset(initialOffsetX, viewportSize.width, contentMetrics.width),
+      y: clampOffset(initialOffsetY, viewportSize.height, contentMetrics.height),
+    });
+    hasInitializedViewportRef.current = true;
+  }, [contentMetrics.height, contentMetrics.width, diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width]);
 
   useEffect(() => {
     if (!viewportSize.width || !viewportSize.height) return;
