@@ -282,22 +282,26 @@ export function getElectricalOneLineUtilityBusGeometry(worldObjects: readonly Wo
 
   return {
     bounds: busWorldObject,
-    conductors: CONDUCTORS.map((conductor, index) => {
-      const x = busWorldObject.x + firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
-      const tapY = busWorldObject.y + centerY + (index - (count - 1) / 2) * 12;
-
-      return {
-        id: `power.utility-bus.conductor.${conductor.label.toLowerCase()}`,
-        points: [
-          { x, y: busWorldObject.y + 155 },
-          { x, y: busWorldObject.y + lineBottom },
-          { x, y: tapY },
-          { x: busWorldObject.x + riserTapX, y: tapY },
-          { x: busWorldObject.x + riserX, y: busWorldObject.y + centerY },
-        ],
-        marker: { x, y: tapY },
-      };
-    }),
+    conductors: buildParallelConnectorBundle({
+      id: 'power.utility-bus.conductor',
+      route: 'busTap',
+      laneCount: count,
+      laneSpacing: 12,
+      sourceX: busWorldObject.x + firstCX,
+      sourceLaneSpacing: UTILITY_BUS_GEOMETRY.hSpacing,
+      sourceTopY: busWorldObject.y + 155,
+      sourceBottomY: busWorldObject.y + lineBottom,
+      destinationX: busWorldObject.x + riserTapX,
+      destinationY: busWorldObject.y + centerY,
+    }).map((path, index) => ({
+      ...path,
+      id: `power.utility-bus.conductor.${CONDUCTORS[index]?.label.toLowerCase() ?? index}`,
+      marker: path.points[2],
+      points: [
+        ...path.points.slice(0, 4),
+        { x: busWorldObject.x + riserX, y: busWorldObject.y + centerY },
+      ],
+    })),
   };
 }
 

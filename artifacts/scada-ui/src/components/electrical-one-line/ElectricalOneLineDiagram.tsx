@@ -20,6 +20,7 @@ import { buildElectricalOneLineWorldObjects, getElectricalOneLineGeneratorBranch
 import { NodeCard } from './NodeCard';
 import { StatusIcon } from './StatusIcon';
 import type { ATSNode, DragState, ElectricalOneLineProps, PinchState } from './types';
+import type { WorldLayer } from './world-model';
 import { UtilityBusAnnotations } from './UtilityBusAnnotations';
 import { UtilityBusBackground } from './UtilityBusBackground';
 import { UtilityCardInterconnect } from './UtilityCardInterconnect';
@@ -31,6 +32,18 @@ const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
 const WORLD_GENERATOR_BRANCH_GEOMETRY = getElectricalOneLineGeneratorBranchGeometry(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 const WORLD_SCENE_BOUNDS = getBoundsForWorldObjects(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 const USEFUL_DIAGRAM_BOUNDS = getUsefulBoundsForWorldObjects(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
+const DEFAULT_LAYER_VISIBILITY: Record<WorldLayer, boolean> = {
+  background: true,
+  conductors: true,
+  equipment: true,
+  annotations: true,
+};
+const LAYER_VISIBILITY_LABELS: Record<WorldLayer, string> = {
+  background: 'BG',
+  conductors: 'COND',
+  equipment: 'EQ',
+  annotations: 'ANN',
+};
 
 export function ElectricalOneLineDiagram({
   disconnectClosed,
@@ -73,6 +86,7 @@ export function ElectricalOneLineDiagram({
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [layerVisibility, setLayerVisibility] = useState(DEFAULT_LAYER_VISIBILITY);
 
   const { state, utilityNode, supplementaryUtilityNodes, atsNode, generatorUnits } = useMemo(
     () =>
@@ -211,6 +225,30 @@ export function ElectricalOneLineDiagram({
     },
     [worldObjectMap],
   );
+
+  const isWorldObjectVisible = useCallback(
+    (worldObjectId: string) => {
+      const worldObject = worldObjectMap.get(worldObjectId);
+      if (!worldObject) {
+        return false;
+      }
+
+      return layerVisibility[worldObject.layer];
+    },
+    [layerVisibility, worldObjectMap],
+  );
+
+  const isLayerVisible = useCallback(
+    (layer: WorldLayer) => layerVisibility[layer],
+    [layerVisibility],
+  );
+
+  const toggleLayerVisibility = useCallback((layer: WorldLayer) => {
+    setLayerVisibility((current) => ({
+      ...current,
+      [layer]: !current[layer],
+    }));
+  }, []);
 
   const stopDragging = useCallback(() => {
     dragStateRef.current = null;
@@ -368,9 +406,32 @@ export function ElectricalOneLineDiagram({
         if (event.key === '-' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); zoomByStep(-KEYBOARD_ZOOM_STEP); }
       }}
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundColor: '#050b10', backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`, backgroundPosition: 'center center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', opacity: 0.55 }} />
+      {isLayerVisible('background') ? (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundColor: '#050b10', backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`, backgroundPosition: 'center center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', opacity: 0.55 }} />
+      ) : null}
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
-        <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
+        <div className="flex items-center gap-3">
+          <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
+          <div className="pointer-events-auto flex items-center gap-1">
+            {(['background', 'conductors', 'equipment', 'annotations'] as WorldLayer[]).map((layer) => (
+              <button
+                key={layer}
+                type="button"
+                aria-pressed={layerVisibility[layer]}
+                aria-label={`Toggle ${layer} layer`}
+                className={cn(
+                  'inline-flex h-7 min-w-[3.25rem] items-center justify-center rounded-md border px-2 text-[9px] tracking-[0.18em] transition',
+                  layerVisibility[layer]
+                    ? 'border-[#2a6078] bg-[#08131a] text-[#d9f7ff]'
+                    : 'border-white/10 bg-black/20 text-[#6f8795]',
+                )}
+                onClick={() => toggleLayerVisibility(layer)}
+              >
+                {LAYER_VISIBILITY_LABELS[layer]}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="pointer-events-auto flex items-center gap-2">
           <button type="button" aria-label="Zoom out" className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/35 text-sm text-[#d9f7ff] transition hover:border-[#2a6078] hover:bg-[#08131a]" onClick={() => zoomByStep(-BUTTON_ZOOM_STEP)}>−</button>
           <span className="min-w-14 text-center">{Math.round(zoom * 100)}%</span>
@@ -381,16 +442,20 @@ export function ElectricalOneLineDiagram({
         <div className="pt-1 pb-8 pl-6 pr-10" style={{ width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined, height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'top left', willChange: 'transform' }}>
           <div ref={diagramRef} className="min-w-max" style={{ transform: `scale(${BASE_DIAGRAM_SCALE})`, transformOrigin: 'top left' }}>
             <div className="relative" style={{ width: sceneWidth, height: sceneHeight }}>
-              <div className="absolute left-0 top-0 shrink-0" style={{ width: UTILITY_BUS_GEOMETRY.width, height: UTILITY_BUS_GEOMETRY.height }}>
-                <UtilityBusBackground utilityActive={state.supplyLive} />
-                <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} feederLabel="NPE-FDR-13.8-01" conductorLabels={conductorLabels} conductorVoltages={conductorVoltages} conductorCurrents={conductorCurrents} conductorColors={conductorColors} />
-              </div>
+              {(isWorldObjectVisible('power.utility-bus.conductors') || isWorldObjectVisible('power.utility-bus.annotations')) ? (
+                <div className="absolute left-0 top-0 shrink-0" style={{ width: UTILITY_BUS_GEOMETRY.width, height: UTILITY_BUS_GEOMETRY.height }}>
+                  {isWorldObjectVisible('power.utility-bus.conductors') ? <UtilityBusBackground utilityActive={state.supplyLive} /> : null}
+                  {isWorldObjectVisible('power.utility-bus.annotations') ? (
+                    <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} feederLabel="NPE-FDR-13.8-01" conductorLabels={conductorLabels} conductorVoltages={conductorVoltages} conductorCurrents={conductorCurrents} conductorColors={conductorColors} />
+                  ) : null}
+                </div>
+              ) : null}
 
               {supplementaryUtilityDisplayNodes.map((node, index) => {
                 const worldObjectId = ['utility.water', 'utility.wastewater', 'utility.gas', 'utility.telecom'][index];
                 const worldObjectStyle = getWorldObjectStyle(worldObjectId);
 
-                if (!worldObjectStyle) {
+                if (!worldObjectStyle || !isWorldObjectVisible(worldObjectId)) {
                   return null;
                 }
 
@@ -401,43 +466,55 @@ export function ElectricalOneLineDiagram({
                 );
               })}
 
-              <div style={{ ...getWorldObjectStyle('power.utility.source'), zIndex: 1 }}>
-                <NodeCard node={utilityDisplayNode} />
-              </div>
+              {isWorldObjectVisible('power.utility.source') ? (
+                <div style={{ ...getWorldObjectStyle('power.utility.source'), zIndex: 1 }}>
+                  <NodeCard node={utilityDisplayNode} />
+                </div>
+              ) : null}
 
-              <div className="relative flex shrink-0 items-center" style={{ ...getWorldObjectStyle('power.utility.interconnect'), marginLeft: UTILITY_TO_RISER_GAP }}>
-                <UtilityCardInterconnect active={state.supplyLive} cardCount={2} leadInWidth={UTILITY_TO_RISER_GAP} />
-              </div>
+              {isWorldObjectVisible('power.utility.interconnect') ? (
+                <div className="relative flex shrink-0 items-center" style={{ ...getWorldObjectStyle('power.utility.interconnect'), marginLeft: UTILITY_TO_RISER_GAP }}>
+                  <UtilityCardInterconnect active={state.supplyLive} cardCount={2} leadInWidth={UTILITY_TO_RISER_GAP} />
+                </div>
+              ) : null}
 
-              <div className="relative z-[1]" style={getWorldObjectStyle('power.riser-pole.0326')}>
-                <NodeCard node={{ kind: 'equipment', tag: 'POLE-0326', title: t.riserPole, subtitle: t.structureLabel, status: t.riserPoleStatus, active: state.supplyLive, accent: 'cyan', width: 340, statusDot: true, miniStatuses: [
-                  { label: t.surgeArresters, tag: 'LA-UTIL', status: 'Normal', active: state.supplyLive },
-                  { label: t.fusedCutouts, tag: 'FCO-UTIL', status: state.supplyLive ? 'Closed' : 'Open', active: state.supplyLive },
-                  { label: t.overheadUndergroundTransition, tag: t.overheadUndergroundTransition, status: state.supplyLive ? 'Connected' : 'Disconnected', active: state.supplyLive },
-                ] }} />
-              </div>
+              {isWorldObjectVisible('power.riser-pole.0326') ? (
+                <div className="relative z-[1]" style={getWorldObjectStyle('power.riser-pole.0326')}>
+                  <NodeCard node={{ kind: 'equipment', tag: 'POLE-0326', title: t.riserPole, subtitle: t.structureLabel, status: t.riserPoleStatus, active: state.supplyLive, accent: 'cyan', width: 340, statusDot: true, miniStatuses: [
+                    { label: t.surgeArresters, tag: 'LA-UTIL', status: 'Normal', active: state.supplyLive },
+                    { label: t.fusedCutouts, tag: 'FCO-UTIL', status: state.supplyLive ? 'Closed' : 'Open', active: state.supplyLive },
+                    { label: t.overheadUndergroundTransition, tag: t.overheadUndergroundTransition, status: state.supplyLive ? 'Connected' : 'Disconnected', active: state.supplyLive },
+                  ] }} />
+                </div>
+              ) : null}
 
-              <div className="relative z-[1] shrink-0" style={getWorldObjectStyle('power.beaver-woods-mt')}>
-                <BeaverWoodsMtCard active={state.supplyLive} frequency={frequency} generatorLiveStates={generatorLiveStates} conductorMetrics={conductorMetrics} />
-              </div>
+              {isWorldObjectVisible('power.beaver-woods-mt') ? (
+                <div className="relative z-[1] shrink-0" style={getWorldObjectStyle('power.beaver-woods-mt')}>
+                  <BeaverWoodsMtCard active={state.supplyLive} frequency={frequency} generatorLiveStates={generatorLiveStates} conductorMetrics={conductorMetrics} />
+                </div>
+              ) : null}
 
-              <div className="shrink-0" style={getWorldObjectStyle('power.ats.001')}>
-                <NodeCard node={atsDisplayNode} />
-              </div>
+              {isWorldObjectVisible('power.ats.001') ? (
+                <div className="shrink-0" style={getWorldObjectStyle('power.ats.001')}>
+                  <NodeCard node={atsDisplayNode} />
+                </div>
+              ) : null}
 
-              <div
-                className="absolute"
-                style={{
-                  left: WORLD_SCENE_BOUNDS.x + 486,
-                  top: worldObjectMap.get('power.campus.divider')?.y ?? 0,
-                }}
-              >
-                <VerticalDivider height={campusDividerHeight} label={t.campus} />
-              </div>
+              {isWorldObjectVisible('power.campus.divider') ? (
+                <div
+                  className="absolute"
+                  style={{
+                    left: WORLD_SCENE_BOUNDS.x + 486,
+                    top: worldObjectMap.get('power.campus.divider')?.y ?? 0,
+                  }}
+                >
+                  <VerticalDivider height={campusDividerHeight} label={t.campus} />
+                </div>
+              ) : null}
 
               {generatorUnits.map((generator, index) => {
                 const generatorWorldObject = worldObjectMap.get(`power.generator.${generator.tag.toLowerCase()}`);
-                if (!generatorWorldObject) {
+                if (!generatorWorldObject || !isWorldObjectVisible(generatorWorldObject.id)) {
                   return null;
                 }
 
@@ -460,21 +537,25 @@ export function ElectricalOneLineDiagram({
                 );
               })}
 
-              <div
-                className="absolute flex shrink-0 items-center"
-                style={{
-                  left: generatorBranchBounds?.x ?? 0,
-                  top: generatorBranchBounds?.y ?? 0,
-                  width: generatorBranchBounds?.width ?? generatorBranchWireWidth,
-                  minHeight: generatorBranchBounds?.height ?? generatorUnits.length * 74 - 12,
-                }}
-              >
-                <div className="flex flex-1 flex-col justify-center gap-[58px]" />
-              </div>
+              {isWorldObjectVisible('power.generator.branch') ? (
+                <div
+                  className="absolute flex shrink-0 items-center"
+                  style={{
+                    left: generatorBranchBounds?.x ?? 0,
+                    top: generatorBranchBounds?.y ?? 0,
+                    width: generatorBranchBounds?.width ?? generatorBranchWireWidth,
+                    minHeight: generatorBranchBounds?.height ?? generatorUnits.length * 74 - 12,
+                  }}
+                >
+                  <div className="flex flex-1 flex-col justify-center gap-[58px]" />
+                </div>
+              ) : null}
 
-              <div className="flex shrink-0 items-center" style={getWorldObjectStyle('power.breaker.cb-gen')}>
-                <NodeCard node={{ kind: 'equipment', tag: 'CB-GEN', title: t.mainPanelGen, status: state.genBrkLive ? t.closed : t.openStandby, active: state.genBrkLive, accent: 'amber', icon: <StatusIcon icon="shield" active={state.genBrkLive} activeColor="text-[#ffb347]" /> }} />
-              </div>
+              {isWorldObjectVisible('power.breaker.cb-gen') ? (
+                <div className="flex shrink-0 items-center" style={getWorldObjectStyle('power.breaker.cb-gen')}>
+                  <NodeCard node={{ kind: 'equipment', tag: 'CB-GEN', title: t.mainPanelGen, status: state.genBrkLive ? t.closed : t.openStandby, active: state.genBrkLive, accent: 'amber', icon: <StatusIcon icon="shield" active={state.genBrkLive} activeColor="text-[#ffb347]" /> }} />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ type IntakeConnectorBundleParams = ConnectorBundleBaseParams & {
 type BusTapConnectorBundleParams = ConnectorBundleBaseParams & {
   route: "busTap";
   sourceX: number;
+  sourceLaneSpacing?: number;
   sourceTopY: number;
   sourceBottomY: number;
   destinationX: number;
@@ -77,6 +78,7 @@ function buildBusTapConnectorBundle(
     laneCount,
     laneSpacing,
     sourceX,
+    sourceLaneSpacing = 0,
     sourceTopY,
     sourceBottomY,
     destinationX,
@@ -85,14 +87,15 @@ function buildBusTapConnectorBundle(
 
   return Array.from({ length: laneCount }, (_, index) => {
     const laneOffset = getLaneOffset(index, laneCount, laneSpacing);
+    const sourceLaneX = sourceX + index * sourceLaneSpacing;
     const tapY = destinationY + laneOffset;
 
     return {
       id: `${id}.${index}`,
       points: [
-        { x: sourceX, y: sourceTopY },
-        { x: sourceX, y: sourceBottomY },
-        { x: sourceX, y: tapY },
+        { x: sourceLaneX, y: sourceTopY },
+        { x: sourceLaneX, y: sourceBottomY },
+        { x: sourceLaneX, y: tapY },
         { x: destinationX, y: tapY },
         { x: destinationX, y: destinationY },
       ],
