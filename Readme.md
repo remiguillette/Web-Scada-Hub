@@ -62,7 +62,6 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 ### Current routes
 
 - `/` — primary public/kiosk electrical one-line display
-- `/electrical-one-line` — full-screen electrical one-line page
 - `/simulation` — operator-facing control and technical page
 
 ## SCADA application domains
