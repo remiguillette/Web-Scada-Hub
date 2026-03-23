@@ -27,6 +27,7 @@ import { SYSTEM } from "@/config/system";
 import { cn } from "@/lib/utils";
 import { buildUtilitySnapshot } from "@/lib/utility-service";
 import { ElecDataCard, GeneratorCard, MetricCard, StatusBadge, type GridFormField } from "@/features/simulation";
+import { HeaderRouteAction } from "@/features/navigation/components/HeaderRouteAction";
 
 const ALARM_STYLE: Record<Alarm["type"], string> = {
   CRITICAL: "border-[#d5565a]/30 bg-[#2a1012] text-[#f3c5c9]",
@@ -464,12 +465,11 @@ export default function SimulationPage() {
                 </span>
               </div>
             )}
-            <Link
+            <HeaderRouteAction
               href="/"
-              className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
-            >
-              <Zap className="h-3.5 w-3.5" /> {t.electricalOneLineLink}
-            </Link>
+              icon={<Zap className="h-3.5 w-3.5" />}
+              label={t.electricalOneLineLink}
+            />
             <button
               type="button"
               onClick={toggleLocale}
