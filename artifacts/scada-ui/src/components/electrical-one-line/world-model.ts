@@ -323,7 +323,8 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
   }
 
   const breakoutLength = 18;
-  const convergeLength = 22;
+  const intakeTransitionLength = 18;
+  const intakeRailLength = 12;
 
   return {
     bounds: interconnectWorldObject,
@@ -334,18 +335,19 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
     paths: CONDUCTORS.map((conductor, index) => {
       const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
       const conductorY = riserPoleRight.y + offset;
-      const beaverWoodsIntakePoint = {
-        x: beaverWoodsUtilityIn.x,
-        y: beaverWoodsUtilityIn.y + offset,
-      };
+      const beaverWoodsIntakeY = beaverWoodsUtilityIn.y + offset;
+      const breakoutX = riserPoleRight.x + breakoutLength;
+      const intakeTransitionX = breakoutX + intakeTransitionLength;
+      const intakeRailStartX = beaverWoodsUtilityIn.x - intakeRailLength;
 
       return {
         id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
         points: [
           riserPoleRight,
-          { x: riserPoleRight.x + breakoutLength, y: conductorY },
-          { x: beaverWoodsIntakePoint.x - convergeLength, y: conductorY },
-          beaverWoodsIntakePoint,
+          { x: breakoutX, y: conductorY },
+          { x: intakeTransitionX, y: beaverWoodsIntakeY },
+          { x: intakeRailStartX, y: beaverWoodsIntakeY },
+          { x: beaverWoodsUtilityIn.x, y: beaverWoodsIntakeY },
         ],
       };
     }),
