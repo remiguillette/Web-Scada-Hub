@@ -59,6 +59,7 @@ const GENERATOR_BREAKER_X =
   CARD_W +
   UTILITY_CARD_GAP +
   ISOLATED_SWITCHGEAR_CARD_WIDTH;
+const BEAVER_WOODS_UTILITY_INSET_Y = 18;
 
 const SUPPLEMENTARY_UTILITY_OBJECTS: Array<Pick<WorldObject, 'id' | 'domain'>> = [
   { id: 'utility.water', domain: 'water' },
@@ -179,6 +180,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       height: NODE_CARD_HEIGHT,
       anchors: {
         left: { x: beaverWoodsMtX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        utilityIn: { x: beaverWoodsMtX, y: TOP_ROW_CARD_Y + BEAVER_WOODS_UTILITY_INSET_Y },
         right: { x: beaverWoodsMtX + ISOLATED_SWITCHGEAR_CARD_WIDTH, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
       },
     },
@@ -314,32 +316,38 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
   }
 
   const riserPoleRight = getWorldObjectAnchor(riserPoleWorldObject, 'right');
-  const beaverWoodsLeft = getWorldObjectAnchor(beaverWoodsWorldObject, 'left');
+  const beaverWoodsUtilityIn = getWorldObjectAnchor(beaverWoodsWorldObject, 'utilityIn') ?? getWorldObjectAnchor(beaverWoodsWorldObject, 'left');
 
-  if (!riserPoleRight || !beaverWoodsLeft) {
+  if (!riserPoleRight || !beaverWoodsUtilityIn) {
     return { bounds: interconnectWorldObject, markers: [] as WorldConnectorMarker[], paths: [] as WorldConnectorPath[] };
   }
 
   const breakoutLength = 18;
-  const convergeLength = 22;
+  const intakeTransitionLength = 18;
+  const intakeRailLength = 12;
 
   return {
     bounds: interconnectWorldObject,
     markers: [
       { id: 'power.utility.interconnect.riser-pole', point: riserPoleRight },
-      { id: 'power.utility.interconnect.beaver-woods', point: beaverWoodsLeft },
+      { id: 'power.utility.interconnect.beaver-woods', point: beaverWoodsUtilityIn },
     ],
     paths: CONDUCTORS.map((conductor, index) => {
       const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
       const conductorY = riserPoleRight.y + offset;
+      const beaverWoodsIntakeY = beaverWoodsUtilityIn.y + offset;
+      const breakoutX = riserPoleRight.x + breakoutLength;
+      const intakeTransitionX = breakoutX + intakeTransitionLength;
+      const intakeRailStartX = beaverWoodsUtilityIn.x - intakeRailLength;
 
       return {
         id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
         points: [
           riserPoleRight,
-          { x: riserPoleRight.x + breakoutLength, y: conductorY },
-          { x: beaverWoodsLeft.x - convergeLength, y: conductorY },
-          beaverWoodsLeft,
+          { x: breakoutX, y: conductorY },
+          { x: intakeTransitionX, y: beaverWoodsIntakeY },
+          { x: intakeRailStartX, y: beaverWoodsIntakeY },
+          { x: beaverWoodsUtilityIn.x, y: beaverWoodsIntakeY },
         ],
       };
     }),
