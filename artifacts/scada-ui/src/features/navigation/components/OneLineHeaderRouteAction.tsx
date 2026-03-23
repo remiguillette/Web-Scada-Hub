@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { RouteActionBase, type RouteActionKioskMode } from "@/features/navigation/components/RouteActionBase";
 
-interface HeaderRouteActionProps {
+interface OneLineHeaderRouteActionProps {
   href: string;
   label: ReactNode;
   icon?: ReactNode;
@@ -9,13 +9,13 @@ interface HeaderRouteActionProps {
   kioskMode?: RouteActionKioskMode;
 }
 
-export function HeaderRouteAction({
+export function OneLineHeaderRouteAction({
   href,
   label,
   icon,
   className,
   kioskMode = "show",
-}: HeaderRouteActionProps) {
+}: OneLineHeaderRouteActionProps) {
   return (
     <RouteActionBase
       href={href}
@@ -24,7 +24,7 @@ export function HeaderRouteAction({
       kioskMode={kioskMode}
       className={
         className ??
-        "flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
+        "flex items-center gap-1.5 rounded-lg border border-[#24342c] bg-[#101513] px-2.5 py-1.5 font-mono text-[10px] tracking-[0.16em] text-[#7f93ac] transition hover:border-[#335646] hover:text-[#b9c7d9]"
       }
     />
   );
