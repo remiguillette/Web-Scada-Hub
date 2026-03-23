@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with a canonical power-source simulation page and a dedicated electrical one-line view.
+Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and supporting libraries. The canonical application in this repository is `artifacts/scada-ui`, a React + Vite frontend that simulates a CAT feeder/dispenser control system with a public electrical one-line view and a separate operator-facing simulation page.
 
 `CARDS_AND_BUS_BARS_ARCHITECTURE.md` is intentionally preserved as an architectural backup reference. Its concepts are useful, but several names and paths in that backup document do **not** exactly match the current implementation.
 
@@ -61,28 +61,25 @@ Web Scada Hub is a pnpm workspace monorepo for a SCADA-style web application and
 
 ### Current routes
 
-- `/` — canonical power-source simulation page
-- `/simulation` — compatibility alias to the same simulation page
+- `/` — primary public/kiosk electrical one-line display
 - `/electrical-one-line` — full-screen electrical one-line page
+- `/simulation` — operator-facing control and technical page
 
 ## SCADA application domains
 
 The frontend currently combines several distinct concerns:
 
-1. **Power-source simulation**
+1. **Public electrical one-line display**
+   - spectator, kiosk, wall-display, and shared-link presentation layer
+   - live one-line visualization of utility, ATS, generator, and feeder state
+   - language toggle without operator control-page density
+
+2. **Operator simulation and control**
    - source voltage and frequency state
    - hydraulic production and dispatch
    - utility and motor electrical details
    - PLC I/O status
    - alarms and events
-
-2. **Electrical one-line visualization**
-   - utility supply card
-   - supplementary utility service cards
-   - ATS card
-   - generator bank
-   - feeder/street-bus conductor metrics
-   - isolated Beaver Woods MT card cluster
 
 3. **Simulation contexts**
    - grid simulation values
