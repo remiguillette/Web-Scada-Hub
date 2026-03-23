@@ -12,10 +12,6 @@ import { isKioskMode } from "@/config/ui";
 
 export default function ElectricalOneLinePage() {
   useEffect(() => {
-    if (!isKioskMode) {
-      return undefined;
-    }
-
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
 
@@ -39,7 +35,7 @@ export default function ElectricalOneLinePage() {
   const { t, locale, toggleLocale } = useTranslation();
 
   return (
-    <div className="flex min-h-[100dvh] flex-col overflow-hidden bg-[#0d0d0d] text-[#d6deea]">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#0d0d0d] text-[#d6deea]">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-[#2a2a2a] bg-[#0a0a0a] shrink-0">
         <div className="w-[3px] h-5 rounded-sm bg-[#00f7a1]" />
         <Zap className="h-4 w-4 text-[#00f7a1] opacity-80" />
@@ -67,7 +63,7 @@ export default function ElectricalOneLinePage() {
           </button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden p-4">
         <ElectricalOneLine
           disconnectClosed={state.disconnectClosed}
           breakerTripped={state.breakerTripped}
