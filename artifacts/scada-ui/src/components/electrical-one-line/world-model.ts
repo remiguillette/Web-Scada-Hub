@@ -370,64 +370,6 @@ export function getElectricalOneLineGeneratorBranchGeometry(worldObjects: readon
   };
 }
 
-export function getElectricalOneLineGeneratorBranchPaths(worldObjects: readonly WorldObject[]) {
-  const geometry = getElectricalOneLineGeneratorBranchGeometry(worldObjects);
-
-  if (
-    !geometry.bounds ||
-    !geometry.branchStart ||
-    !geometry.atsGeneratorIn ||
-    geometry.generatorOutputs.length === 0
-  ) {
-    return {
-      bounds: geometry.bounds,
-      paths: [] as WorldConnectorPath[],
-    };
-  }
-
-  const sortedGeneratorOutputs = [...geometry.generatorOutputs].sort(
-    (left, right) => left.y - right.y,
-  );
-  const trunkTopY = sortedGeneratorOutputs[0].y;
-  const trunkBottomY =
-    sortedGeneratorOutputs[sortedGeneratorOutputs.length - 1].y;
-  const mainRunY = geometry.branchStart.y;
-
-  return {
-    bounds: geometry.bounds,
-    paths: [
-      {
-        id: "power.generator.branch.trunk",
-        points: [
-          { x: geometry.branchStart.x, y: trunkTopY },
-          { x: geometry.branchStart.x, y: trunkBottomY },
-        ],
-      },
-      ...sortedGeneratorOutputs.map((generatorOutput, index) => ({
-        id: `power.generator.branch.tap.${index + 1}`,
-        points: [
-          generatorOutput,
-          { x: geometry.branchStart!.x, y: generatorOutput.y },
-        ],
-      })),
-      {
-        id: "power.generator.branch.main-run",
-        points: [
-          { x: geometry.branchStart.x, y: mainRunY },
-          { x: geometry.atsGeneratorIn.x, y: mainRunY },
-        ],
-      },
-      {
-        id: "power.generator.branch.riser",
-        points: [
-          { x: geometry.atsGeneratorIn.x, y: geometry.atsGeneratorIn.y },
-          { x: geometry.atsGeneratorIn.x, y: mainRunY },
-        ],
-      },
-    ],
-  };
-}
-
 export function getElectricalOneLineUtilityBusAnnotationGeometry(worldObjects: readonly WorldObject[]) {
   const worldObjectMap = new Map(worldObjects.map((worldObject) => [worldObject.id, worldObject]));
   const annotationWorldObject = worldObjectMap.get('power.utility-bus.annotations');

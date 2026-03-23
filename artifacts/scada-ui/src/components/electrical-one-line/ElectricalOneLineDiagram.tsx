@@ -25,7 +25,6 @@ import { UtilityBusBackground } from './UtilityBusBackground';
 import { UtilityCardInterconnect } from './UtilityCardInterconnect';
 import { useConductorMetrics } from './useConductorMetrics';
 import { VerticalDivider } from './VerticalDivider';
-import { GeneratorBranchInterconnect } from './GeneratorBranchInterconnect';
 
 const ZOOM_STEP = 0.0015;
 const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
@@ -182,8 +181,11 @@ export function ElectricalOneLineDiagram({
     }));
   }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
 
-  const campusDividerHeight = generatorUnits.length * 74 + 24;
   const generatorBranchBounds = WORLD_GENERATOR_BRANCH_GEOMETRY.bounds;
+  const generatorBranchWireWidth = WORLD_GENERATOR_BRANCH_GEOMETRY.branchStart && WORLD_GENERATOR_BRANCH_GEOMETRY.atsGeneratorIn
+    ? Math.max(0, WORLD_GENERATOR_BRANCH_GEOMETRY.atsGeneratorIn.x - WORLD_GENERATOR_BRANCH_GEOMETRY.branchStart.x)
+    : generatorBranchBounds?.width ?? 0;
+  const campusDividerHeight = generatorUnits.length * 74 + 24;
   const worldObjectMap = useMemo(
     () => new Map(ELECTRICAL_ONE_LINE_WORLD_OBJECTS.map((worldObject) => [worldObject.id, worldObject])),
     [],
@@ -459,15 +461,15 @@ export function ElectricalOneLineDiagram({
               })}
 
               <div
-                className="absolute"
+                className="absolute flex shrink-0 items-center"
                 style={{
                   left: generatorBranchBounds?.x ?? 0,
                   top: generatorBranchBounds?.y ?? 0,
-                  width: generatorBranchBounds?.width ?? 0,
-                  height: generatorBranchBounds?.height ?? generatorUnits.length * 74,
+                  width: generatorBranchBounds?.width ?? generatorBranchWireWidth,
+                  minHeight: generatorBranchBounds?.height ?? generatorUnits.length * 74 - 12,
                 }}
               >
-                <GeneratorBranchInterconnect active={state.genLive} />
+                <div className="flex flex-1 flex-col justify-center gap-[58px]" />
               </div>
 
               <div className="flex shrink-0 items-center" style={getWorldObjectStyle('power.breaker.cb-gen')}>
