@@ -45,6 +45,7 @@ export type WorldObject = {
 };
 
 const TOP_ROW_CARD_Y = UTILITY_BUS_GEOMETRY.lineTop - 98;
+const TOP_ROW_FEEDER_CENTER_Y = TOP_ROW_CARD_Y + 110;
 const NODE_CARD_HEIGHT = 160; // Hauteur standard des cartes pour le calcul du centre
 const TOP_ROW_SECTION_HEIGHT = UTILITY_BUS_GEOMETRY.height;
 const GENERATOR_SECTION_Y = TOP_ROW_SECTION_HEIGHT + 28;
@@ -161,7 +162,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       height: NODE_CARD_HEIGHT,
       anchors: {
         left: { x: riserPoleX, y: TOP_ROW_CENTER_Y },
-        right: { x: riserPoleX + CARD_W, y: TOP_ROW_CENTER_Y },
+        right: { x: riserPoleX + CARD_W, y: TOP_ROW_FEEDER_CENTER_Y },
       },
     },
     {
@@ -174,7 +175,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       height: NODE_CARD_HEIGHT,
       anchors: {
         left: { x: beaverWoodsMtX, y: TOP_ROW_CENTER_Y },
-        utilityIn: { x: beaverWoodsMtX, y: TOP_ROW_CENTER_Y },
+        utilityIn: { x: beaverWoodsMtX, y: TOP_ROW_FEEDER_CENTER_Y },
         right: { x: beaverWoodsMtX + ISOLATED_SWITCHGEAR_CARD_WIDTH, y: TOP_ROW_CENTER_Y },
       },
     },
