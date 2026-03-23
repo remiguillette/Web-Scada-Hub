@@ -7,7 +7,8 @@ import {
   UTILITY_SUPPLEMENTARY_CARD_GAP,
   UTILITY_TO_RISER_GAP,
 } from './constants';
-import { UTILITY_BUS_GEOMETRY } from './geometry';
+import { getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
+import { CONDUCTORS } from './metrics';
 
 export type WorldDomain = 'power' | 'water' | 'gas' | 'telecom' | 'shared';
 export type WorldLayer = 'background' | 'conductors' | 'equipment' | 'annotations';
@@ -15,6 +16,21 @@ export type WorldLayer = 'background' | 'conductors' | 'equipment' | 'annotation
 export type WorldAnchor = {
   x: number;
   y: number;
+};
+
+export type WorldConnectorPath = {
+  id: string;
+  points: WorldAnchor[];
+};
+
+export type WorldConnectorMarker = {
+  id: string;
+  point: WorldAnchor;
+};
+
+export type WorldAnnotationAnchor = {
+  id: string;
+  point: WorldAnchor;
 };
 
 export type WorldObject = {
@@ -122,6 +138,10 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       y: TOP_ROW_CARD_Y,
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
+      anchors: {
+        left: { x: utilitySourceX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        right: { x: utilitySourceX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+      },
     },
     {
       id: 'power.utility.interconnect',
@@ -131,6 +151,10 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       y: TOP_ROW_CARD_Y,
       width: utilityInterconnectWidth,
       height: NODE_CARD_HEIGHT,
+      anchors: {
+        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        right: { x: riserPoleX + utilityInterconnectWidth, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+      },
     },
     {
       id: 'power.riser-pole.0326',
@@ -140,6 +164,10 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       y: TOP_ROW_CARD_Y,
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
+      anchors: {
+        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        right: { x: riserPoleX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+      },
     },
     {
       id: 'power.beaver-woods-mt',
@@ -149,6 +177,10 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       y: TOP_ROW_CARD_Y,
       width: ISOLATED_SWITCHGEAR_CARD_WIDTH,
       height: NODE_CARD_HEIGHT,
+      anchors: {
+        left: { x: beaverWoodsMtX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        right: { x: beaverWoodsMtX + ISOLATED_SWITCHGEAR_CARD_WIDTH, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+      },
     },
     {
       id: 'power.ats.001',
@@ -159,7 +191,9 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
       anchors: {
+        utilityIn: { x: atsX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
         generatorIn: { x: atsX + CARD_W / 2, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT },
+        output: { x: atsX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
       },
     },
     {
@@ -193,6 +227,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       height: SYSTEM.generators.length * GENERATOR_ROW_HEIGHT,
       anchors: {
         start: { x: generatorBranchWireX, y: GENERATOR_SECTION_Y + NODE_CARD_HEIGHT / 2 },
+        end: { x: generatorBranchWireX + generatorBranchWireWidth, y: GENERATOR_SECTION_Y + NODE_CARD_HEIGHT / 2 },
         layoutOffsetStart: { x: 59, y: GENERATOR_SECTION_Y },
       },
     },
@@ -206,6 +241,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       height: NODE_CARD_HEIGHT,
       anchors: {
         input: { x: GENERATOR_BREAKER_X, y: GENERATOR_SECTION_Y + NODE_CARD_HEIGHT / 2 },
+        output: { x: GENERATOR_BREAKER_X + CARD_W, y: GENERATOR_SECTION_Y + NODE_CARD_HEIGHT / 2 },
       },
     },
   ];
@@ -233,5 +269,202 @@ export function getElectricalOneLineGeneratorPathLayout(worldObjects: readonly W
       atsGeneratorIn && generatorBranchLayoutOffsetStart
         ? Math.max(0, atsGeneratorIn.x - generatorBranchLayoutOffsetStart.x)
         : 0,
+  };
+}
+
+export function getElectricalOneLineUtilityBusGeometry(worldObjects: readonly WorldObject[]) {
+  const worldObjectMap = new Map(worldObjects.map((worldObject) => [worldObject.id, worldObject]));
+  const busWorldObject = worldObjectMap.get('power.utility-bus.conductors');
+
+  if (!busWorldObject) {
+    return { bounds: null, conductors: [] as Array<{ id: string; points: WorldAnchor[]; marker: WorldAnchor }> };
+  }
+
+  const { count, firstCX, centerY, lineBottom, riserX, riserTapX } = getUtilityBusLayout();
+
+  return {
+    bounds: busWorldObject,
+    conductors: CONDUCTORS.map((conductor, index) => {
+      const x = busWorldObject.x + firstCX + index * UTILITY_BUS_GEOMETRY.hSpacing;
+      const tapY = busWorldObject.y + centerY + (index - (count - 1) / 2) * 12;
+
+      return {
+        id: `power.utility-bus.conductor.${conductor.label.toLowerCase()}`,
+        points: [
+          { x, y: busWorldObject.y + 155 },
+          { x, y: busWorldObject.y + lineBottom },
+          { x, y: tapY },
+          { x: busWorldObject.x + riserTapX, y: tapY },
+          { x: busWorldObject.x + riserX, y: busWorldObject.y + centerY },
+        ],
+        marker: { x, y: tapY },
+      };
+    }),
+  };
+}
+
+export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: readonly WorldObject[]) {
+  const worldObjectMap = new Map(worldObjects.map((worldObject) => [worldObject.id, worldObject]));
+  const interconnectWorldObject = worldObjectMap.get('power.utility.interconnect');
+  const riserPoleWorldObject = worldObjectMap.get('power.riser-pole.0326');
+  const beaverWoodsWorldObject = worldObjectMap.get('power.beaver-woods-mt');
+
+  if (!interconnectWorldObject || !riserPoleWorldObject || !beaverWoodsWorldObject) {
+    return { bounds: null, markers: [] as WorldConnectorMarker[], paths: [] as WorldConnectorPath[] };
+  }
+
+  const riserPoleRight = getWorldObjectAnchor(riserPoleWorldObject, 'right');
+  const beaverWoodsLeft = getWorldObjectAnchor(beaverWoodsWorldObject, 'left');
+
+  if (!riserPoleRight || !beaverWoodsLeft) {
+    return { bounds: interconnectWorldObject, markers: [] as WorldConnectorMarker[], paths: [] as WorldConnectorPath[] };
+  }
+
+  const breakoutLength = 18;
+  const convergeLength = 22;
+
+  return {
+    bounds: interconnectWorldObject,
+    markers: [
+      { id: 'power.utility.interconnect.riser-pole', point: riserPoleRight },
+      { id: 'power.utility.interconnect.beaver-woods', point: beaverWoodsLeft },
+    ],
+    paths: CONDUCTORS.map((conductor, index) => {
+      const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
+      const conductorY = riserPoleRight.y + offset;
+
+      return {
+        id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
+        points: [
+          riserPoleRight,
+          { x: riserPoleRight.x + breakoutLength, y: conductorY },
+          { x: beaverWoodsLeft.x - convergeLength, y: conductorY },
+          beaverWoodsLeft,
+        ],
+      };
+    }),
+  };
+}
+
+export function getElectricalOneLineGeneratorBranchGeometry(worldObjects: readonly WorldObject[]) {
+  const worldObjectMap = new Map(worldObjects.map((worldObject) => [worldObject.id, worldObject]));
+  const branchWorldObject = worldObjectMap.get('power.generator.branch');
+  const breakerWorldObject = worldObjectMap.get('power.breaker.cb-gen');
+  const atsWorldObject = worldObjectMap.get('power.ats.001');
+  const generatorWorldObjects = worldObjects.filter((worldObject) => worldObject.id.startsWith('power.generator.'));
+
+  const branchStart = branchWorldObject ? getWorldObjectAnchor(branchWorldObject, 'start') : null;
+  const branchEnd = branchWorldObject ? getWorldObjectAnchor(branchWorldObject, 'end') : null;
+  const breakerInput = breakerWorldObject ? getWorldObjectAnchor(breakerWorldObject, 'input') : null;
+  const atsGeneratorIn = atsWorldObject ? getWorldObjectAnchor(atsWorldObject, 'generatorIn') : null;
+
+  return {
+    bounds: branchWorldObject,
+    generatorOutputs: generatorWorldObjects
+      .map((worldObject) => getWorldObjectAnchor(worldObject, 'output'))
+      .filter((anchor): anchor is WorldAnchor => Boolean(anchor)),
+    branchStart,
+    branchEnd,
+    breakerInput,
+    atsGeneratorIn,
+  };
+}
+
+export function getElectricalOneLineGeneratorBranchPaths(worldObjects: readonly WorldObject[]) {
+  const geometry = getElectricalOneLineGeneratorBranchGeometry(worldObjects);
+
+  if (
+    !geometry.bounds ||
+    !geometry.branchStart ||
+    !geometry.atsGeneratorIn ||
+    geometry.generatorOutputs.length === 0
+  ) {
+    return {
+      bounds: geometry.bounds,
+      paths: [] as WorldConnectorPath[],
+    };
+  }
+
+  const sortedGeneratorOutputs = [...geometry.generatorOutputs].sort(
+    (left, right) => left.y - right.y,
+  );
+  const trunkTopY = sortedGeneratorOutputs[0].y;
+  const trunkBottomY =
+    sortedGeneratorOutputs[sortedGeneratorOutputs.length - 1].y;
+  const mainRunY = geometry.branchStart.y;
+
+  return {
+    bounds: geometry.bounds,
+    paths: [
+      {
+        id: "power.generator.branch.trunk",
+        points: [
+          { x: geometry.branchStart.x, y: trunkTopY },
+          { x: geometry.branchStart.x, y: trunkBottomY },
+        ],
+      },
+      ...sortedGeneratorOutputs.map((generatorOutput, index) => ({
+        id: `power.generator.branch.tap.${index + 1}`,
+        points: [
+          generatorOutput,
+          { x: geometry.branchStart!.x, y: generatorOutput.y },
+        ],
+      })),
+      {
+        id: "power.generator.branch.main-run",
+        points: [
+          { x: geometry.branchStart.x, y: mainRunY },
+          { x: geometry.atsGeneratorIn.x, y: mainRunY },
+        ],
+      },
+      {
+        id: "power.generator.branch.riser",
+        points: [
+          { x: geometry.atsGeneratorIn.x, y: geometry.atsGeneratorIn.y },
+          { x: geometry.atsGeneratorIn.x, y: mainRunY },
+        ],
+      },
+    ],
+  };
+}
+
+export function getElectricalOneLineUtilityBusAnnotationGeometry(worldObjects: readonly WorldObject[]) {
+  const worldObjectMap = new Map(worldObjects.map((worldObject) => [worldObject.id, worldObject]));
+  const annotationWorldObject = worldObjectMap.get('power.utility-bus.annotations');
+  const utilityBusGeometry = getElectricalOneLineUtilityBusGeometry(worldObjects);
+  const { busCenterX, feederLabelX } = getUtilityBusLayout();
+
+  if (!annotationWorldObject) {
+    return {
+      bounds: null,
+      streetLabel: null as WorldAnnotationAnchor | null,
+      feederLabel: null as WorldAnnotationAnchor | null,
+      conductorMetrics: [] as WorldAnnotationAnchor[],
+    };
+  }
+
+  return {
+    bounds: annotationWorldObject,
+    streetLabel: {
+      id: 'power.utility-bus.annotations.street-label',
+      point: {
+        x: annotationWorldObject.x + busCenterX,
+        y: annotationWorldObject.y + UTILITY_BUS_GEOMETRY.titleY - 12,
+      },
+    },
+    feederLabel: {
+      id: 'power.utility-bus.annotations.feeder-label',
+      point: {
+        x: annotationWorldObject.x + feederLabelX,
+        y: annotationWorldObject.y + UTILITY_BUS_GEOMETRY.feederLabelY,
+      },
+    },
+    conductorMetrics: utilityBusGeometry.conductors.map((conductor, index) => ({
+      id: `power.utility-bus.annotations.metric.${CONDUCTORS[index].label.toLowerCase()}`,
+      point: {
+        x: conductor.marker.x,
+        y: annotationWorldObject.y + UTILITY_BUS_GEOMETRY.conductorLabelY + 6,
+      },
+    })),
   };
 }
