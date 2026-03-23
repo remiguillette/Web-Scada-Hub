@@ -147,7 +147,7 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: utilityInterconnectWidth,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 5 },
         right: { x: riserPoleX + utilityInterconnectWidth, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
       },
     },
