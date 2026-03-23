@@ -169,12 +169,6 @@ export function ElectricalOneLineDiagram({
     };
   }, [diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width]);
 
-  const resetViewportToUsefulBounds = useCallback(() => {
-    const defaultZoom = 1;
-    setZoom(defaultZoom);
-    setOffset(getUsefulBoundsFramingOffset(defaultZoom));
-  }, [getUsefulBoundsFramingOffset]);
-
   useEffect(() => {
     if (hasInitializedViewportRef.current) return;
     if (!viewportSize.width || !viewportSize.height || !diagramSize.width || !diagramSize.height) return;
@@ -393,9 +387,6 @@ export function ElectricalOneLineDiagram({
         if (nextZoom === zoom) return;
         const rect = viewport.getBoundingClientRect();
         zoomAroundPoint(nextZoom, event.clientX - rect.left, event.clientY - rect.top);
-      }}
-      onDoubleClick={() => {
-        resetViewportToUsefulBounds();
       }}
       onKeyDown={(event) => {
         if (event.key === 'ArrowLeft') { event.preventDefault(); panBy(PAN_STEP, 0); }
