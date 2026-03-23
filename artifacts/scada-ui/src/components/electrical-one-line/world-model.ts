@@ -45,7 +45,7 @@ export type WorldObject = {
 };
 
 const TOP_ROW_CARD_Y = UTILITY_BUS_GEOMETRY.lineTop - 98;
-const NODE_CARD_HEIGHT = CARD_W;
+const NODE_CARD_HEIGHT = 160; // Hauteur standard des cartes pour le calcul du centre
 const TOP_ROW_SECTION_HEIGHT = UTILITY_BUS_GEOMETRY.height;
 const GENERATOR_SECTION_Y = TOP_ROW_SECTION_HEIGHT + 28;
 const GENERATOR_ROW_HEIGHT = 74;
@@ -59,7 +59,9 @@ const GENERATOR_BREAKER_X =
   CARD_W +
   UTILITY_CARD_GAP +
   ISOLATED_SWITCHGEAR_CARD_WIDTH;
-const BEAVER_WOODS_UTILITY_INSET_Y = 78;
+
+// Ajusté de 78 à 110 pour forcer une descente visuelle depuis le centre du Riser Pole (80)
+const BEAVER_WOODS_UTILITY_INSET_Y = 110; 
 
 const SUPPLEMENTARY_UTILITY_OBJECTS: Array<Pick<WorldObject, 'id' | 'domain'>> = [
   { id: 'utility.water', domain: 'water' },
@@ -68,14 +70,6 @@ const SUPPLEMENTARY_UTILITY_OBJECTS: Array<Pick<WorldObject, 'id' | 'domain'>> =
   { id: 'utility.telecom', domain: 'telecom' },
 ];
 
-/**
- * Phase 1 world mapping for the current one-line scene.
- *
- * This is intentionally data-only:
- * - it mirrors the existing JSX layout
- * - it uses the same spacing and geometry constants
- * - it does not change rendering or viewport behavior
- */
 export function buildElectricalOneLineWorldObjects(): WorldObject[] {
   const utilityBusX = 0;
   const utilityBusY = 0;
@@ -322,8 +316,8 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
     return { bounds: interconnectWorldObject, markers: [] as WorldConnectorMarker[], paths: [] as WorldConnectorPath[] };
   }
 
-  const breakoutLength = 18;
-  const intakeTransitionLength = 18;
+  const breakoutLength = 24;
+  const intakeTransitionLength = 24;
   const intakeRailLength = 12;
 
   return {
@@ -334,8 +328,11 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
     ],
     paths: CONDUCTORS.map((conductor, index) => {
       const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
-      const conductorY = riserPoleRight.y + offset;
+      
+      // Point de départ centré verticalement sur la carte, fanné immédiatement au bord
+      const startY = riserPoleRight.y + offset;
       const beaverWoodsIntakeY = beaverWoodsUtilityIn.y + offset;
+      
       const breakoutX = riserPoleRight.x + breakoutLength;
       const intakeTransitionX = breakoutX + intakeTransitionLength;
       const intakeRailStartX = beaverWoodsUtilityIn.x - intakeRailLength;
@@ -343,8 +340,8 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
       return {
         id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
         points: [
-          riserPoleRight,
-          { x: breakoutX, y: conductorY },
+          { x: riserPoleRight.x, y: startY }, // Départ fanné au bord de la carte (pas de convergence à un seul point)
+          { x: breakoutX, y: startY },
           { x: intakeTransitionX, y: beaverWoodsIntakeY },
           { x: intakeRailStartX, y: beaverWoodsIntakeY },
           { x: beaverWoodsUtilityIn.x, y: beaverWoodsIntakeY },
