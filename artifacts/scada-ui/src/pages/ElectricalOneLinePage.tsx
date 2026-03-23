@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { Languages, Zap } from "lucide-react";
 import { ElectricalOneLine } from "@/components/ElectricalOneLine";
+import { OneLineHeaderRouteAction } from "@/features/navigation/components/OneLineHeaderRouteAction";
 import { useScadaState } from "@/hooks/use-scada-state";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
 import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
 import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
 import { useTranslation } from "@/context/LanguageContext";
 import { SYSTEM } from "@/config/system";
+import { isKioskMode } from "@/config/ui";
 
 export default function ElectricalOneLinePage() {
   useEffect(() => {
@@ -43,7 +45,13 @@ export default function ElectricalOneLinePage() {
         <span className="ml-2 font-mono text-[10px] tracking-widest text-[#4a6a5a]">
           {SYSTEM.id} / {SYSTEM.mcc}
         </span>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <OneLineHeaderRouteAction
+            href="/power"
+            icon={<Zap className="h-3.5 w-3.5" />}
+            label={t.gridDetailsButton}
+            kioskMode={isKioskMode ? "hide" : "show"}
+          />
           <button
             type="button"
             onClick={toggleLocale}
