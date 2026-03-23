@@ -60,9 +60,6 @@ const GENERATOR_BREAKER_X =
   UTILITY_CARD_GAP +
   ISOLATED_SWITCHGEAR_CARD_WIDTH;
 
-// Ajusté de 78 à 110 pour forcer une descente visuelle depuis le centre du Riser Pole (80)
-const BEAVER_WOODS_UTILITY_INSET_Y = 110; 
-
 const SUPPLEMENTARY_UTILITY_OBJECTS: Array<Pick<WorldObject, 'id' | 'domain'>> = [
   { id: 'utility.water', domain: 'water' },
   { id: 'utility.wastewater', domain: 'water' },
@@ -75,6 +72,9 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
   const utilityBusY = 0;
   const utilityBusWidth = UTILITY_BUS_GEOMETRY.width;
   const utilityBusHeight = UTILITY_BUS_GEOMETRY.height;
+
+  const { centerY } = getUtilityBusLayout();
+  const TOP_ROW_CENTER_Y = utilityBusY + centerY;
 
   const utilitySupplementaryObjects = SUPPLEMENTARY_UTILITY_OBJECTS.map((object, index) => ({
     id: object.id,
@@ -134,8 +134,8 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        left: { x: utilitySourceX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
-        right: { x: utilitySourceX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        left: { x: utilitySourceX, y: TOP_ROW_CENTER_Y },
+        right: { x: utilitySourceX + CARD_W, y: TOP_ROW_CENTER_Y },
       },
     },
     {
@@ -147,8 +147,8 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: utilityInterconnectWidth,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 5 },
-        right: { x: riserPoleX + utilityInterconnectWidth, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        left: { x: riserPoleX, y: TOP_ROW_CENTER_Y },
+        right: { x: riserPoleX + utilityInterconnectWidth, y: TOP_ROW_CENTER_Y },
       },
     },
     {
@@ -160,8 +160,8 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        left: { x: riserPoleX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
-        right: { x: riserPoleX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        left: { x: riserPoleX, y: TOP_ROW_CENTER_Y },
+        right: { x: riserPoleX + CARD_W, y: TOP_ROW_CENTER_Y },
       },
     },
     {
@@ -173,9 +173,9 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: ISOLATED_SWITCHGEAR_CARD_WIDTH,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        left: { x: beaverWoodsMtX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
-        utilityIn: { x: beaverWoodsMtX, y: TOP_ROW_CARD_Y + BEAVER_WOODS_UTILITY_INSET_Y },
-        right: { x: beaverWoodsMtX + ISOLATED_SWITCHGEAR_CARD_WIDTH, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        left: { x: beaverWoodsMtX, y: TOP_ROW_CENTER_Y },
+        utilityIn: { x: beaverWoodsMtX, y: TOP_ROW_CENTER_Y },
+        right: { x: beaverWoodsMtX + ISOLATED_SWITCHGEAR_CARD_WIDTH, y: TOP_ROW_CENTER_Y },
       },
     },
     {
@@ -187,9 +187,9 @@ export function buildElectricalOneLineWorldObjects(): WorldObject[] {
       width: CARD_W,
       height: NODE_CARD_HEIGHT,
       anchors: {
-        utilityIn: { x: atsX, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        utilityIn: { x: atsX, y: TOP_ROW_CENTER_Y },
         generatorIn: { x: atsX + CARD_W / 2, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT },
-        output: { x: atsX + CARD_W, y: TOP_ROW_CARD_Y + NODE_CARD_HEIGHT / 2 },
+        output: { x: atsX + CARD_W, y: TOP_ROW_CENTER_Y },
       },
     },
     {
@@ -340,7 +340,7 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
       return {
         id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
         points: [
-          { x: riserPoleRight.x, y: startY }, // Départ fanné au bord de la carte (pas de convergence à un seul point)
+          { x: riserPoleRight.x, y: startY }, 
           { x: breakoutX, y: startY },
           { x: intakeTransitionX, y: beaverWoodsIntakeY },
           { x: intakeRailStartX, y: beaverWoodsIntakeY },
