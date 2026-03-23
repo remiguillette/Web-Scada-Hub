@@ -45,7 +45,7 @@ export type WorldObject = {
 };
 
 const TOP_ROW_CARD_Y = UTILITY_BUS_GEOMETRY.lineTop - 98;
-const TOP_ROW_FEEDER_CENTER_Y = TOP_ROW_CARD_Y + 110;
+const TOP_ROW_FEEDER_CENTER_Y = TOP_ROW_CARD_Y + 147;
 const NODE_CARD_HEIGHT = 160; // Hauteur standard des cartes pour le calcul du centre
 const TOP_ROW_SECTION_HEIGHT = UTILITY_BUS_GEOMETRY.height;
 const GENERATOR_SECTION_Y = TOP_ROW_SECTION_HEIGHT + 28;
