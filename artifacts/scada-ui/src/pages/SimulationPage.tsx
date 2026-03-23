@@ -1,8 +1,4 @@
-import type { FormEvent } from "react";
 import { Activity, Zap } from "lucide-react";
-import { useGeneratorSimulationContext } from "@/context/GeneratorSimulationContext";
-import { useGridSimulationContext } from "@/context/GridSimulationContext";
-import { useTranslation } from "@/context/LanguageContext";
 import {
   AlarmEventsPanel,
   ElecDataCard,
@@ -13,56 +9,21 @@ import {
   SimulationOverviewSection,
   SimulationSettingsSection,
 } from "@/features/simulation";
-import { formatVoltageDisplay } from "@/features/simulation/formatters";
-import { useSimulationPageModel } from "@/features/simulation/hooks/useSimulationPageModel";
-import { useElectricalMetrics } from "@/hooks/use-electrical-metrics";
-import { useScadaState } from "@/hooks/use-scada-state";
+import { useSimulationPageController } from "@/features/simulation/hooks/useSimulationPageController";
 import { SYSTEM } from "@/config/system";
 
 export default function SimulationPage() {
-  const grid = useGridSimulationContext();
-  const { statuses: generatorStatuses, start, stop } = useGeneratorSimulationContext();
-  const { state } = useScadaState();
-  const { powerFactor, activePower, reactivePower, apparentPower } = useElectricalMetrics(
-    grid.voltage,
-    state.current,
-    state.motorPowered,
-  );
-  const { t, locale, toggleLocale } = useTranslation();
-
-  const model = useSimulationPageModel({
+  const {
     t,
-    voltage: grid.voltage,
-    frequency: grid.frequency,
-    gridState: grid.gridState,
-    history: grid.history,
-    config: grid.config,
-    gridEnabled: grid.gridEnabled,
-    gridDemandMw: grid.gridDemandMw,
-    simulationTimeMinutes: grid.simulationTimeMinutes,
-    inflowRate: grid.inflowRate,
-    reservoirLevel: grid.reservoirLevel,
-    generatedPowerMw: grid.generatedPowerMw,
-    hydraulicHeadMeters: grid.hydraulicHeadMeters,
-    waterFlowActiveUnits: grid.waterFlowActiveUnits,
-    waterToWireEfficiency: grid.waterToWireEfficiency,
-    hydroDispatchMode: grid.hydroDispatchMode,
-    rawWaterPowerMw: grid.rawWaterPowerMw,
-    hydraulicCapacityMw: grid.hydraulicCapacityMw,
-    hydraulicReserveMw: grid.hydraulicReserveMw,
-    importedGridPowerMw: grid.importedGridPowerMw,
-    generatorStatuses,
+    locale,
+    toggleLocale,
+    formatVoltageDisplay,
+    model,
+    grid,
     state,
-    activePower,
-    reactivePower,
-    apparentPower,
-    powerFactor,
-  });
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    grid.applyConfig();
-  };
+    generators,
+    handlers,
+  } = useSimulationPageController();
 
   return (
     <div className="min-h-screen bg-[#141414] text-[#d6deea]">
@@ -167,7 +128,7 @@ export default function SimulationPage() {
           form={grid.form}
           formFields={model.formFields}
           gridDetails={model.gridDetails}
-          onSubmit={handleSubmit}
+          onSubmit={handlers.handleSubmit}
           setForm={grid.setForm}
         />
 
@@ -177,9 +138,9 @@ export default function SimulationPage() {
           t={t}
           anyGenActive={model.anyGenActive}
           availableGenCount={model.availableGenCount}
-          generatorStatuses={generatorStatuses}
-          start={start}
-          stop={stop}
+          generatorStatuses={generators.statuses}
+          start={generators.start}
+          stop={generators.stop}
         />
       </main>
     </div>

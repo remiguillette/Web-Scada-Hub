@@ -1,20 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useGridSimulationContext } from "@/context/GridSimulationContext";
-import {
-  activateAlarm,
-  buildDigitalInputs,
-  buildDigitalOutputs,
-  clearAlarmMessage,
-  deriveScadaState,
-  pushAlarmEvent,
-  type Alarm,
-  type AlarmType,
-  type IoPoint,
-  type ScadaState,
-} from "@/features/simulation/state";
+import { deriveScadaState, type Alarm, type AlarmType, type ScadaState } from "@/features/simulation/state";
+import { createAlarmPolicy } from "@/features/scada/state/alarmPolicy";
+import { useFeedCycleController } from "@/features/scada/state/feedCycleController";
+import { useScadaRuntimeTick } from "@/features/scada/state/runtimeTick";
+import { buildScadaIoState, buildScadaStateShape } from "@/features/scada/state/stateShape";
 
 export interface ScadaActions {
+  /**
+   * @deprecated Disconnect state is derived from grid ownership (`gridEnabled`).
+   * This action is retained as a compatibility no-op.
+   */
   toggleDisconnect: () => void;
+  /**
+   * @deprecated Disconnect state is derived from grid ownership (`gridEnabled`).
+   * This action is retained as a compatibility no-op.
+   */
   setDisconnectClosed: (closed: boolean) => void;
   tripBreaker: () => void;
   resetBreaker: () => void;
@@ -52,7 +53,6 @@ function useScadaStateValue(): ScadaStateContextValue {
   const [nextFeedingTime, setNextFeedingTime] = useState(new Date(Date.now() + 70_000));
   const [alarms, setAlarms] = useState<Alarm[]>([]);
 
-  const cycleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toggleBowlRef = useRef(0);
 
   const {
@@ -79,66 +79,43 @@ function useScadaStateValue(): ScadaStateContextValue {
     feedActive,
   });
 
-  const pushEvent = useCallback((message: string, type: AlarmType = "INFO", active = false) => {
-    setAlarms((prev) => pushAlarmEvent(prev, message, type, active));
-  }, []);
+  const { pushEvent, setAlarmActive, clearAlarm } = useMemo(
+    () => createAlarmPolicy({ setAlarms }),
+    [],
+  );
 
-  const setAlarmActive = useCallback((message: string, type: AlarmType) => {
-    setAlarms((prev) => activateAlarm(prev, message, type));
-  }, []);
+  const { triggerFeed } = useFeedCycleController({
+    isPowered,
+    estopPressed,
+    breakerTripped,
+    feedActive,
+    bowlDetected,
+    hopperEmpty,
+    bowlDemand,
+    isFault,
+    systemMode,
+    nextFeedingTime,
+    pushEvent,
+    setAlarmActive,
+    setFeedActive,
+    setFeedCount,
+    setLastFeedTime,
+    setNextFeedingTime,
+    setHopperLevel,
+    setBowlLevel,
+  });
 
-  const clearAlarm = useCallback((message: string, clearMessage?: string) => {
-    setAlarms((prev) => clearAlarmMessage(prev, message));
-
-    if (clearMessage) {
-      pushEvent(clearMessage, "INFO", false);
-    }
-  }, [pushEvent]);
-
-  const finishFeedCycle = useCallback(() => {
-    setFeedActive(false);
-    setFeedCount((prev) => prev + 1);
-    setLastFeedTime(new Date());
-    setNextFeedingTime(new Date(Date.now() + 70_000));
-    setHopperLevel((prev) => Math.max(0, Number((prev - (6 + Math.random() * 3)).toFixed(1))));
-    setBowlLevel((prev) => Math.min(100, Number((prev + 22 + Math.random() * 8).toFixed(1))));
-    pushEvent("FEED CYCLE COMPLETED", "INFO", false);
-  }, [pushEvent]);
-
-  const triggerFeed = useCallback(() => {
-    if (!isPowered || estopPressed || breakerTripped || feedActive) return;
-    if (!bowlDetected) {
-      setAlarmActive("BOWL NOT DETECTED", "WARNING");
-      return;
-    }
-    if (hopperEmpty) {
-      setAlarmActive("HOPPER EMPTY", "CRITICAL");
-      return;
-    }
-
-    setFeedActive(true);
-    pushEvent("FEED CYCLE STARTED", "INFO", false);
-
-    if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
-    cycleTimeoutRef.current = setTimeout(finishFeedCycle, 4200);
-  }, [breakerTripped, bowlDetected, estopPressed, feedActive, finishFeedCycle, hopperEmpty, isPowered, pushEvent, setAlarmActive]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setUptime((prev) => prev + 1);
-      setVoltage(isPowered ? Number((13_800 + (Math.random() - 0.5) * 140).toFixed(1)) : 0);
-      setCurrent(motorPowered ? Number((1.85 + Math.random() * 0.75).toFixed(2)) : 0);
-      setBowlLevel((prev) => Math.max(0, Number((prev - 0.045).toFixed(1))));
-      toggleBowlRef.current += 1;
-
-      if (toggleBowlRef.current % 45 === 0 && !feedActive) {
-        const present = Math.random() > 0.15;
-        setBowlDetected(present);
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [feedActive, isPowered, motorPowered]);
+  useScadaRuntimeTick({
+    feedActive,
+    isPowered,
+    motorPowered,
+    setUptime,
+    setVoltage,
+    setCurrent,
+    setBowlLevel,
+    toggleBowlRef,
+    setBowlDetected,
+  });
 
   useEffect(() => {
     if (gridEnabled) {
@@ -192,31 +169,35 @@ function useScadaStateValue(): ScadaStateContextValue {
     }
   }, [bowlDetected, clearAlarm, setAlarmActive]);
 
-  useEffect(() => {
-    if (systemMode === "AUTO" && bowlDemand && isPowered && !feedActive && !isFault && bowlDetected) {
-      const msUntilFeed = nextFeedingTime.getTime() - Date.now();
-      if (msUntilFeed <= 0) {
-        triggerFeed();
-      }
-    }
-  }, [bowlDemand, bowlDetected, feedActive, isFault, isPowered, nextFeedingTime, systemMode, triggerFeed]);
-
-  useEffect(() => () => {
-    if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
-  }, []);
-
-  const digitalInputs: IoPoint[] = useMemo(
-    () => buildDigitalInputs({ disconnectClosed, breakerTripped, hopperHigh, hopperLow, bowlDetected, estopHealthy }),
-    [bowlDetected, breakerTripped, disconnectClosed, estopHealthy, hopperHigh, hopperLow],
+  const { digitalInputs, digitalOutputs } = useMemo(
+    () => buildScadaIoState({
+      disconnectClosed,
+      breakerTripped,
+      hopperHigh,
+      hopperLow,
+      bowlDetected,
+      estopHealthy,
+      feederContactor,
+      solenoidContactor,
+      systemState,
+    }),
+    [
+      bowlDetected,
+      breakerTripped,
+      disconnectClosed,
+      estopHealthy,
+      feederContactor,
+      hopperHigh,
+      hopperLow,
+      solenoidContactor,
+      systemState,
+    ],
   );
 
-  const digitalOutputs: IoPoint[] = useMemo(
-    () => buildDigitalOutputs({ feederContactor, solenoidContactor, systemState }),
-    [feederContactor, solenoidContactor, systemState],
-  );
+  const noopDisconnectAction = () => {};
 
   return {
-    state: {
+    state: buildScadaStateShape({
       disconnectClosed,
       breakerTripped,
       estopPressed,
@@ -246,10 +227,10 @@ function useScadaStateValue(): ScadaStateContextValue {
       bowlDemand,
       digitalInputs,
       digitalOutputs,
-    },
+    }),
     actions: {
-      toggleDisconnect: () => {},
-      setDisconnectClosed: (_closed: boolean) => {},
+      toggleDisconnect: noopDisconnectAction,
+      setDisconnectClosed: (_closed: boolean) => noopDisconnectAction(),
       tripBreaker: () => setBreakerTripped(true),
       resetBreaker: () => setBreakerTripped(false),
       setBreakerTripped,
