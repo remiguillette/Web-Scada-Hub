@@ -334,14 +334,18 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
     paths: CONDUCTORS.map((conductor, index) => {
       const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
       const conductorY = riserPoleRight.y + offset;
+      const beaverWoodsIntakePoint = {
+        x: beaverWoodsUtilityIn.x,
+        y: beaverWoodsUtilityIn.y + offset,
+      };
 
       return {
         id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
         points: [
           riserPoleRight,
           { x: riserPoleRight.x + breakoutLength, y: conductorY },
-          { x: beaverWoodsUtilityIn.x - convergeLength, y: conductorY },
-          beaverWoodsUtilityIn,
+          { x: beaverWoodsIntakePoint.x - convergeLength, y: conductorY },
+          beaverWoodsIntakePoint,
         ],
       };
     }),
