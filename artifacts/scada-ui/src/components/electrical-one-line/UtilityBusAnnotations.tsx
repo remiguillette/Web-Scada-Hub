@@ -1,5 +1,9 @@
 import { memo } from "react";
 import { PhaseMetricPanel } from "./PhaseMetricPanel";
+import {
+  buildElectricalOneLineWorldObjects,
+  getElectricalOneLineUtilityBusAnnotationGeometry,
+} from "./world-model";
 
 type UtilityBusAnnotationsProps = {
   utilityActive: boolean;
@@ -9,41 +13,38 @@ type UtilityBusAnnotationsProps = {
   conductorVoltages: readonly string[];
   conductorCurrents: readonly string[];
   conductorColors: readonly string[];
-  titleY: number;
-  feederLabelY: number;
-  conductorLabelY: number;
-  annotationWidth: number;
-  firstCX: number;
-  hSpacing: number;
-  busCenterX: number;
-  feederLabelX: number;
 };
+
+const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
+const UTILITY_BUS_ANNOTATION_GEOMETRY =
+  getElectricalOneLineUtilityBusAnnotationGeometry(
+    ELECTRICAL_ONE_LINE_WORLD_OBJECTS,
+  );
+const ANNOTATION_WIDTH = 44;
 
 const UtilityBusHeader = memo(function UtilityBusHeader({
   utilityActive,
   streetLabel,
   feederLabel,
-  titleY,
-  feederLabelY,
-  busCenterX,
-  feederLabelX,
 }: Pick<
   UtilityBusAnnotationsProps,
-  | "utilityActive"
-  | "streetLabel"
-  | "feederLabel"
-  | "titleY"
-  | "feederLabelY"
-  | "busCenterX"
-  | "feederLabelX"
+  "utilityActive" | "streetLabel" | "feederLabel"
 >) {
+  const annotationBounds = UTILITY_BUS_ANNOTATION_GEOMETRY.bounds;
+  const streetLabelAnchor = UTILITY_BUS_ANNOTATION_GEOMETRY.streetLabel;
+  const feederLabelAnchor = UTILITY_BUS_ANNOTATION_GEOMETRY.feederLabel;
+
+  if (!annotationBounds || !streetLabelAnchor || !feederLabelAnchor) {
+    return null;
+  }
+
   return (
     <>
       <div
         className="absolute -translate-x-1/2 text-center font-mono text-[14px] font-bold tracking-[0.4em]"
         style={{
-          top: titleY - 12,
-          left: busCenterX,
+          top: streetLabelAnchor.point.y - annotationBounds.y,
+          left: streetLabelAnchor.point.x - annotationBounds.x,
           color: utilityActive ? "#4ade80" : "#4b5563",
         }}
       >
@@ -56,8 +57,8 @@ const UtilityBusHeader = memo(function UtilityBusHeader({
       <div
         className="absolute -translate-x-1/2 text-center font-mono text-[11px] font-semibold tracking-[0.28em] text-[#cbd5e1]"
         style={{
-          top: feederLabelY,
-          left: feederLabelX,
+          top: feederLabelAnchor.point.y - annotationBounds.y,
+          left: feederLabelAnchor.point.x - annotationBounds.x,
         }}
       >
         {feederLabel}
@@ -72,26 +73,24 @@ const UtilityBusMetricAnnotation = memo(function UtilityBusMetricAnnotation({
   voltage,
   current,
   color,
+  centerX,
   top,
-  left,
-  width,
 }: {
   utilityActive: boolean;
   label: string;
   voltage: string;
   current: string;
   color: string;
+  centerX: number;
   top: number;
-  left: number;
-  width: number;
 }) {
   return (
     <div
       className="absolute flex flex-col items-center px-1 py-1 text-center font-mono"
       style={{
         top,
-        left,
-        width,
+        left: centerX - ANNOTATION_WIDTH / 2,
+        width: ANNOTATION_WIDTH,
         gap: "1px",
         color,
         opacity: utilityActive ? 1 : 0.5,
@@ -116,45 +115,35 @@ export const UtilityBusAnnotations = memo(function UtilityBusAnnotations({
   conductorVoltages,
   conductorCurrents,
   conductorColors,
-  titleY,
-  feederLabelY,
-  conductorLabelY,
-  annotationWidth,
-  firstCX,
-  hSpacing,
-  busCenterX,
-  feederLabelX,
 }: UtilityBusAnnotationsProps) {
+  const annotationBounds = UTILITY_BUS_ANNOTATION_GEOMETRY.bounds;
+
+  if (!annotationBounds) {
+    return null;
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 z-[10]">
       <UtilityBusHeader
         utilityActive={utilityActive}
         streetLabel={streetLabel}
         feederLabel={feederLabel}
-        titleY={titleY}
-        feederLabelY={feederLabelY}
-        busCenterX={busCenterX}
-        feederLabelX={feederLabelX}
       />
 
-      {conductorLabels.map((label, index) => {
-        const cx = firstCX + index * hSpacing;
-        const left = cx - annotationWidth / 2;
-
-        return (
+      {UTILITY_BUS_ANNOTATION_GEOMETRY.conductorMetrics.map(
+        (metricAnchor, index) => (
           <UtilityBusMetricAnnotation
-            key={`bus-annotation-${label}`}
+            key={metricAnchor.id}
             utilityActive={utilityActive}
-            label={label}
+            label={conductorLabels[index]}
             voltage={conductorVoltages[index]}
             current={conductorCurrents[index]}
             color={conductorColors[index]}
-            top={conductorLabelY + 6}
-            left={left}
-            width={annotationWidth}
+            top={metricAnchor.point.y - annotationBounds.y}
+            centerX={metricAnchor.point.x - annotationBounds.x}
           />
-        );
-      })}
+        ),
+      )}
     </div>
   );
 });
