@@ -1,11 +1,5 @@
-import {
-  CARD_W,
-  ISOLATED_SWITCHGEAR_CARD_WIDTH,
-  PAN_OVERSCROLL,
-  UTILITY_CARD_GAP,
-  UTILITY_LEFT_CLUSTER_WIDTH,
-  UTILITY_TO_RISER_GAP,
-} from './constants';
+import { CARD_W, PAN_OVERSCROLL, UTILITY_LEFT_CLUSTER_WIDTH } from './constants';
+import type { WorldObject } from './world-model';
 import { CONDUCTORS } from './metrics';
 
 export type DiagramBounds = {
@@ -67,31 +61,26 @@ export function getUtilityBusLayout() {
   };
 }
 
-const TOP_ROW_FOCUS_WIDTH =
-  UTILITY_BUS_GEOMETRY.width +
-  UTILITY_TO_RISER_GAP +
-  CARD_W +
-  UTILITY_CARD_GAP +
-  ISOLATED_SWITCHGEAR_CARD_WIDTH +
-  CARD_W;
+export function getBoundsForWorldObjects(worldObjects: readonly WorldObject[]): DiagramBounds {
+  if (!worldObjects.length) {
+    return { x: 0, y: 0, width: 0, height: 0 };
+  }
 
-const TOP_ROW_FOCUS_HEIGHT = UTILITY_BUS_GEOMETRY.lineTop - 98 + CARD_W;
-const GENERATOR_BRANCH_ROW_GAP = 28;
-const GENERATOR_SECTION_FOCUS_HEIGHT = 4 * 74 + 24;
-
-export function getUsefulDiagramBounds(): DiagramBounds {
-  const x = 0;
-  const y = 0;
-  const width = TOP_ROW_FOCUS_WIDTH;
-  const height = Math.max(
-    TOP_ROW_FOCUS_HEIGHT,
-    TOP_ROW_FOCUS_HEIGHT + GENERATOR_BRANCH_ROW_GAP + GENERATOR_SECTION_FOCUS_HEIGHT,
-  );
+  const minX = Math.min(...worldObjects.map((object) => object.x));
+  const minY = Math.min(...worldObjects.map((object) => object.y));
+  const maxX = Math.max(...worldObjects.map((object) => object.x + object.width));
+  const maxY = Math.max(...worldObjects.map((object) => object.y + object.height));
 
   return {
-    x,
-    y,
-    width,
-    height,
+    x: minX,
+    y: minY,
+    width: maxX - minX,
+    height: maxY - minY,
   };
+}
+
+export function getUsefulBoundsForWorldObjects(worldObjects: readonly WorldObject[]): DiagramBounds {
+  const usefulWorldObjects = worldObjects.filter((object) => object.layer !== 'background');
+
+  return getBoundsForWorldObjects(usefulWorldObjects);
 }

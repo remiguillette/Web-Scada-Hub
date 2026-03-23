@@ -19,8 +19,9 @@ import {
   UTILITY_TO_RISER_GAP,
 } from './constants';
 import { GeneratorBank } from './GeneratorBank';
-import { clamp, clampOffset, getUsefulDiagramBounds, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
+import { clamp, clampOffset, getUsefulBoundsForWorldObjects, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
 import { buildElectricalModel } from './model';
+import { buildElectricalOneLineWorldObjects, getElectricalOneLineGeneratorPathLayout } from './world-model';
 import { NodeCard } from './NodeCard';
 import { StatusIcon } from './StatusIcon';
 import type { ATSNode, DragState, ElectricalOneLineProps, PinchState } from './types';
@@ -30,8 +31,10 @@ import { UtilityCardInterconnect } from './UtilityCardInterconnect';
 import { useConductorMetrics } from './useConductorMetrics';
 
 const ZOOM_STEP = 0.0015;
+const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
+const { generatorBranchVerticalOffset: WORLD_GENERATOR_BRANCH_VERTICAL_OFFSET, generatorBranchWireWidth: WORLD_GENERATOR_BRANCH_WIRE_WIDTH } = getElectricalOneLineGeneratorPathLayout(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 const UTILITY_BUS_LAYOUT = getUtilityBusLayout();
-const USEFUL_DIAGRAM_BOUNDS = getUsefulDiagramBounds();
+const USEFUL_DIAGRAM_BOUNDS = getUsefulBoundsForWorldObjects(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 
 export function ElectricalOneLineDiagram({
   disconnectClosed,
@@ -65,13 +68,11 @@ export function ElectricalOneLineDiagram({
   const conductorColors = useMemo(() => conductorMetrics.map((metric) => metric.color), [conductorMetrics]);
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
-  const atsRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const pinchStateRef = useRef<PinchState | null>(null);
   const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
   const hasInitializedViewportRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [atsCenterX, setAtsCenterX] = useState<number | null>(null);
   const [diagramSize, setDiagramSize] = useState({ width: 0, height: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(1);
@@ -119,22 +120,12 @@ export function ElectricalOneLineDiagram({
     [atsNode, state.atsNormal, state.genLive],
   );
 
-  const measureAtsCenter = useCallback(() => {
-    const diagram = diagramRef.current;
-    const ats = atsRef.current;
-    if (!diagram || !ats) return;
-    const diagramRect = diagram.getBoundingClientRect();
-    const atsRect = ats.getBoundingClientRect();
-    setAtsCenterX(atsRect.left - diagramRect.left + atsRect.width / 2);
-  }, []);
-
   useEffect(() => {
     const updateLayoutMeasurements = () => {
       const diagram = diagramRef.current;
       if (diagram) setDiagramSize({ width: diagram.offsetWidth, height: diagram.offsetHeight });
       const viewport = viewportRef.current;
       if (viewport) setViewportSize({ width: viewport.clientWidth, height: viewport.clientHeight });
-      measureAtsCenter();
     };
 
     updateLayoutMeasurements();
@@ -146,14 +137,13 @@ export function ElectricalOneLineDiagram({
 
     const observer = new ResizeObserver(() => updateLayoutMeasurements());
     if (diagramRef.current) observer.observe(diagramRef.current);
-    if (atsRef.current) observer.observe(atsRef.current);
     window.addEventListener('resize', updateLayoutMeasurements);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', updateLayoutMeasurements);
     };
-  }, [measureAtsCenter]);
+  }, []);
 
   const contentMetrics = useMemo(() => ({ width: diagramSize.width * BASE_DIAGRAM_SCALE * zoom, height: diagramSize.height * BASE_DIAGRAM_SCALE * zoom }), [diagramSize.height, diagramSize.width, zoom]);
 
@@ -195,9 +185,9 @@ export function ElectricalOneLineDiagram({
     }));
   }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
 
-  const generatorBranchWireWidth = Math.max(0, (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - SOURCE_COL_W - CARD_W / 2);
+  const generatorBranchWireWidth = WORLD_GENERATOR_BRANCH_WIRE_WIDTH;
   const campusDividerHeight = generatorUnits.length * 74 + 24;
-  const generatorBranchVerticalOffset = Math.max(0, (atsCenterX ?? SOURCE_COL_W + CARD_W / 2) - 56 - 3);
+  const generatorBranchVerticalOffset = WORLD_GENERATOR_BRANCH_VERTICAL_OFFSET;
 
   const stopDragging = useCallback(() => {
     dragStateRef.current = null;
@@ -389,7 +379,7 @@ export function ElectricalOneLineDiagram({
                   <BeaverWoodsMtCard active={state.supplyLive} frequency={frequency} generatorLiveStates={generatorLiveStates} conductorMetrics={conductorMetrics} />
                 </div>
               </div>
-              <div ref={atsRef} className="shrink-0">
+              <div className="shrink-0">
                 <NodeCard node={atsDisplayNode} />
               </div>
             </div>
