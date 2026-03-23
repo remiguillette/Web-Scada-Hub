@@ -69,10 +69,7 @@ interface DiagramViewportProps {
   children: (props: DiagramViewportRenderProps) => ReactNode;
 }
 
-export function DiagramViewport({
-  baseScale,
-  children,
-}: DiagramViewportProps) {
+export function DiagramViewport({ baseScale, children }: DiagramViewportProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -95,12 +92,18 @@ export function DiagramViewport({
     const updateLayoutMeasurements = () => {
       const diagram = diagramRef.current;
       if (diagram) {
-        setDiagramSize({ width: diagram.offsetWidth, height: diagram.offsetHeight });
+        setDiagramSize({
+          width: diagram.offsetWidth,
+          height: diagram.offsetHeight,
+        });
       }
 
       const viewport = viewportRef.current;
       if (viewport) {
-        setViewportSize({ width: viewport.clientWidth, height: viewport.clientHeight });
+        setViewportSize({
+          width: viewport.clientWidth,
+          height: viewport.clientHeight,
+        });
       }
     };
 
@@ -108,7 +111,8 @@ export function DiagramViewport({
 
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", updateLayoutMeasurements);
-      return () => window.removeEventListener("resize", updateLayoutMeasurements);
+      return () =>
+        window.removeEventListener("resize", updateLayoutMeasurements);
     }
 
     const observer = new ResizeObserver(updateLayoutMeasurements);
@@ -129,16 +133,34 @@ export function DiagramViewport({
       x: clampOffset(current.x, viewportSize.width, contentMetrics.width),
       y: clampOffset(current.y, viewportSize.height, contentMetrics.height),
     }));
-  }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
+  }, [
+    contentMetrics.height,
+    contentMetrics.width,
+    viewportSize.height,
+    viewportSize.width,
+  ]);
 
   const panBy = useCallback(
     (deltaX: number, deltaY: number) => {
       setOffset((current) => ({
-        x: clampOffset(current.x + deltaX, viewportSize.width, contentMetrics.width),
-        y: clampOffset(current.y + deltaY, viewportSize.height, contentMetrics.height),
+        x: clampOffset(
+          current.x + deltaX,
+          viewportSize.width,
+          contentMetrics.width,
+        ),
+        y: clampOffset(
+          current.y + deltaY,
+          viewportSize.height,
+          contentMetrics.height,
+        ),
       }));
     },
-    [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width],
+    [
+      contentMetrics.height,
+      contentMetrics.width,
+      viewportSize.height,
+      viewportSize.width,
+    ],
   );
 
   const stopDragging = useCallback(() => {
@@ -151,7 +173,8 @@ export function DiagramViewport({
 
   const zoomAroundPoint = useCallback(
     (nextZoom: number, pointerX: number, pointerY: number) => {
-      if (!viewportRef.current || !diagramSize.width || !diagramSize.height) return;
+      if (!viewportRef.current || !diagramSize.width || !diagramSize.height)
+        return;
 
       const clampedZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
       const nextContentWidth = diagramSize.width * baseScale * clampedZoom;
@@ -161,11 +184,28 @@ export function DiagramViewport({
 
       setZoom(clampedZoom);
       setOffset({
-        x: clampOffset(pointerX - contentX * clampedZoom, viewportSize.width, nextContentWidth),
-        y: clampOffset(pointerY - contentY * clampedZoom, viewportSize.height, nextContentHeight),
+        x: clampOffset(
+          pointerX - contentX * clampedZoom,
+          viewportSize.width,
+          nextContentWidth,
+        ),
+        y: clampOffset(
+          pointerY - contentY * clampedZoom,
+          viewportSize.height,
+          nextContentHeight,
+        ),
       });
     },
-    [baseScale, diagramSize.height, diagramSize.width, offset.x, offset.y, viewportSize.height, viewportSize.width, zoom],
+    [
+      baseScale,
+      diagramSize.height,
+      diagramSize.width,
+      offset.x,
+      offset.y,
+      viewportSize.height,
+      viewportSize.width,
+      zoom,
+    ],
   );
 
   const zoomByStep = useCallback(
@@ -200,15 +240,22 @@ export function DiagramViewport({
       const target = event.target as HTMLElement;
       if (target.closest("button, a, input, select, textarea")) return;
 
-      activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      activePointersRef.current.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY,
+      });
       event.currentTarget.setPointerCapture(event.pointerId);
 
       if (activePointersRef.current.size >= 2) {
-        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const entries = Array.from(activePointersRef.current.entries()).slice(
+          0,
+          2,
+        );
         const [[firstId, first], [secondId, second]] = entries;
         const midpointX = (first.x + second.x) / 2;
         const midpointY = (first.y + second.y) / 2;
-        const startDistance = Math.hypot(second.x - first.x, second.y - first.y) || 1;
+        const startDistance =
+          Math.hypot(second.x - first.x, second.y - first.y) || 1;
         const rect = viewportRef.current.getBoundingClientRect();
         const pointerX = midpointX - rect.left;
         const pointerY = midpointY - rect.top;
@@ -242,7 +289,10 @@ export function DiagramViewport({
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (activePointersRef.current.has(event.pointerId)) {
-        activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        activePointersRef.current.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY,
+        });
       }
 
       const pinch = pinchStateRef.current;
@@ -252,15 +302,29 @@ export function DiagramViewport({
         const second = activePointersRef.current.get(secondId);
         if (!first || !second) return;
 
-        const distance = Math.hypot(second.x - first.x, second.y - first.y) || pinch.startDistance;
-        const nextZoom = clamp(pinch.startZoom * (distance / pinch.startDistance), MIN_ZOOM, MAX_ZOOM);
+        const distance =
+          Math.hypot(second.x - first.x, second.y - first.y) ||
+          pinch.startDistance;
+        const nextZoom = clamp(
+          pinch.startZoom * (distance / pinch.startDistance),
+          MIN_ZOOM,
+          MAX_ZOOM,
+        );
         const nextContentWidth = diagramSize.width * baseScale * nextZoom;
         const nextContentHeight = diagramSize.height * baseScale * nextZoom;
 
         setZoom(nextZoom);
         setOffset({
-          x: clampOffset(pinch.midpointX - pinch.contentX * nextZoom, viewportSize.width, nextContentWidth),
-          y: clampOffset(pinch.midpointY - pinch.contentY * nextZoom, viewportSize.height, nextContentHeight),
+          x: clampOffset(
+            pinch.midpointX - pinch.contentX * nextZoom,
+            viewportSize.width,
+            nextContentWidth,
+          ),
+          y: clampOffset(
+            pinch.midpointY - pinch.contentY * nextZoom,
+            viewportSize.height,
+            nextContentHeight,
+          ),
         });
         return;
       }
@@ -269,11 +333,27 @@ export function DiagramViewport({
       if (!drag) return;
 
       setOffset({
-        x: clampOffset(drag.offsetX + (event.clientX - drag.startX), viewportSize.width, contentMetrics.width),
-        y: clampOffset(drag.offsetY + (event.clientY - drag.startY), viewportSize.height, contentMetrics.height),
+        x: clampOffset(
+          drag.offsetX + (event.clientX - drag.startX),
+          viewportSize.width,
+          contentMetrics.width,
+        ),
+        y: clampOffset(
+          drag.offsetY + (event.clientY - drag.startY),
+          viewportSize.height,
+          contentMetrics.height,
+        ),
       });
     },
-    [baseScale, contentMetrics.height, contentMetrics.width, diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width],
+    [
+      baseScale,
+      contentMetrics.height,
+      contentMetrics.width,
+      diagramSize.height,
+      diagramSize.width,
+      viewportSize.height,
+      viewportSize.width,
+    ],
   );
 
   const handlePointerUp = useCallback(
@@ -285,7 +365,10 @@ export function DiagramViewport({
       activePointersRef.current.delete(event.pointerId);
 
       if (activePointersRef.current.size >= 2) {
-        const entries = Array.from(activePointersRef.current.entries()).slice(0, 2);
+        const entries = Array.from(activePointersRef.current.entries()).slice(
+          0,
+          2,
+        );
         const [[firstId, first], [secondId, second]] = entries;
         const midpointX = (first.x + second.x) / 2;
         const midpointY = (first.y + second.y) / 2;
@@ -295,7 +378,8 @@ export function DiagramViewport({
           const pointerY = midpointY - rect.top;
           pinchStateRef.current = {
             pointerIds: [firstId, secondId],
-            startDistance: Math.hypot(second.x - first.x, second.y - first.y) || 1,
+            startDistance:
+              Math.hypot(second.x - first.x, second.y - first.y) || 1,
             startZoom: zoom,
             midpointX: pointerX,
             midpointY: pointerY,
@@ -309,7 +393,9 @@ export function DiagramViewport({
 
       pinchStateRef.current = null;
 
-      const remainingPointer = Array.from(activePointersRef.current.values())[0];
+      const remainingPointer = Array.from(
+        activePointersRef.current.values(),
+      )[0];
       if (remainingPointer) {
         dragStateRef.current = {
           startX: remainingPointer.x,
@@ -346,17 +432,29 @@ export function DiagramViewport({
         const viewport = viewportRef.current;
         if (!viewport || !diagramSize.width || !diagramSize.height) return;
 
-        const nextZoom = clamp(zoom - event.deltaY * ZOOM_STEP, MIN_ZOOM, MAX_ZOOM);
+        const nextZoom = clamp(
+          zoom - event.deltaY * ZOOM_STEP,
+          MIN_ZOOM,
+          MAX_ZOOM,
+        );
         if (nextZoom === zoom) return;
 
         const rect = viewport.getBoundingClientRect();
-        zoomAroundPoint(nextZoom, event.clientX - rect.left, event.clientY - rect.top);
+        zoomAroundPoint(
+          nextZoom,
+          event.clientX - rect.left,
+          event.clientY - rect.top,
+        );
       }}
       onDoubleClick={() => {
         setZoom(1);
         setOffset({
           x: clampOffset(0, viewportSize.width, diagramSize.width * baseScale),
-          y: clampOffset(0, viewportSize.height, diagramSize.height * baseScale),
+          y: clampOffset(
+            0,
+            viewportSize.height,
+            diagramSize.height * baseScale,
+          ),
         });
       }}
       onKeyDown={(event) => {
@@ -376,7 +474,11 @@ export function DiagramViewport({
           event.preventDefault();
           panBy(0, -PAN_STEP);
         }
-        if ((event.key === "+" || event.key === "=") && !event.metaKey && !event.ctrlKey) {
+        if (
+          (event.key === "+" || event.key === "=") &&
+          !event.metaKey &&
+          !event.ctrlKey
+        ) {
           event.preventDefault();
           zoomByStep(KEYBOARD_ZOOM_STEP);
         }
@@ -386,19 +488,6 @@ export function DiagramViewport({
         }
       }}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundColor: "#050b10",
-          backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          opacity: 0.55,
-        }}
-      />
-
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
         <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
         <div className="pointer-events-auto flex items-center gap-2">
@@ -410,7 +499,9 @@ export function DiagramViewport({
           >
             −
           </button>
-          <span className="min-w-14 text-center">{Math.round(zoom * 100)}%</span>
+          <span className="min-w-14 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             type="button"
             aria-label="Zoom in"
@@ -424,16 +515,49 @@ export function DiagramViewport({
 
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className="pt-1 pb-8 pl-6 pr-10"
+          className="relative pt-1 pb-8 pl-6 pr-10"
           style={{
-            width: diagramSize.width > 0 ? diagramSize.width * baseScale : undefined,
-            height: diagramSize.height > 0 ? diagramSize.height * baseScale : undefined,
+            width:
+              diagramSize.width > 0 ? diagramSize.width * baseScale : undefined,
+            height:
+              diagramSize.height > 0
+                ? diagramSize.height * baseScale
+                : undefined,
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
             transformOrigin: "top left",
             willChange: "transform",
           }}
         >
-          {children({ diagramRef, zoom, offset, isDragging, diagramSize, viewportSize })}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 z-0"
+            style={{
+              width:
+                diagramSize.width > 0
+                  ? diagramSize.width * baseScale
+                  : undefined,
+              height:
+                diagramSize.height > 0
+                  ? diagramSize.height * baseScale
+                  : undefined,
+              backgroundColor: "#050b10",
+              backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
+              backgroundPosition: "center center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              opacity: 0.55,
+            }}
+          />
+          <div className="relative z-10">
+            {children({
+              diagramRef,
+              zoom,
+              offset,
+              isDragging,
+              diagramSize,
+              viewportSize,
+            })}
+          </div>
         </div>
       </div>
     </div>
