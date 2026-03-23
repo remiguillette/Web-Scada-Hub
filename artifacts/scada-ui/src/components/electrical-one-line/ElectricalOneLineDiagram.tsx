@@ -328,6 +328,7 @@ export function ElectricalOneLineDiagram({
         if (event.key === '-' && !event.metaKey && !event.ctrlKey) { event.preventDefault(); zoomByStep(-KEYBOARD_ZOOM_STEP); }
       }}
     >
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundColor: '#050b10', backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`, backgroundPosition: 'center center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', opacity: 0.55 }} />
       <div className="pointer-events-none absolute inset-x-4 top-4 z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/35 px-4 py-2 text-[10px] font-mono uppercase tracking-[0.22em] text-[#8fb3c9] backdrop-blur">
         <span>Drag to pan · Wheel/pinch or +/- to zoom</span>
         <div className="pointer-events-auto flex items-center gap-2">
@@ -337,9 +338,8 @@ export function ElectricalOneLineDiagram({
         </div>
       </div>
       <div className="absolute inset-0 overflow-hidden">
-        <div className="relative pt-1 pb-8 pl-6 pr-10" style={{ width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined, height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'top left', willChange: 'transform' }}>
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ backgroundColor: '#050b10', backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`, backgroundPosition: 'center center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', opacity: 0.55 }} />
-          <div ref={diagramRef} className="relative z-[1] min-w-max" style={{ transform: `scale(${BASE_DIAGRAM_SCALE})`, transformOrigin: 'top left' }}>
+        <div className="pt-1 pb-8 pl-6 pr-10" style={{ width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined, height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'top left', willChange: 'transform' }}>
+          <div ref={diagramRef} className="min-w-max" style={{ transform: `scale(${BASE_DIAGRAM_SCALE})`, transformOrigin: 'top left' }}>
             <div className="flex items-center gap-0">
               <div className="relative shrink-0" style={{ width: UTILITY_BUS_GEOMETRY.width, height: UTILITY_BUS_GEOMETRY.height }}>
                 <UtilityBusBackground utilityActive={state.supplyLive} />
