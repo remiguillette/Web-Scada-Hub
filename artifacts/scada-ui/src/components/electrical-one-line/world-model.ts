@@ -59,7 +59,7 @@ const GENERATOR_BREAKER_X =
   CARD_W +
   UTILITY_CARD_GAP +
   ISOLATED_SWITCHGEAR_CARD_WIDTH;
-const BEAVER_WOODS_UTILITY_INSET_Y = 18;
+const BEAVER_WOODS_UTILITY_INSET_Y = 78;
 
 const SUPPLEMENTARY_UTILITY_OBJECTS: Array<Pick<WorldObject, 'id' | 'domain'>> = [
   { id: 'utility.water', domain: 'water' },
