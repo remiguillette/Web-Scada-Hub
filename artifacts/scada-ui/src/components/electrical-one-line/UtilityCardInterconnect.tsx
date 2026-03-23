@@ -4,6 +4,7 @@ import { buildElectricalOneLineWorldObjects, getElectricalOneLineUtilityIntercon
 
 const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
 const UTILITY_INTERCONNECT_GEOMETRY = getElectricalOneLineUtilityInterconnectGeometry(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
+const INTERCONNECT_VERTICAL_OFFSET = 12;
 
 export const UtilityCardInterconnect = memo(function UtilityCardInterconnect({
   active,
@@ -27,14 +28,14 @@ export const UtilityCardInterconnect = memo(function UtilityCardInterconnect({
     ...marker,
     point: {
       x: marker.point.x - interconnectBounds.x + leadInWidth,
-      y: marker.point.y - interconnectBounds.y,
+      y: marker.point.y - interconnectBounds.y + INTERCONNECT_VERTICAL_OFFSET,
     },
   }));
   const paths = UTILITY_INTERCONNECT_GEOMETRY.paths.map((path) => ({
     ...path,
     points: path.points.map((point) => ({
       x: point.x - interconnectBounds.x + leadInWidth,
-      y: point.y - interconnectBounds.y,
+      y: point.y - interconnectBounds.y + INTERCONNECT_VERTICAL_OFFSET,
     })),
   }));
 
