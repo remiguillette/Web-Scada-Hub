@@ -7,6 +7,7 @@ import {
   UTILITY_SUPPLEMENTARY_CARD_GAP,
   UTILITY_TO_RISER_GAP,
 } from './constants';
+import { buildParallelConnectorBundle } from './connector-geometry';
 import { getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
 import { CONDUCTORS } from './metrics';
 
@@ -327,28 +328,20 @@ export function getElectricalOneLineUtilityInterconnectGeometry(worldObjects: re
       { id: 'power.utility.interconnect.riser-pole', point: riserPoleRight },
       { id: 'power.utility.interconnect.beaver-woods', point: beaverWoodsUtilityIn },
     ],
-    paths: CONDUCTORS.map((conductor, index) => {
-      const offset = (index - (CONDUCTORS.length - 1) / 2) * 8;
-      
-      // Point de départ centré verticalement sur la carte, fanné immédiatement au bord
-      const startY = riserPoleRight.y + offset;
-      const beaverWoodsIntakeY = beaverWoodsUtilityIn.y + offset;
-      
-      const breakoutX = riserPoleRight.x + breakoutLength;
-      const intakeTransitionX = breakoutX + intakeTransitionLength;
-      const intakeRailStartX = beaverWoodsUtilityIn.x - intakeRailLength;
-
-      return {
-        id: `power.utility.interconnect.${conductor.label.toLowerCase()}`,
-        points: [
-          { x: riserPoleRight.x, y: startY }, 
-          { x: breakoutX, y: startY },
-          { x: intakeTransitionX, y: beaverWoodsIntakeY },
-          { x: intakeRailStartX, y: beaverWoodsIntakeY },
-          { x: beaverWoodsUtilityIn.x, y: beaverWoodsIntakeY },
-        ],
-      };
-    }),
+    paths: buildParallelConnectorBundle({
+      id: 'power.utility.interconnect',
+      route: 'intake',
+      laneCount: CONDUCTORS.length,
+      laneSpacing: 8,
+      source: riserPoleRight,
+      destination: beaverWoodsUtilityIn,
+      breakoutLength,
+      transitionLength: intakeTransitionLength,
+      destinationLeadLength: intakeRailLength,
+    }).map((path, index) => ({
+      ...path,
+      id: `power.utility.interconnect.${CONDUCTORS[index]?.label.toLowerCase() ?? index}`,
+    })),
   };
 }
 
@@ -373,6 +366,29 @@ export function getElectricalOneLineGeneratorBranchGeometry(worldObjects: readon
     branchEnd,
     breakerInput,
     atsGeneratorIn,
+  };
+}
+
+export function getElectricalOneLineGeneratorBranchPaths(worldObjects: readonly WorldObject[]) {
+  const geometry = getElectricalOneLineGeneratorBranchGeometry(worldObjects);
+
+  return {
+    bounds: geometry.bounds,
+    paths: geometry.generatorOutputs.map((output, index) => {
+      const joinX = geometry.branchStart?.x ?? output.x;
+      const branchY = geometry.branchStart?.y ?? output.y;
+      const breakerX = geometry.breakerInput?.x ?? geometry.branchEnd?.x ?? joinX;
+
+      return {
+        id: `power.generator.branch.path.${index}`,
+        points: [
+          { x: output.x, y: output.y },
+          { x: joinX, y: output.y },
+          { x: joinX, y: branchY },
+          { x: breakerX, y: branchY },
+        ],
+      };
+    }),
   };
 }
 
