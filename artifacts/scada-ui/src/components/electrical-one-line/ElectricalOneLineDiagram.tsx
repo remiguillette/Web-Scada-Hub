@@ -8,20 +8,15 @@ import { BeaverWoodsMtCard } from './BeaverWoodsMtCard';
 import {
   BASE_DIAGRAM_SCALE,
   BUTTON_ZOOM_STEP,
-  CARD_W,
   KEYBOARD_ZOOM_STEP,
   MAX_ZOOM,
   MIN_ZOOM,
   PAN_STEP,
-  SOURCE_COL_W,
-  UTILITY_CARD_GAP,
-  UTILITY_SUPPLEMENTARY_CARD_GAP,
   UTILITY_TO_RISER_GAP,
 } from './constants';
-import { GeneratorBank } from './GeneratorBank';
-import { clamp, clampOffset, getUsefulBoundsForWorldObjects, getUtilityBusLayout, UTILITY_BUS_GEOMETRY } from './geometry';
+import { clamp, clampOffset, getBoundsForWorldObjects, getUsefulBoundsForWorldObjects, UTILITY_BUS_GEOMETRY } from './geometry';
 import { buildElectricalModel } from './model';
-import { buildElectricalOneLineWorldObjects, getElectricalOneLineGeneratorPathLayout } from './world-model';
+import { buildElectricalOneLineWorldObjects, getElectricalOneLineGeneratorBranchGeometry } from './world-model';
 import { NodeCard } from './NodeCard';
 import { StatusIcon } from './StatusIcon';
 import type { ATSNode, DragState, ElectricalOneLineProps, PinchState } from './types';
@@ -29,11 +24,13 @@ import { UtilityBusAnnotations } from './UtilityBusAnnotations';
 import { UtilityBusBackground } from './UtilityBusBackground';
 import { UtilityCardInterconnect } from './UtilityCardInterconnect';
 import { useConductorMetrics } from './useConductorMetrics';
+import { VerticalDivider } from './VerticalDivider';
+import { GeneratorBranchInterconnect } from './GeneratorBranchInterconnect';
 
 const ZOOM_STEP = 0.0015;
 const ELECTRICAL_ONE_LINE_WORLD_OBJECTS = buildElectricalOneLineWorldObjects();
-const { generatorBranchVerticalOffset: WORLD_GENERATOR_BRANCH_VERTICAL_OFFSET, generatorBranchWireWidth: WORLD_GENERATOR_BRANCH_WIRE_WIDTH } = getElectricalOneLineGeneratorPathLayout(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
-const UTILITY_BUS_LAYOUT = getUtilityBusLayout();
+const WORLD_GENERATOR_BRANCH_GEOMETRY = getElectricalOneLineGeneratorBranchGeometry(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
+const WORLD_SCENE_BOUNDS = getBoundsForWorldObjects(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 const USEFUL_DIAGRAM_BOUNDS = getUsefulBoundsForWorldObjects(ELECTRICAL_ONE_LINE_WORLD_OBJECTS);
 
 export function ElectricalOneLineDiagram({
@@ -185,9 +182,33 @@ export function ElectricalOneLineDiagram({
     }));
   }, [contentMetrics.height, contentMetrics.width, viewportSize.height, viewportSize.width]);
 
-  const generatorBranchWireWidth = WORLD_GENERATOR_BRANCH_WIRE_WIDTH;
   const campusDividerHeight = generatorUnits.length * 74 + 24;
-  const generatorBranchVerticalOffset = WORLD_GENERATOR_BRANCH_VERTICAL_OFFSET;
+  const generatorBranchBounds = WORLD_GENERATOR_BRANCH_GEOMETRY.bounds;
+  const worldObjectMap = useMemo(
+    () => new Map(ELECTRICAL_ONE_LINE_WORLD_OBJECTS.map((worldObject) => [worldObject.id, worldObject])),
+    [],
+  );
+  const sceneWidth = WORLD_SCENE_BOUNDS.x + WORLD_SCENE_BOUNDS.width;
+  const sceneHeight = Math.max(
+    WORLD_SCENE_BOUNDS.y + WORLD_SCENE_BOUNDS.height,
+    UTILITY_BUS_GEOMETRY.lineBottom,
+  );
+
+  const getWorldObjectStyle = useCallback(
+    (worldObjectId: string) => {
+      const worldObject = worldObjectMap.get(worldObjectId);
+      if (!worldObject) {
+        return undefined;
+      }
+
+      return {
+        position: 'absolute' as const,
+        left: worldObject.x,
+        top: worldObject.y,
+      };
+    },
+    [worldObjectMap],
+  );
 
   const stopDragging = useCallback(() => {
     dragStateRef.current = null;
@@ -357,40 +378,102 @@ export function ElectricalOneLineDiagram({
       <div className="absolute inset-0 overflow-hidden">
         <div className="pt-1 pb-8 pl-6 pr-10" style={{ width: diagramSize.width > 0 ? diagramSize.width * BASE_DIAGRAM_SCALE : undefined, height: diagramSize.height > 0 ? diagramSize.height * BASE_DIAGRAM_SCALE : undefined, transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'top left', willChange: 'transform' }}>
           <div ref={diagramRef} className="min-w-max" style={{ transform: `scale(${BASE_DIAGRAM_SCALE})`, transformOrigin: 'top left' }}>
-            <div className="flex items-center gap-0">
-              <div className="relative shrink-0" style={{ width: UTILITY_BUS_GEOMETRY.width, height: UTILITY_BUS_GEOMETRY.height }}>
+            <div className="relative" style={{ width: sceneWidth, height: sceneHeight }}>
+              <div className="absolute left-0 top-0 shrink-0" style={{ width: UTILITY_BUS_GEOMETRY.width, height: UTILITY_BUS_GEOMETRY.height }}>
                 <UtilityBusBackground utilityActive={state.supplyLive} />
-                <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} feederLabel="NPE-FDR-13.8-01" conductorLabels={conductorLabels} conductorVoltages={conductorVoltages} conductorCurrents={conductorCurrents} conductorColors={conductorColors} titleY={UTILITY_BUS_GEOMETRY.titleY} feederLabelY={UTILITY_BUS_GEOMETRY.feederLabelY} conductorLabelY={UTILITY_BUS_GEOMETRY.conductorLabelY} annotationWidth={UTILITY_BUS_GEOMETRY.annotationWidth} firstCX={UTILITY_BUS_LAYOUT.firstCX} hSpacing={UTILITY_BUS_GEOMETRY.hSpacing} busCenterX={UTILITY_BUS_LAYOUT.busCenterX} feederLabelX={UTILITY_BUS_LAYOUT.feederLabelX} />
-                <div className="absolute left-0 flex items-start" style={{ zIndex: 1, top: UTILITY_BUS_GEOMETRY.lineTop - 98, gap: UTILITY_SUPPLEMENTARY_CARD_GAP }}>
-                  {supplementaryUtilityDisplayNodes.map((node) => <NodeCard key={node.tag} node={node} />)}
-                  <NodeCard node={utilityDisplayNode} />
-                </div>
+                <UtilityBusAnnotations utilityActive={state.supplyLive} streetLabel={t.street} feederLabel="NPE-FDR-13.8-01" conductorLabels={conductorLabels} conductorVoltages={conductorVoltages} conductorCurrents={conductorCurrents} conductorColors={conductorColors} />
               </div>
-              <div className="relative flex shrink-0 items-center" style={{ marginLeft: UTILITY_TO_RISER_GAP }}>
+
+              {supplementaryUtilityDisplayNodes.map((node, index) => {
+                const worldObjectId = ['utility.water', 'utility.wastewater', 'utility.gas', 'utility.telecom'][index];
+                const worldObjectStyle = getWorldObjectStyle(worldObjectId);
+
+                if (!worldObjectStyle) {
+                  return null;
+                }
+
+                return (
+                  <div key={node.tag} style={{ ...worldObjectStyle, zIndex: 1 }}>
+                    <NodeCard node={node} />
+                  </div>
+                );
+              })}
+
+              <div style={{ ...getWorldObjectStyle('power.utility.source'), zIndex: 1 }}>
+                <NodeCard node={utilityDisplayNode} />
+              </div>
+
+              <div className="relative flex shrink-0 items-center" style={{ ...getWorldObjectStyle('power.utility.interconnect'), marginLeft: UTILITY_TO_RISER_GAP }}>
                 <UtilityCardInterconnect active={state.supplyLive} cardCount={2} leadInWidth={UTILITY_TO_RISER_GAP} />
-                <div className="relative z-[1]">
-                  <NodeCard node={{ kind: 'equipment', tag: 'POLE-0326', title: t.riserPole, subtitle: t.structureLabel, status: t.riserPoleStatus, active: state.supplyLive, accent: 'cyan', width: 340, statusDot: true, miniStatuses: [
-                    { label: t.surgeArresters, tag: 'LA-UTIL', status: 'Normal', active: state.supplyLive },
-                    { label: t.fusedCutouts, tag: 'FCO-UTIL', status: state.supplyLive ? 'Closed' : 'Open', active: state.supplyLive },
-                    { label: t.overheadUndergroundTransition, tag: t.overheadUndergroundTransition, status: state.supplyLive ? 'Connected' : 'Disconnected', active: state.supplyLive },
-                  ] }} />
-                </div>
-                <div className="relative z-[1] shrink-0" style={{ marginLeft: UTILITY_CARD_GAP }}>
-                  <BeaverWoodsMtCard active={state.supplyLive} frequency={frequency} generatorLiveStates={generatorLiveStates} conductorMetrics={conductorMetrics} />
-                </div>
               </div>
-              <div className="shrink-0">
+
+              <div className="relative z-[1]" style={getWorldObjectStyle('power.riser-pole.0326')}>
+                <NodeCard node={{ kind: 'equipment', tag: 'POLE-0326', title: t.riserPole, subtitle: t.structureLabel, status: t.riserPoleStatus, active: state.supplyLive, accent: 'cyan', width: 340, statusDot: true, miniStatuses: [
+                  { label: t.surgeArresters, tag: 'LA-UTIL', status: 'Normal', active: state.supplyLive },
+                  { label: t.fusedCutouts, tag: 'FCO-UTIL', status: state.supplyLive ? 'Closed' : 'Open', active: state.supplyLive },
+                  { label: t.overheadUndergroundTransition, tag: t.overheadUndergroundTransition, status: state.supplyLive ? 'Connected' : 'Disconnected', active: state.supplyLive },
+                ] }} />
+              </div>
+
+              <div className="relative z-[1] shrink-0" style={getWorldObjectStyle('power.beaver-woods-mt')}>
+                <BeaverWoodsMtCard active={state.supplyLive} frequency={frequency} generatorLiveStates={generatorLiveStates} conductorMetrics={conductorMetrics} />
+              </div>
+
+              <div className="shrink-0" style={getWorldObjectStyle('power.ats.001')}>
                 <NodeCard node={atsDisplayNode} />
               </div>
+
+              <div
+                className="absolute"
+                style={{
+                  left: WORLD_SCENE_BOUNDS.x + 486,
+                  top: worldObjectMap.get('power.campus.divider')?.y ?? 0,
+                }}
+              >
+                <VerticalDivider height={campusDividerHeight} label={t.campus} />
+              </div>
+
+              {generatorUnits.map((generator, index) => {
+                const generatorWorldObject = worldObjectMap.get(`power.generator.${generator.tag.toLowerCase()}`);
+                if (!generatorWorldObject) {
+                  return null;
+                }
+
+                return (
+                  <div key={generator.tag} style={{ position: 'absolute', left: generatorWorldObject.x, top: generatorWorldObject.y }}>
+                    <NodeCard
+                      node={{
+                        kind: 'source',
+                        tag: generator.tag,
+                        title: generator.title,
+                        status: generator.status,
+                        active: generator.active,
+                        accent: 'amber',
+                        width: generator.width,
+                        details: generator.details,
+                        icon: <StatusIcon icon="zap" active={generator.active} activeColor="text-[#ffb347]" />,
+                      }}
+                    />
+                  </div>
+                );
+              })}
+
+              <div
+                className="absolute"
+                style={{
+                  left: generatorBranchBounds?.x ?? 0,
+                  top: generatorBranchBounds?.y ?? 0,
+                  width: generatorBranchBounds?.width ?? 0,
+                  height: generatorBranchBounds?.height ?? generatorUnits.length * 74,
+                }}
+              >
+                <GeneratorBranchInterconnect active={state.genLive} />
+              </div>
+
+              <div className="flex shrink-0 items-center" style={getWorldObjectStyle('power.breaker.cb-gen')}>
+                <NodeCard node={{ kind: 'equipment', tag: 'CB-GEN', title: t.mainPanelGen, status: state.genBrkLive ? t.closed : t.openStandby, active: state.genBrkLive, accent: 'amber', icon: <StatusIcon icon="shield" active={state.genBrkLive} activeColor="text-[#ffb347]" /> }} />
+              </div>
             </div>
-            <div className="flex items-start" style={{ height: 28 }}><div style={{ width: generatorBranchVerticalOffset, flexShrink: 0 }} /></div>
-            <GeneratorBank
-              generatorUnits={generatorUnits}
-              dividerLabel={t.campus}
-              dividerHeight={campusDividerHeight}
-              branchWireWidth={generatorBranchWireWidth}
-              genBreakerNode={{ kind: 'equipment', tag: 'CB-GEN', title: t.mainPanelGen, status: state.genBrkLive ? t.closed : t.openStandby, active: state.genBrkLive, accent: 'amber', icon: <StatusIcon icon="shield" active={state.genBrkLive} activeColor="text-[#ffb347]" /> }}
-            />
           </div>
         </div>
       </div>
