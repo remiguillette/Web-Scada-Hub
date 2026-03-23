@@ -157,21 +157,31 @@ export function ElectricalOneLineDiagram({
 
   const contentMetrics = useMemo(() => ({ width: diagramSize.width * BASE_DIAGRAM_SCALE * zoom, height: diagramSize.height * BASE_DIAGRAM_SCALE * zoom }), [diagramSize.height, diagramSize.width, zoom]);
 
+  const getUsefulBoundsFramingOffset = useCallback((targetZoom: number) => {
+    const usefulCenterX = (USEFUL_DIAGRAM_BOUNDS.x + USEFUL_DIAGRAM_BOUNDS.width / 2) * BASE_DIAGRAM_SCALE * targetZoom;
+    const usefulCenterY = (USEFUL_DIAGRAM_BOUNDS.y + USEFUL_DIAGRAM_BOUNDS.height / 2) * BASE_DIAGRAM_SCALE * targetZoom;
+    const contentWidth = diagramSize.width * BASE_DIAGRAM_SCALE * targetZoom;
+    const contentHeight = diagramSize.height * BASE_DIAGRAM_SCALE * targetZoom;
+
+    return {
+      x: clampOffset(viewportSize.width / 2 - usefulCenterX, viewportSize.width, contentWidth),
+      y: clampOffset(viewportSize.height / 2 - usefulCenterY, viewportSize.height, contentHeight),
+    };
+  }, [diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width]);
+
+  const resetViewportToUsefulBounds = useCallback(() => {
+    const defaultZoom = 1;
+    setZoom(defaultZoom);
+    setOffset(getUsefulBoundsFramingOffset(defaultZoom));
+  }, [getUsefulBoundsFramingOffset]);
+
   useEffect(() => {
     if (hasInitializedViewportRef.current) return;
     if (!viewportSize.width || !viewportSize.height || !diagramSize.width || !diagramSize.height) return;
 
-    const usefulCenterX = (USEFUL_DIAGRAM_BOUNDS.x + USEFUL_DIAGRAM_BOUNDS.width / 2) * BASE_DIAGRAM_SCALE;
-    const usefulCenterY = (USEFUL_DIAGRAM_BOUNDS.y + USEFUL_DIAGRAM_BOUNDS.height / 2) * BASE_DIAGRAM_SCALE;
-    const initialOffsetX = viewportSize.width / 2 - usefulCenterX;
-    const initialOffsetY = viewportSize.height / 2 - usefulCenterY;
-
-    setOffset({
-      x: clampOffset(initialOffsetX, viewportSize.width, contentMetrics.width),
-      y: clampOffset(initialOffsetY, viewportSize.height, contentMetrics.height),
-    });
+    setOffset(getUsefulBoundsFramingOffset(zoom));
     hasInitializedViewportRef.current = true;
-  }, [contentMetrics.height, contentMetrics.width, diagramSize.height, diagramSize.width, viewportSize.height, viewportSize.width]);
+  }, [diagramSize.height, diagramSize.width, getUsefulBoundsFramingOffset, viewportSize.height, viewportSize.width, zoom]);
 
   useEffect(() => {
     if (!viewportSize.width || !viewportSize.height) return;
@@ -334,8 +344,7 @@ export function ElectricalOneLineDiagram({
         zoomAroundPoint(nextZoom, event.clientX - rect.left, event.clientY - rect.top);
       }}
       onDoubleClick={() => {
-        setZoom(1);
-        setOffset({ x: clampOffset(0, viewportSize.width, diagramSize.width * BASE_DIAGRAM_SCALE), y: clampOffset(0, viewportSize.height, diagramSize.height * BASE_DIAGRAM_SCALE) });
+        resetViewportToUsefulBounds();
       }}
       onKeyDown={(event) => {
         if (event.key === 'ArrowLeft') { event.preventDefault(); panBy(PAN_STEP, 0); }
