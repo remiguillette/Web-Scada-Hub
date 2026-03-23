@@ -16,7 +16,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={ElectricalOneLinePage} />
-      <Route path="/electrical-one-line" component={ElectricalOneLinePage} />
       <Route path="/simulation" component={SimulationPage} />
       <Route component={NotFound} />
     </Switch>

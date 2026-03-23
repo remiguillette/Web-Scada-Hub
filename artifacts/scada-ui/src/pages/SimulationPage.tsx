@@ -465,7 +465,7 @@ export default function SimulationPage() {
               </div>
             )}
             <Link
-              href="/electrical-one-line"
+              href="/"
               className="flex items-center gap-2 rounded-xl border border-[#00f7a1]/30 bg-[#00f7a1]/8 px-3 py-2 font-display text-xs tracking-[0.16em] text-[#00f7a1] transition hover:bg-[#00f7a1]/15"
             >
               <Zap className="h-3.5 w-3.5" /> {t.electricalOneLineLink}
@@ -1304,7 +1304,7 @@ export default function SimulationPage() {
         <Panel
           title={`${t.generatorUnits} — ${SYSTEM.id}`}
           icon={<Droplets className="h-4 w-4" />}
-          openUrl={`${import.meta.env.BASE_URL}electrical-one-line`}
+          openUrl={import.meta.env.BASE_URL}
         >
           <div className="mb-3 flex items-center gap-3 rounded-xl border border-[#1c2c40] bg-[#09111d] px-4 py-3">
             <div className="flex items-center gap-2">
@@ -1316,7 +1316,7 @@ export default function SimulationPage() {
               </span>
             </div>
             <Link
-              href="/electrical-one-line"
+              href="/"
               className="ml-auto flex items-center gap-1.5 font-display text-xs tracking-[0.14em] text-[#00dcff] transition hover:text-white"
             >
               <Zap className="h-3.5 w-3.5" /> {t.viewInOneLine}
