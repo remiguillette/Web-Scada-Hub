@@ -791,14 +791,15 @@ export function ElectricalOneLineDiagram({
                   diagramSize.height > 0
                     ? diagramSize.height * BASE_DIAGRAM_SCALE
                     : undefined,
-                backgroundColor: "#050b10",
-                backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
-                backgroundPosition: "center 22%",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "contain",
-                opacity: 0.55,
               }}
-            />
+            >
+              <img
+                src={niagaraFallsBackground}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-center opacity-70"
+                draggable={false}
+              />
+            </div>
           ) : null}
           <div
             ref={diagramRef}
