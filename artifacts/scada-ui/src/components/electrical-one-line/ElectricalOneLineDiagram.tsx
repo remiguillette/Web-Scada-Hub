@@ -793,9 +793,9 @@ export function ElectricalOneLineDiagram({
                     : undefined,
                 backgroundColor: "#050b10",
                 backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
-                backgroundPosition: "center 22%",
+                backgroundPosition: "center center",
                 backgroundRepeat: "no-repeat",
-                backgroundSize: "contain",
+                backgroundSize: "cover",
                 opacity: 0.55,
               }}
             />
