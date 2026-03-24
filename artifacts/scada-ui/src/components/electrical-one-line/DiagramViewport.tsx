@@ -515,7 +515,19 @@ export function DiagramViewport({ baseScale, children }: DiagramViewportProps) {
 
       <div className="absolute inset-0 overflow-hidden">
         <div
-          className="relative pt-1 pb-8 pl-6 pr-10"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            backgroundColor: "#050b10",
+            backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            opacity: 0.55,
+          }}
+        />
+        <div
+          className="relative z-10 pt-1 pb-8 pl-6 pr-10"
           style={{
             width:
               diagramSize.width > 0 ? diagramSize.width * baseScale : undefined,
@@ -528,26 +540,6 @@ export function DiagramViewport({ baseScale, children }: DiagramViewportProps) {
             willChange: "transform",
           }}
         >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 top-0 z-0"
-            style={{
-              width:
-                diagramSize.width > 0
-                  ? diagramSize.width * baseScale
-                  : undefined,
-              height:
-                diagramSize.height > 0
-                  ? diagramSize.height * baseScale
-                  : undefined,
-              backgroundColor: "#050b10",
-              backgroundImage: `linear-gradient(rgba(5, 11, 16, 0.2), rgba(5, 11, 16, 0.72)), url(${niagaraFallsBackground})`,
-              backgroundPosition: "center center",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "cover",
-              opacity: 0.55,
-            }}
-          />
           <div className="relative z-10">
             {children({
               diagramRef,
